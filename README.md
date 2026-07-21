@@ -4,6 +4,10 @@ A premium, cinematic redesign of the Legendary Perfume storefront — built as a
 interactive front‑end demo. Heritage‑luxe aesthetic (ivory, antique gold, Peranakan
 motifs), scroll‑driven storytelling, and a working shop experience.
 
+### 🔗 Live demo → **https://23f3000111.github.io/legendary-perfume/**
+
+Deployed automatically to GitHub Pages on every push to `main`.
+
 ## Run it
 
 ```bash
