@@ -1,0 +1,187 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   LEGENDARY — Heritage Luxe design system
+   ============================================================ */
+
+@layer base {
+  :root {
+    --ease-luxe: cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-ivory text-ink font-sans;
+    font-weight: 400;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: rgba(176, 141, 62, 0.9);
+    color: #fbf8f2;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 10px; }
+  ::-webkit-scrollbar-track { background: #ece4d5; }
+  ::-webkit-scrollbar-thumb {
+    background: #c9b48a;
+    border-radius: 999px;
+    border: 2px solid #ece4d5;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--tw-gold, #B08D3E); }
+
+  :focus-visible {
+    outline: 2px solid #B08D3E;
+    outline-offset: 3px;
+  }
+}
+
+@layer components {
+  .u-container {
+    @apply mx-auto w-full px-5 sm:px-8 lg:px-14;
+    max-width: 1600px;
+  }
+  .u-narrow {
+    @apply mx-auto w-full px-5 sm:px-8;
+    max-width: 1080px;
+  }
+
+  /* Eyebrow / kicker label */
+  .eyebrow {
+    @apply font-sans uppercase text-smoke;
+    font-size: 0.72rem;
+    letter-spacing: 0.28em;
+    font-weight: 500;
+  }
+  .eyebrow-gold { color: #9a7d38; }
+
+  /* Gold gradient text */
+  .text-gilt {
+    background: linear-gradient(100deg, #8A6D2A 0%, #CBAA5D 30%, #f0dca2 50%, #CBAA5D 70%, #8A6D2A 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+  .text-gilt-anim { animation: shimmer 7s linear infinite; }
+
+  /* Hairline divider */
+  .hairline { height: 1px; background: #D9CFBD; border: 0; }
+  .hairline-dark { height: 1px; background: rgba(244,238,226,0.16); border: 0; }
+
+  /* Buttons */
+  .btn {
+    @apply relative inline-flex items-center justify-center gap-2 font-sans uppercase transition-all duration-500;
+    letter-spacing: 0.18em;
+    font-size: 0.74rem;
+    font-weight: 500;
+    padding: 1rem 2rem;
+    transition-timing-function: var(--ease-luxe);
+  }
+  .btn-solid {
+    @apply btn text-ivory;
+    background: #1C1815;
+  }
+  .btn-solid:hover { background: #2f2822; transform: translateY(-2px); }
+
+  .btn-gold {
+    @apply btn text-ink;
+    background: linear-gradient(120deg, #CBAA5D, #B08D3E 55%, #8A6D2A);
+    box-shadow: 0 10px 30px -12px rgba(138,109,42,0.6);
+  }
+  .btn-gold:hover { filter: brightness(1.06); transform: translateY(-2px); }
+
+  .btn-ghost {
+    @apply btn text-ink;
+    border: 1px solid #C6B48C;
+    background: transparent;
+  }
+  .btn-ghost:hover { background: #1C1815; color: #F4EEE2; border-color: #1C1815; }
+
+  /* Animated gold link underline */
+  .link-gold {
+    @apply relative inline-block;
+    background-image: linear-gradient(#B08D3E, #B08D3E);
+    background-size: 0% 1px;
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    transition: background-size 0.5s var(--ease-luxe);
+  }
+  .link-gold:hover { background-size: 100% 1px; }
+
+  /* Cards */
+  .card-surface {
+    @apply bg-porcelain;
+    box-shadow: 0 30px 60px -40px rgba(28,24,21,0.25);
+  }
+
+  /* Peranakan-inspired tile pattern (subtle) */
+  .peranakan {
+    background-image: radial-gradient(circle at 50% 50%, currentColor 1.6px, transparent 1.8px),
+      radial-gradient(circle at 0 0, currentColor 1.2px, transparent 1.4px),
+      radial-gradient(circle at 100% 100%, currentColor 1.2px, transparent 1.4px);
+    background-size: 26px 26px, 26px 26px, 26px 26px;
+    background-position: 0 0, 0 0, 0 0;
+  }
+
+  .plate-glass {
+    background: rgba(251, 248, 242, 0.72);
+    backdrop-filter: blur(14px) saturate(1.1);
+    -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  }
+  .plate-glass-dark {
+    background: rgba(20, 17, 14, 0.55);
+    backdrop-filter: blur(16px) saturate(1.1);
+    -webkit-backdrop-filter: blur(16px) saturate(1.1);
+  }
+}
+
+@layer utilities {
+  .grain::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    opacity: 0.4;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  }
+
+  .edge-fade-b {
+    -webkit-mask-image: linear-gradient(to bottom, black 72%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 72%, transparent 100%);
+  }
+
+  .writing-vertical {
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+  }
+
+  .text-balance { text-wrap: balance; }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

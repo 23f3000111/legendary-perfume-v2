@@ -1,0 +1,9 @@
+node_modules
+dist
+*.tsbuildinfo
+.playwright-mcp
+.DS_Store
+
+# Source design inputs (already copied into public/assets)
+UI images/
+reference images/
