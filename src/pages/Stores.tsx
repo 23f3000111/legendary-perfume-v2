@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { asset } from '../lib/asset'
 import { stores, regions, mapEmbedUrl, directionsUrl } from '../data/stores'
 import PageHeader from '../components/ui/PageHeader'
 import { Pin, Phone, Clock, ArrowUpRight, WhatsApp } from '../components/ui/icons'
@@ -21,6 +22,7 @@ export default function Stores() {
         title="Boutiques across Malaysia"
         intro="From Pavilion KL to the shores of Langkawi — visit a Legendary counter to discover your scent in person. Live maps and directions below."
         crumbs={[{ label: 'Home', to: '/' }, { label: 'Stores' }]}
+        image={asset('/assets/client/banner-stores.webp')}
       />
 
       <section className="bg-ivory py-12 md:py-16">
@@ -122,14 +124,22 @@ export default function Stores() {
             </div>
           </div>
 
-          {/* Retailers */}
-          <div className="mt-14 rounded-sm border border-line bg-porcelain p-8 text-center">
-            <p className="eyebrow eyebrow-gold">Also available at</p>
-            <h3 className="mt-3 font-display text-2xl">SASA &amp; AirAsia</h3>
-            <p className="mx-auto mt-2 max-w-xl text-sm text-smoke">
-              Find Legendary at all SASA stores in Malaysia, selected SASA stores in Singapore, and on board
-              AirAsia flights departing from Malaysia.
+          {/* Trusted sellers — client change from "Also available at" */}
+          <div className="mt-14 border-t border-line pt-14">
+            <h2 className="text-center font-display text-[clamp(1.7rem,3vw,2.4rem)]">Trusted Sellers</h2>
+            <p className="mx-auto mt-3 max-w-xl text-center text-sm text-smoke">
+              Beyond our own boutiques, Legendary is stocked by these authorised partners.
             </p>
+            <div className="mt-9 flex flex-wrap items-center justify-center gap-x-14 gap-y-8 md:gap-x-20">
+              {['SASA', 'AirAsia', 'Watsons', 'Parkson'].map((name) => (
+                <span
+                  key={name}
+                  className="font-display text-[clamp(1.3rem,2.4vw,1.9rem)] font-bold text-ink/45 transition-colors duration-500 hover:text-ink"
+                >
+                  {name}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
       </section>

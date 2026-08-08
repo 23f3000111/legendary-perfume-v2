@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useShop, cartCount } from '../../store/shop'
 import { useUI } from '../../store/ui'
 import { collections } from '../../data/collections'
-import { Search, User, Bag, Heart, Menu, Close, ArrowUpRight } from '../ui/icons'
+import { Search, User, Bag, Menu, Close, ArrowUpRight } from '../ui/icons'
 
 const megaShop = [
   { label: 'All Fragrances', to: '/shop' },
@@ -21,7 +21,6 @@ export default function Header() {
   const [scrolled, setScrolled] = useState(false)
   const [mega, setMega] = useState(false)
   const items = useShop((s) => s.items)
-  const wishlist = useShop((s) => s.wishlist)
   const count = cartCount(items)
   const { openCart, toggleMenu, menuOpen, closeMenu, cartPulse } = useUI()
 
@@ -71,14 +70,6 @@ export default function Header() {
             {/* Right icons */}
             <div className={`flex flex-1 items-center justify-end gap-4 md:gap-5 ${dark ? 'text-ivory' : 'text-ink'}`}>
               <button className="hidden sm:block transition hover:text-gold" aria-label="Search"><Search width={20} /></button>
-              <Link to="/wishlist" className="relative transition hover:text-gold" aria-label="Wishlist">
-                <Heart width={20} />
-                {wishlist.length > 0 && (
-                  <span className="absolute -right-2 -top-2 grid h-4 w-4 place-items-center rounded-full bg-rose text-[0.55rem] text-ivory">
-                    {wishlist.length}
-                  </span>
-                )}
-              </Link>
               <Link to="/checkout" className="hidden transition hover:text-gold sm:block" aria-label="Account"><User width={20} /></Link>
               <motion.button
                 key={cartPulse}
@@ -104,6 +95,7 @@ export default function Header() {
               dark ? 'border-ivory/15 text-ivory' : 'border-line/70 text-ink'
             }`}
           >
+            <NavLink to="/" end className="link-gold py-1" onMouseEnter={() => setMega(false)}>Home</NavLink>
             <button
               onMouseEnter={() => setMega(true)}
               onClick={() => setMega((v) => !v)}
@@ -130,16 +122,6 @@ export default function Header() {
             >
               <div className="u-container grid grid-cols-[1fr_1fr_1.2fr] gap-10 py-10">
                 <div>
-                  <p className="eyebrow mb-5">Shop</p>
-                  <ul className="space-y-3">
-                    {megaShop.map((l) => (
-                      <li key={l.to}>
-                        <Link to={l.to} onClick={() => setMega(false)} className="link-gold font-display text-lg text-ink">{l.label}</Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div>
                   <p className="eyebrow mb-5">Collections</p>
                   <ul className="space-y-3">
                     {collections.map((c) => (
@@ -150,8 +132,18 @@ export default function Header() {
                     ))}
                   </ul>
                 </div>
+                <div>
+                  <p className="eyebrow mb-5">Shop</p>
+                  <ul className="space-y-3">
+                    {megaShop.map((l) => (
+                      <li key={l.to}>
+                        <Link to={l.to} onClick={() => setMega(false)} className="link-gold font-display text-lg text-ink">{l.label}</Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
                 <Link to="/product/orchid" onClick={() => setMega(false)} className="group relative overflow-hidden">
-                  <img src={asset("/assets/orchid-mirror.webp")} alt="Orchid" className="h-56 w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <img src={asset('/assets/client/signature-orchid.webp')} alt="Orchid" className="h-56 w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-gradient-to-t from-ink/70 to-transparent" />
                   <div className="absolute bottom-4 left-4 text-ivory">
                     <p className="eyebrow eyebrow-gold">The Signature</p>
@@ -172,12 +164,13 @@ export default function Header() {
 
 function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const links = [
+    { label: 'Home', to: '/' },
     { label: 'All Fragrances', to: '/shop' },
     ...collections.map((c) => ({ label: c.name, to: `/shop?collection=${c.id}` })),
     { label: 'Stores', to: '/stores' },
     { label: 'Our Story', to: '/about' },
     { label: 'Journal', to: '/journal' },
-    { label: 'Wishlist', to: '/wishlist' },
+    { label: 'Contact', to: '/contact' },
   ]
   return (
     <AnimatePresence>

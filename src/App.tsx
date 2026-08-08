@@ -7,7 +7,6 @@ import Stores from './pages/Stores'
 import About from './pages/About'
 import Journal from './pages/Journal'
 import Contact from './pages/Contact'
-import Wishlist from './pages/Wishlist'
 import Checkout from './pages/Checkout'
 import NotFound from './pages/NotFound'
 
@@ -22,7 +21,6 @@ export default function App() {
         <Route path="/about" element={<About />} />
         <Route path="/journal" element={<Journal />} />
         <Route path="/contact" element={<Contact />} />
-        <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/checkout" element={<Checkout />} />
         <Route path="*" element={<NotFound />} />
       </Route>

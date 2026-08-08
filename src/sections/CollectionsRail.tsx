@@ -47,8 +47,8 @@ export default function CollectionsRail() {
                 highlands, its islands. Scroll to wander through them.
               </p>
             </div>
-            {collections.map((c, i) => (
-              <RailCard key={c.id} c={c} index={i} />
+            {collections.map((c) => (
+              <RailCard key={c.id} c={c} />
             ))}
           </motion.div>
         </div>
@@ -61,9 +61,9 @@ export default function CollectionsRail() {
           <h2 className="mt-4 font-display text-4xl">Four worlds, bottled.</h2>
         </div>
         <div className="mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-4">
-          {collections.map((c, i) => (
+          {collections.map((c) => (
             <div key={c.id} className="w-[78vw] shrink-0 snap-center">
-              <RailCard c={c} index={i} />
+              <RailCard c={c} />
             </div>
           ))}
         </div>
@@ -72,7 +72,7 @@ export default function CollectionsRail() {
   )
 }
 
-function RailCard({ c, index }: { c: (typeof collections)[number]; index: number }) {
+function RailCard({ c }: { c: (typeof collections)[number] }) {
   const tone = accent(c.accent)
   return (
     <Link
@@ -80,19 +80,23 @@ function RailCard({ c, index }: { c: (typeof collections)[number]; index: number
       className="group relative block h-[64vh] w-[min(78vw,30rem)] shrink-0 overflow-hidden rounded-sm lg:w-[30rem]"
     >
       <img src={c.image} alt={c.name} className="h-full w-full object-cover transition-transform duration-[1200ms] ease-luxe group-hover:scale-105" />
-      <div className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/20 to-transparent" />
-      <div className="absolute left-1 top-5">
-        <span className="ml-6 font-display text-6xl text-ivory/15">0{index + 1}</span>
-      </div>
-      <div className="absolute inset-x-0 bottom-0 p-7">
-        <p className="eyebrow" style={{ color: tone.hex }}>{c.tagline}</p>
-        <h3 className="mt-2 flex items-center gap-3 font-display text-4xl">
-          {c.name}
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-ivory/10 opacity-0 transition-all duration-500 group-hover:opacity-100">
-            <ArrowUpRight width={18} />
-          </span>
-        </h3>
-        <p className="mt-3 max-w-xs text-sm text-ivory/60">{c.description}</p>
+      {/* Deep enough at the foot that the frosted plate reads as a light veil
+          over dark, keeping both the ivory copy and the accent tagline legible
+          on the pale family photography. */}
+      <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/55 to-transparent" />
+      {/* Client note: copy sits on a white-transparency plate so it stays
+          legible over the lighter family photography. */}
+      <div className="absolute inset-x-4 bottom-4">
+        <div className="plate-frost rounded-sm p-6">
+          <p className="eyebrow" style={{ color: tone.hex }}>{c.tagline}</p>
+          <h3 className="mt-2 flex items-center gap-3 font-display text-4xl text-ivory">
+            {c.name}
+            <span className="grid h-9 w-9 place-items-center rounded-full bg-ivory/15 opacity-0 transition-all duration-500 group-hover:opacity-100">
+              <ArrowUpRight width={18} />
+            </span>
+          </h3>
+          <p className="mt-3 max-w-xs text-sm text-ivory/80">{c.description}</p>
+        </div>
       </div>
     </Link>
   )

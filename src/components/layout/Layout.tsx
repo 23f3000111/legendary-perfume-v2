@@ -6,6 +6,7 @@ import CartDrawer from '../CartDrawer'
 import Concierge from '../Concierge'
 import Atmosphere from '../Atmosphere'
 import Intro from '../Intro'
+import { useContentGuard } from '../../lib/contentGuard'
 
 function ScrollToTop() {
   const { pathname } = useLocation()
@@ -16,6 +17,7 @@ function ScrollToTop() {
 }
 
 export default function Layout() {
+  useContentGuard()
   return (
     <div className="grain relative min-h-screen">
       <Intro />

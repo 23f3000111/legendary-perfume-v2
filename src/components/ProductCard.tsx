@@ -6,13 +6,11 @@ import { accent } from '../lib/accents'
 import { formatRM, discountPct } from '../lib/format'
 import { useShop } from '../store/shop'
 import { useUI } from '../store/ui'
-import { Heart, HeartFilled, Plus, Check } from './ui/icons'
+import { Plus, Check } from './ui/icons'
 
 export default function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
   const tone = accent(product.accent)
   const add = useShop((s) => s.add)
-  const toggleWish = useShop((s) => s.toggleWish)
-  const wished = useShop((s) => s.wishlist.includes(product.id))
   const pulse = useUI((s) => s.pulse)
   const openCart = useUI((s) => s.openCart)
   const [added, setAdded] = useState(false)
@@ -36,12 +34,11 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
       className="group relative"
     >
       <Link to={`/product/${product.id}`} className="block">
-        {/* Image tile */}
+        {/* Image tile — gradient wash kept, background dot pattern removed */}
         <div
           className="relative overflow-hidden"
           style={{ background: `linear-gradient(160deg, ${tone.soft}, rgba(251,248,242,0.5))` }}
         >
-          <div className="peranakan pointer-events-none absolute inset-0 opacity-[0.05]" style={{ color: tone.hex }} />
           {off && (
             <span
               className="absolute left-4 top-4 z-10 px-2.5 py-1 text-[0.62rem] font-medium uppercase tracking-[0.16em] text-ivory"
@@ -50,23 +47,21 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
               −{off}%
             </span>
           )}
-          <button
-            onClick={(e) => {
-              e.preventDefault()
-              toggleWish(product.id)
-            }}
-            aria-label={wished ? 'Remove from wishlist' : 'Save to wishlist'}
-            className="absolute right-3.5 top-3.5 z-10 grid h-9 w-9 place-items-center rounded-full bg-porcelain/80 text-ink backdrop-blur transition hover:bg-porcelain"
-          >
-            {wished ? <HeartFilled width={16} className="text-rose" /> : <Heart width={16} />}
-          </button>
 
-          <div className="aspect-[4/5] w-full">
+          {/* Lifestyle shot cross-fades to the box + bottle pack shot on hover */}
+          <div className="relative aspect-[4/5] w-full">
             <img
               src={product.image}
               alt={product.name}
               loading={index < 4 ? 'eager' : 'lazy'}
-              className="h-full w-full object-cover transition-transform duration-[1100ms] ease-luxe group-hover:scale-[1.06]"
+              className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-luxe group-hover:opacity-0"
+            />
+            <img
+              src={product.hoverImage}
+              alt=""
+              aria-hidden
+              loading="lazy"
+              className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700 ease-luxe group-hover:opacity-100"
             />
           </div>
 

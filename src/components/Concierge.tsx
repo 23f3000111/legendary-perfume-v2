@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useUI } from '../store/ui'
+import { asset } from '../lib/asset'
 import { GREETING, handle, waLink, type BotReply } from '../lib/concierge'
-import { Close, Send, Sparkle, WhatsApp, ArrowRight, ArrowUpRight } from './ui/icons'
+import { Close, Send, WhatsApp, ArrowRight, ArrowUpRight } from './ui/icons'
 
 interface Msg { role: 'bot' | 'user'; text?: string; reply?: BotReply }
 
@@ -60,7 +61,11 @@ export default function Concierge() {
               aria-label="Open the Legendary concierge"
             >
               <span className="absolute inset-0 animate-ping rounded-full bg-gold/40 [animation-duration:2.6s]" />
-              <Sparkle width={24} />
+              <img
+                src={asset('/assets/client/icon-perfume.webp')}
+                alt=""
+                className="relative h-7 w-7 object-contain"
+              />
             </motion.button>
           )}
         </AnimatePresence>
@@ -80,7 +85,7 @@ export default function Concierge() {
             <div className="relative flex items-center gap-3 bg-ink px-5 py-4 text-ivory">
               <div className="pointer-events-none absolute inset-0 opacity-10 peranakan" style={{ color: '#CBAA5D' }} />
               <div className="relative grid h-10 w-10 place-items-center rounded-full" style={{ background: 'linear-gradient(135deg,#CBAA5D,#8A6D2A)' }}>
-                <Sparkle width={20} className="text-ink" />
+                <img src={asset('/assets/client/icon-perfume.webp')} alt="" className="h-5 w-5 object-contain" />
               </div>
               <div className="relative flex-1">
                 <p className="font-display text-lg leading-none">Concierge</p>

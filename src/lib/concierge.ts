@@ -132,7 +132,7 @@ export function handle(input: string): BotReply {
 function recommendByMood(mood: Mood): BotReply {
   const matches = products.filter((p) => p.moods.includes(mood)).slice(0, 3)
   return {
-    text: `${moodCopy[mood].line} — think ${moodCopy[mood].hint}. Here’s what I’d wear:`,
+    text: `${moodCopy[mood].line}. Here’s what I’d wear:`,
     products: matches.map((p) => ref(p.id)).filter(Boolean) as ProductRef[],
     chips: ['Find my scent', 'Gift ideas', 'Talk to a human'],
   }

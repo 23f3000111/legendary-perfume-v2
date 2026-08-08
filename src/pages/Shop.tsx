@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { asset } from '../lib/asset'
 import { products, type Product } from '../data/products'
 import { collections } from '../data/collections'
 import ProductCard from '../components/ProductCard'
@@ -41,16 +42,25 @@ export default function Shop() {
       case 'price-asc': out.sort((a, b) => a.price - b.price); break
       case 'price-desc': out.sort((a, b) => b.price - a.price); break
       case 'az': out.sort((a, b) => a.name.localeCompare(b.name)); break
-      default: out.sort((a, b) => Number(!!b.bestseller) - Number(!!a.bestseller))
+      // "Featured" keeps the merchandising sequence the client specified:
+      // Orchid · Violet · Mahsuri · Man · Nyonya · 3 Wishes · Spirit
+      default: break
     }
     return out
   }, [collectionParam, audience, filterParam, sort])
 
+  const activeCollection = collections.find((c) => c.id === collectionParam)
+
   const activeTitle =
     filterParam === 'bestsellers' ? 'Bestsellers'
     : filterParam === 'gifts' ? 'Gifts & Sets'
-    : collectionParam !== 'all' ? collections.find((c) => c.id === collectionParam)?.name ?? 'Fragrances'
+    : collectionParam !== 'all' ? activeCollection?.name ?? 'Fragrances'
     : 'All Fragrances'
+
+  const banner =
+    filterParam === 'bestsellers' ? asset('/assets/client/banner-bestsellers.webp')
+    : filterParam === 'gifts' ? asset('/assets/client/banner-gifts.webp')
+    : activeCollection?.banner ?? asset('/assets/client/banner-fragrances.webp')
 
   return (
     <>
@@ -59,6 +69,7 @@ export default function Shop() {
         title={activeTitle}
         intro="Nine fragrances, each an olfactory postcard of Malaysia — crafted, Halal-certified, and made to be worn as a memory."
         crumbs={[{ label: 'Home', to: '/' }, { label: 'Fragrances' }]}
+        image={banner}
       />
 
       <section className="bg-ivory py-12 md:py-16">

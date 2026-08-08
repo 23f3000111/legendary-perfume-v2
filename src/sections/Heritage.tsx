@@ -15,7 +15,9 @@ const stats = [
 
 function Counter({ value, prefix, suffix }: { value: number; prefix?: string; suffix?: string }) {
   const ref = useRef<HTMLSpanElement>(null)
-  const inView = useInView(ref, { once: true, margin: '-20%' })
+  // No negative margin: on short viewports it could stop the observer from
+  // ever firing, which left the Halal figure stuck on 0%.
+  const inView = useInView(ref, { once: true })
   const [n, setN] = useState(0)
   useEffect(() => {
     if (!inView) return
@@ -27,6 +29,7 @@ function Counter({ value, prefix, suffix }: { value: number; prefix?: string; su
       const eased = 1 - Math.pow(1 - p, 3)
       setN(Math.round(value * eased))
       if (p < 1) raf = requestAnimationFrame(tick)
+      else setN(value)
     }
     raf = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(raf)
@@ -42,9 +45,14 @@ export default function Heritage() {
   return (
     <section className="bg-ivory py-24 md:py-32">
       <div className="u-container grid items-center gap-14 lg:grid-cols-2 lg:gap-20">
+        {/* Client note: image sized to fill the column height beside the copy */}
         <Reveal className="relative order-1">
           <div className="overflow-hidden rounded-sm">
-            <img src={asset("/assets/nyonya-heritage-house.webp")} alt="A Peranakan heritage home" className="aspect-[4/5] w-full object-cover" />
+            <img
+              src={asset('/assets/client/heritage-nyonya.webp')}
+              alt="The Nyonya collection in a Peranakan heritage home"
+              className="aspect-[5/6] w-full object-cover lg:aspect-[4/5]"
+            />
           </div>
           <div className="absolute inset-0 rounded-sm ring-1 ring-inset ring-gold/15" />
         </Reveal>
@@ -79,8 +87,9 @@ export default function Heritage() {
 
           <Reveal delay={0.2}>
             <div className="mt-9 flex flex-wrap gap-4">
-              <Link to="/about" className="btn-ghost group gap-2">
-                Read our story <ArrowRight width={16} className="transition-transform group-hover:translate-x-1" />
+              <Link to="/about" className="btn-ghost group">
+                Read our story
+                <ArrowRight width={16} className="transition-transform duration-500 group-hover:translate-x-1" />
               </Link>
               <Link to="/stores" className="btn-ghost">Find a boutique</Link>
             </div>

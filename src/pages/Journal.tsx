@@ -1,3 +1,4 @@
+import { asset } from '../lib/asset'
 import { journalPosts } from '../data/journal'
 import PageHeader from '../components/ui/PageHeader'
 import { RevealGroup, RevealItem } from '../components/ui/Reveal'
@@ -12,6 +13,7 @@ export default function Journal() {
         title="Notes, rituals & heritage"
         intro="Stories from the house — on scent, craft, and the culture that shapes every Legendary fragrance."
         crumbs={[{ label: 'Home', to: '/' }, { label: 'Journal' }]}
+        image={asset('/assets/client/banner-journal.webp')}
       />
 
       <section className="bg-ivory py-14 md:py-20">

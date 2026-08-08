@@ -7,8 +7,13 @@ export interface Collection {
   tagline: string
   description: string
   accent: AccentKey
+  /** Family shot of the whole collection, supplied by the client. */
   image: string
+  /** Wide banner used behind the page title bar. */
+  banner?: string
 }
+
+const img = (name: string) => asset(`/assets/client/${name}`)
 
 export const collections: Collection[] = [
   {
@@ -18,7 +23,8 @@ export const collections: Collection[] = [
     description:
       'Orchid, Mahsuri, Violet and Man — the icons of the house, inspired by Malaysia’s landscapes and worn the world over.',
     accent: 'gold',
-    image: asset('/assets/orchid-mirror.webp'),
+    image: img('collection-signature.webp'),
+    banner: img('banner-signature.webp'),
   },
   {
     id: 'nyonya',
@@ -27,7 +33,8 @@ export const collections: Collection[] = [
     description:
       'Rooted in Nyonya culture, this collection reimagines the flavours, textiles and tiles of the Peranakan world as fragrance.',
     accent: 'rose',
-    image: asset('/assets/nyonya-heritage-house.webp'),
+    image: img('collection-nyonya.webp'),
+    banner: img('banner-nyonya.webp'),
   },
   {
     id: 'three-wishes',
@@ -36,7 +43,8 @@ export const collections: Collection[] = [
     description:
       'A silken, skin-safe trio designed for gentle daily indulgence — a soft ritual for unwinding and treating yourself.',
     accent: 'gold',
-    image: asset('/assets/three-wishes-ribbon.webp'),
+    image: img('collection-3-wishes.webp'),
+    banner: img('banner-3wishes.webp'),
   },
   {
     id: 'spirit',
@@ -45,7 +53,7 @@ export const collections: Collection[] = [
     description:
       'A fresh, spirited discovery trio made for movement — sea air, citrus groves and open skies.',
     accent: 'teal',
-    image: asset('/assets/spirit.webp'),
+    image: img('collection-spirit.webp'),
   },
 ]
 

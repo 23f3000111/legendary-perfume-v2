@@ -9,20 +9,16 @@ export interface CartLine {
 
 interface ShopState {
   items: CartLine[]
-  wishlist: string[]
   add: (id: string, qty?: number) => void
   remove: (id: string) => void
   setQty: (id: string, qty: number) => void
   clear: () => void
-  toggleWish: (id: string) => void
-  isWished: (id: string) => boolean
 }
 
 export const useShop = create<ShopState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       items: [],
-      wishlist: [],
       add: (id, qty = 1) =>
         set((s) => {
           const existing = s.items.find((i) => i.id === id)
@@ -44,13 +40,6 @@ export const useShop = create<ShopState>()(
               : s.items.map((i) => (i.id === id ? { ...i, qty } : i)),
         })),
       clear: () => set({ items: [] }),
-      toggleWish: (id) =>
-        set((s) => ({
-          wishlist: s.wishlist.includes(id)
-            ? s.wishlist.filter((w) => w !== id)
-            : [...s.wishlist, id],
-        })),
-      isWished: (id) => get().wishlist.includes(id),
     }),
     { name: 'legendary-shop' },
   ),

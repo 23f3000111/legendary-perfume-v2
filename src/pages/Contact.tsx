@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { asset } from '../lib/asset'
 import PageHeader from '../components/ui/PageHeader'
 import { Kicker } from '../components/ui/SplitText'
 import { WhatsApp, Instagram, Facebook, Phone, Pin, Check, ArrowRight } from '../components/ui/icons'
@@ -23,6 +24,7 @@ export default function Contact() {
         title="We’d love to hear from you"
         intro="Questions about a scent, an order, or a gift? Our concierge team replies quickly — choose whichever way suits you."
         crumbs={[{ label: 'Home', to: '/' }, { label: 'Contact' }]}
+        image={asset('/assets/client/banner-contact.webp')}
       />
 
       <section className="bg-ivory py-16 md:py-24">

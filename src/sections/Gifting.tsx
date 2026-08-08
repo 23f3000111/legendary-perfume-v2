@@ -12,7 +12,7 @@ export default function Gifting() {
         {/* Image */}
         <Reveal className="relative">
           <div className="relative overflow-hidden rounded-sm">
-            <img src={asset("/assets/three-wishes-ribbon.webp")} alt="3 Wishes gift set with ribbon" className="aspect-[4/3] w-full object-cover" />
+            <img src={asset('/assets/client/gifting-wishes.webp')} alt="3 Wishes gift set with ribbon" className="aspect-[4/3] w-full object-cover" />
           </div>
           <motion.div
             className="absolute -bottom-6 -right-4 hidden rounded-full bg-ivory px-6 py-6 text-center shadow-xl sm:block"
@@ -40,7 +40,7 @@ export default function Gifting() {
           </Reveal>
           <Reveal delay={0.15}>
             <ul className="mt-8 space-y-3 text-ink-soft">
-              {['Hand-wrapped in signature ivory & gold', 'A personalised message card', 'Discovery samples with every order'].map((f) => (
+              {['Hand-wrapped in signature ivory & gold', 'A personalised post card', 'Discovery samples with every order'].map((f) => (
                 <li key={f} className="flex items-center gap-3">
                   <span className="h-1.5 w-1.5 rounded-full bg-gold" /> {f}
                 </li>
@@ -48,8 +48,9 @@ export default function Gifting() {
             </ul>
           </Reveal>
           <Reveal delay={0.2}>
-            <Link to="/shop?filter=gifts" className="btn-gold group mt-9 gap-2">
-              Find the perfect gift <ArrowRight width={16} className="transition-transform group-hover:translate-x-1" />
+            <Link to="/shop?filter=gifts" className="btn-gold group mt-9">
+              Find the perfect gift
+              <ArrowRight width={16} className="transition-transform duration-500 group-hover:translate-x-1" />
             </Link>
           </Reveal>
         </div>

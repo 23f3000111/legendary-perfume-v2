@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { moodList, moodCopy, productsByMood, type Mood } from '../data/products'
+import { moodList, moodCopy, moodIcon, productsByMood, type Mood } from '../data/products'
 import ProductCard from '../components/ProductCard'
 import Reveal from '../components/ui/Reveal'
 import { Kicker } from '../components/ui/SplitText'
-import { Compass, ArrowRight } from '../components/ui/icons'
+import { ArrowRight } from '../components/ui/icons'
 
 export default function Finder() {
   const [mood, setMood] = useState<Mood>('Serene')
@@ -41,10 +41,17 @@ export default function Finder() {
                     active ? 'border-gold bg-ink text-ivory' : 'border-line bg-porcelain text-ink hover:border-gold/60'
                   }`}
                 >
-                  <Compass width={20} className={active ? 'text-gold' : 'text-smoke'} />
+                  <img
+                    src={moodIcon[m]}
+                    alt=""
+                    className={`h-8 w-8 object-contain transition duration-500 ${
+                      active ? 'opacity-100 invert' : 'opacity-55'
+                    }`}
+                  />
                   <p className="mt-3 font-display text-xl">{m}</p>
-                  <p className={`mt-1 text-[0.72rem] leading-snug ${active ? 'text-ivory/60' : 'text-smoke'}`}>
-                    {moodCopy[m].hint}
+                  {/* Client change: the mood headline replaces the ingredient hint */}
+                  <p className={`mt-1 text-[0.72rem] leading-snug ${active ? 'text-ivory/70' : 'text-smoke'}`}>
+                    {moodCopy[m].line}
                   </p>
                 </button>
               )
@@ -54,8 +61,7 @@ export default function Finder() {
 
         {/* Results */}
         <div className="mt-14">
-          <div className="mb-6 flex items-center justify-between">
-            <p className="font-display text-xl italic text-ink-soft">“{moodCopy[mood].line}”</p>
+          <div className="mb-6 flex items-center justify-end">
             <Link to="/shop" className="hidden items-center gap-1.5 text-xs font-medium uppercase tracking-[0.16em] text-gold-deep sm:flex">
               Shop all <ArrowRight width={14} />
             </Link>

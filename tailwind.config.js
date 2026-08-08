@@ -25,7 +25,7 @@ export default {
         graphite: '#3A3F45',    // Man
       },
       fontFamily: {
-        display: ['Fraunces', 'Georgia', 'serif'],
+        display: ['"Cormorant Garamond"', 'Garamond', 'Georgia', 'serif'],
         sans: ['Jost', 'system-ui', 'sans-serif'],
       },
       letterSpacing: {

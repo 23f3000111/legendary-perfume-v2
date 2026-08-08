@@ -1,5 +1,4 @@
 import Hero from '../sections/Hero'
-import NotesMarquee from '../sections/NotesMarquee'
 import Signature from '../sections/Signature'
 import CollectionsRail from '../sections/CollectionsRail'
 import ScentMemory from '../sections/ScentMemory'
@@ -8,13 +7,13 @@ import Bestsellers from '../sections/Bestsellers'
 import Gifting from '../sections/Gifting'
 import Heritage from '../sections/Heritage'
 import Services from '../sections/Services'
-import JournalPreview from '../sections/JournalPreview'
+import FeaturedIn from '../sections/FeaturedIn'
+import Reviews from '../sections/Reviews'
 
 export default function Home() {
   return (
     <>
       <Hero />
-      <NotesMarquee />
       <Signature />
       <CollectionsRail />
       <ScentMemory />
@@ -22,7 +21,9 @@ export default function Home() {
       <Finder />
       <Gifting />
       <Heritage />
-      <JournalPreview />
+      {/* "As Featured In" sits directly before the customer reviews */}
+      <FeaturedIn />
+      <Reviews />
       <Services />
     </>
   )

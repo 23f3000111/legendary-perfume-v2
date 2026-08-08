@@ -10,6 +10,12 @@ export interface ScentNotes {
   base: string[]
 }
 
+/** One line of the "What's included" list shown on the product page. */
+export interface IncludedItem {
+  label: string
+  detail: string
+}
+
 export interface Product {
   id: string
   name: string
@@ -22,9 +28,21 @@ export interface Product {
   price: number
   compareAt?: number
   size: string
+  /** Lifestyle shot — the resting state of every product tile. */
   image: string
+  /** Box + bottle pack shot — revealed on hover over the lifestyle shot. */
+  hoverImage: string
   gallery: string[]
+  /** Flat-lay of everything in the box, for the "What's included" block. */
+  included: string
+  includedItems: IncludedItem[]
+  /** Client-supplied occasion chart (Sport · Work · Social · Vacation · Casual). */
+  radar: string
+  /** Cut-out botanical that dresses the composition band. */
+  bloom?: string
   accent: AccentKey
+  /** Overrides the composition band wash — Mahsuri runs orange per the client. */
+  compositionTint?: string
   badges: string[]
   bestseller?: boolean
   story: string
@@ -34,7 +52,20 @@ export interface Product {
   place?: string
 }
 
+const img = (name: string) => asset(`/assets/client/${name}`)
+
+/** Every product ships with the same presentation set. */
+const STANDARD_INCLUDES: IncludedItem[] = [
+  { label: 'Eau de Parfum', detail: 'Your fragrance in its signature faceted bottle' },
+  { label: 'Signature carrier', detail: 'Legendary Malaysia paper bag, ready to gift' },
+  { label: 'Gift box', detail: 'Hand-finished box in house ivory & gold' },
+  { label: 'Post card', detail: 'A personalised card to write your own note' },
+  { label: 'Discovery samples', detail: 'Vials to try the rest of the house' },
+]
+
 // Prices in Malaysian Ringgit (RM / MYR)
+// Order below is the merchandising sequence the client specified:
+// Orchid · Violet · Mahsuri · Man · Nyonya · 3 Wishes · Spirit
 export const products: Product[] = [
   {
     id: 'orchid',
@@ -48,48 +79,25 @@ export const products: Product[] = [
     price: 159,
     compareAt: 199,
     size: '30ml Eau de Parfum',
-    image: asset('/assets/orchid-mirror.webp'),
-    gallery: [asset('/assets/orchid-mirror.webp'), asset('/assets/lifestyle-orchid-hand.webp')],
+    image: img('p-orchid-life.webp'),
+    hoverImage: img('p-orchid-box.webp'),
+    gallery: [img('p-orchid-life.webp'), img('p-orchid-box.webp')],
+    included: img('p-orchid-included.webp'),
+    includedItems: STANDARD_INCLUDES,
+    radar: img('p-orchid-radar.webp'),
+    bloom: img('p-orchid-bloom.webp'),
     accent: 'gold',
-    badges: ['Halal Certified', 'Signature Scent'],
+    badges: ['Signature Scent'],
     bestseller: true,
     place: 'Kuala Lumpur',
     story:
-      'The scent that began it all. Inspired by the wild orchids of Malaysia’s rainforests, Orchid is a timeless dance of grace and serenity — the soul of the house captured in a single drop.',
+      'Orchid is the signature of Legendary, inspired by the tropical rainforests of Malaysia. Bathed in the purity of white orchids, where elegance blossoms in every delicate petal — a timeless dance of grace and serenity captured in a luscious Eau de Parfum.',
     description:
-      'A luminous eau de parfum that opens bright and fresh before settling into a serene garden of white blooms. Refined, radiant and unmistakably Legendary.',
+      'A light, fresh eau de parfum that opens on orange, lemon and mandarin, blooms into a serene garden of jasmine, magnolia and tuberose, and settles on ambergris, vetiver and cedar.',
     notes: {
-      top: ['Orange', 'Apple', 'Green Lemon'],
-      heart: ['Magnolia', 'Cattleya Orchid', 'Muguet', 'Pansy'],
-      base: ['Peach', 'Amber', 'Musk', 'Cedar'],
-    },
-  },
-  {
-    id: 'mahsuri',
-    name: 'Mahsuri',
-    subtitle: 'A Legend Reborn in Bloom',
-    collection: 'Signature',
-    collectionId: 'signature',
-    family: 'Fruity Floral',
-    audience: 'For Her',
-    moods: ['Romantic', 'Playful'],
-    price: 159,
-    compareAt: 199,
-    size: '30ml Eau de Parfum',
-    image: asset('/assets/mahsuri.webp'),
-    gallery: [asset('/assets/mahsuri.webp')],
-    accent: 'rose',
-    badges: ['Halal Certified'],
-    bestseller: true,
-    place: 'Langkawi',
-    story:
-      'Named for the legendary maiden of Langkawi, Mahsuri is a tribute to purity and enduring beauty — sun-warmed fruits and dewy petals gathered from the island air.',
-    description:
-      'Juicy peach and grapefruit spark against a tender heart of lily of the valley and peony, closing on a soft, luminous musk.',
-    notes: {
-      top: ['Peach', 'Pink Grapefruit', 'Bergamot'],
-      heart: ['Lily of the Valley', 'Jasmine', 'Peony'],
-      base: ['White Musk', 'Cedar', 'Vanilla'],
+      top: ['Orange', 'Aqueous', 'Clove', 'Lemon', 'Mandarin'],
+      heart: ['Jasmine', 'Magnolia', 'Muguet', 'Tuberose', 'Orchid'],
+      base: ['Ambergris', 'Vetiver', 'Violet', 'Musky', 'Cedar'],
     },
   },
   {
@@ -104,19 +112,59 @@ export const products: Product[] = [
     price: 149,
     compareAt: 189,
     size: '30ml Eau de Parfum',
-    image: asset('/assets/violet.webp'),
-    gallery: [asset('/assets/violet.webp')],
+    image: img('p-violet-life.webp'),
+    hoverImage: img('p-violet-box.webp'),
+    gallery: [img('p-violet-life.webp'), img('p-violet-box.webp')],
+    included: img('p-violet-included.webp'),
+    includedItems: STANDARD_INCLUDES,
+    radar: img('p-violet-radar.webp'),
+    bloom: img('p-violet-bloom.webp'),
     accent: 'plum',
-    badges: ['Halal Certified'],
+    badges: ['Signature Scent'],
     place: 'Genting Highlands',
     story:
-      'Born of the cool mountain air of the highlands, Violet is quiet confidence bottled — a powdery, romantic veil that lingers close to the skin.',
+      'A classic symbol of love and devotion that evokes mystique and timeless elegance. With a touch of sophistication and depth, Violet captures the delicate essence of a blooming violet as it unfolds into its true beauty.',
     description:
-      'A modern violet built on iris and rose, wrapped in warm vanilla and sandalwood for a finish that feels like cashmere.',
+      'One spray wraps you in lusciousness and mystery — bergamot, lychee and red fruits over cedarwood, incense and rose, resting on musk, cashmere and vanilla.',
     notes: {
-      top: ['Bergamot', 'Blackcurrant'],
-      heart: ['Violet', 'Rose', 'Iris'],
-      base: ['Vanilla', 'Musk', 'Sandalwood'],
+      top: ['Bergamot', 'Lychee', 'Red Fruits', 'Rhubarb', 'Nutmeg'],
+      heart: ['Cedarwood', 'Incense', 'Peony', 'Rose'],
+      base: ['Musk', 'Ambergris', 'Cashmere', 'Vetiver', 'Vanilla'],
+    },
+  },
+  {
+    id: 'mahsuri',
+    name: 'Mahsuri',
+    subtitle: 'A Legend Reborn in Bloom',
+    collection: 'Signature',
+    collectionId: 'signature',
+    family: 'Fruity Floral',
+    audience: 'For Her',
+    moods: ['Romantic', 'Playful'],
+    price: 159,
+    compareAt: 199,
+    size: '30ml Eau de Parfum',
+    image: img('p-mahsuri-life.webp'),
+    hoverImage: img('p-mahsuri-box.webp'),
+    gallery: [img('p-mahsuri-life.webp'), img('p-mahsuri-box.webp')],
+    included: img('p-mahsuri-included.webp'),
+    includedItems: STANDARD_INCLUDES,
+    radar: img('p-mahsuri-radar.webp'),
+    bloom: img('p-mahsuri-bloom.webp'),
+    accent: 'rose',
+    // Client note: the Mahsuri composition band runs orange, not rose.
+    compositionTint: '#ffdbbb',
+    badges: ['Signature Scent'],
+    bestseller: true,
+    place: 'Langkawi',
+    story:
+      'Inspired by the story of Mahsuri, the fragrance embodies the grace, purity and unwavering courage that immortalised her legend. It carries a noble aura and a strong spirit — a charming scent that whispers like an enchanting tale.',
+    description:
+      'An elegant yet powerful scent that leaves a timeless and unforgettable impression: apple, muguet and rose over a cedarwood heart, closing on amber.',
+    notes: {
+      top: ['Apple', 'Muguet', 'Rose'],
+      heart: ['Cedarwood'],
+      base: ['Cedarwood', 'Muguet', 'Rose', 'Amber Gray', 'Amber Dry'],
     },
   },
   {
@@ -131,20 +179,25 @@ export const products: Product[] = [
     price: 189,
     compareAt: 229,
     size: '50ml Eau de Parfum',
-    image: asset('/assets/man.webp'),
-    gallery: [asset('/assets/man.webp')],
+    image: img('p-man-life.webp'),
+    hoverImage: img('p-man-box.webp'),
+    gallery: [img('p-man-life.webp'), img('p-man-box.webp')],
+    included: img('p-man-included.webp'),
+    includedItems: STANDARD_INCLUDES,
+    radar: img('p-man-radar.webp'),
+    bloom: img('p-man-bloom.webp'),
     accent: 'graphite',
-    badges: ['Halal Certified'],
+    badges: ['Signature Scent'],
     bestseller: true,
-    place: 'Kuala Lumpur',
+    place: 'Genting Highlands',
     story:
-      'For the modern gentleman of the tropics. Man is a tailored blend of citrus, spice and dark woods — assured, magnetic and effortlessly refined.',
+      'A versatile fragrance crafted for the modern man — elegant, charismatic and effortlessly sophisticated. It captures the essence of timeless elegance, making it a signature scent for any occasion.',
     description:
-      'Crisp bergamot and pepper give way to an aromatic heart, grounded by vetiver, leather and amberwood for lasting presence.',
+      'Grapefruit and lemon open crisp and clean before an orchard heart of apple, raspberry and orange flower, grounded in cedarwood, sandalwood and vanilla.',
     notes: {
-      top: ['Bergamot', 'Grapefruit', 'Black Pepper'],
-      heart: ['Lavender', 'Geranium', 'Sage'],
-      base: ['Vetiver', 'Leather', 'Amberwood'],
+      top: ['Grapefruit', 'Lemon'],
+      heart: ['Apple', 'Raspberry', 'Orange Flower', 'Muguet', 'Jasmine'],
+      base: ['Cedarwood', 'Musk', 'Sandalwood', 'Vanilla'],
     },
   },
   {
@@ -159,10 +212,15 @@ export const products: Product[] = [
     price: 159,
     compareAt: 199,
     size: '30ml Eau de Parfum',
-    image: asset('/assets/kebaya-blooms.webp'),
-    gallery: [asset('/assets/kebaya-blooms.webp')],
+    image: img('p-kebaya-blooms-life.webp'),
+    hoverImage: img('p-kebaya-blooms-box.webp'),
+    gallery: [img('p-kebaya-blooms-life.webp'), img('p-kebaya-blooms-box.webp')],
+    included: img('p-kebaya-blooms-included.webp'),
+    includedItems: STANDARD_INCLUDES,
+    radar: img('p-kebaya-blooms-radar.webp'),
+    bloom: img('p-kebaya-blooms-bloom.webp'),
     accent: 'rose',
-    badges: ['Halal Certified', 'Nyonya Heritage'],
+    badges: ['Nyonya Heritage'],
     bestseller: true,
     place: 'Melaka',
     story:
@@ -187,10 +245,15 @@ export const products: Product[] = [
     price: 159,
     compareAt: 199,
     size: '30ml Eau de Parfum',
-    image: asset('/assets/ondeh-delights.webp'),
-    gallery: [asset('/assets/ondeh-delights.webp')],
+    image: img('p-ondeh-delights-life.webp'),
+    hoverImage: img('p-ondeh-delights-box.webp'),
+    gallery: [img('p-ondeh-delights-life.webp'), img('p-ondeh-delights-box.webp')],
+    included: img('p-ondeh-delights-included.webp'),
+    includedItems: STANDARD_INCLUDES,
+    radar: img('p-ondeh-delights-radar.webp'),
+    bloom: img('p-ondeh-delights-bloom.webp'),
     accent: 'jade',
-    badges: ['Halal Certified', 'Nyonya Heritage'],
+    badges: ['Nyonya Heritage'],
     place: 'Melaka',
     story:
       'The beloved ondeh-ondeh, reimagined as fragrance. Pandan and coconut cradle a molten heart of gula melaka — a nostalgic, edible sweetness.',
@@ -214,10 +277,16 @@ export const products: Product[] = [
     price: 159,
     compareAt: 199,
     size: '30ml Eau de Parfum',
-    image: asset('/assets/nyonya-aromatic.webp'),
-    gallery: [asset('/assets/nyonya-aromatic.webp')],
+    image: img('p-nyonya-aromatic-life.webp'),
+    hoverImage: img('p-nyonya-aromatic-box.webp'),
+    gallery: [img('p-nyonya-aromatic-life.webp'), img('p-nyonya-aromatic-box.webp')],
+    included: img('p-nyonya-aromatic-included.webp'),
+    includedItems: STANDARD_INCLUDES,
+    radar: img('p-nyonya-aromatic-radar.webp'),
+    bloom: img('p-nyonya-aromatic-bloom.webp'),
     accent: 'amber',
-    badges: ['Halal Certified', 'Nyonya Heritage'],
+    badges: ['Nyonya Heritage'],
+    place: 'Melaka',
     story:
       'The warmth of a Peranakan kitchen — cardamom, clove and cinnamon folded into rose and amber. Spice as heirloom, worn on the skin.',
     description:
@@ -240,10 +309,14 @@ export const products: Product[] = [
     price: 199,
     compareAt: 249,
     size: '3 × 15ml Eau de Parfum',
-    image: asset('/assets/three-wishes-ribbon.webp'),
-    gallery: [asset('/assets/three-wishes-ribbon.webp'), asset('/assets/three-wishes.webp')],
+    image: img('p-3-wishes-life.webp'),
+    hoverImage: img('p-3-wishes-box.webp'),
+    gallery: [img('p-3-wishes-life.webp'), img('p-3-wishes-box.webp')],
+    included: img('p-3-wishes-included.webp'),
+    includedItems: STANDARD_INCLUDES,
+    radar: img('p-3-wishes-radar.webp'),
     accent: 'gold',
-    badges: ['Halal Certified', 'Alcohol-Free', 'Skin-Safe'],
+    badges: ['Alcohol-Free', 'Skin-Safe'],
     bestseller: true,
     story:
       'A luxurious, alcohol-free collection designed for gentle, everyday indulgence. Safe for all skin types, each of the three Wishes is a soft, silken ritual.',
@@ -258,7 +331,7 @@ export const products: Product[] = [
   {
     id: 'spirit',
     name: 'Spirit',
-    subtitle: 'Live · Passion · Dream',
+    subtitle: 'Hope · Love · Confidence',
     collection: 'Spirit',
     collectionId: 'spirit',
     family: 'Fresh Discovery',
@@ -267,29 +340,45 @@ export const products: Product[] = [
     price: 179,
     compareAt: 219,
     size: '3 × 15ml Eau de Parfum',
-    image: asset('/assets/spirit.webp'),
-    gallery: [asset('/assets/spirit.webp')],
+    image: img('p-spirit-life.webp'),
+    hoverImage: img('p-spirit-box.webp'),
+    gallery: [img('p-spirit-life.webp'), img('p-spirit-box.webp')],
+    included: img('p-spirit-included.webp'),
+    includedItems: STANDARD_INCLUDES,
+    radar: img('p-spirit-radar.webp'),
     accent: 'teal',
-    badges: ['Halal Certified', 'Discovery Set'],
+    badges: ['Discovery Set'],
+    place: 'Kota Kinabalu',
     story:
-      'A trio of fresh, spirited scents made for movement — sea air, citrus groves and open skies. Discover which one is yours.',
+      'Shine with Hope, do with Love, strive with Confidence. Enhance your journey by creating unforgettable moments with the three fragrances of Spirit I.',
     description:
-      'Three vibrant fragrances that capture living, passion and dreaming: bright, clean and effortlessly modern.',
+      'Hope opens floral green on aqueous pear; Love turns powdery on muguet and rose; Confidence lifts bright with bergamot, pear and jasmine.',
     notes: {
-      top: ['Sea Salt', 'Yuzu', 'Mandarin'],
-      heart: ['Neroli', 'Mint', 'Freesia'],
-      base: ['Driftwood', 'Musk', 'Amber'],
+      top: ['Aqueous', 'Green', 'Pear', 'Bergamot'],
+      heart: ['Jasmine', 'Muguet', 'Magnolia', 'Rose'],
+      base: ['Amber', 'Musky', 'Woody', 'Cedarwood'],
     },
   },
 ]
 
 export const moodList: Mood[] = ['Serene', 'Bold', 'Romantic', 'Playful']
 
-export const moodCopy: Record<Mood, { line: string; hint: string }> = {
-  Serene: { line: 'Calm, clean and quietly luminous', hint: 'soft musks & white florals' },
-  Bold: { line: 'Warm, spirited and unforgettable', hint: 'spice, wood & amber' },
-  Romantic: { line: 'Tender, powdery and full of bloom', hint: 'rose, peony & violet' },
-  Playful: { line: 'Bright, fruity and full of joy', hint: 'citrus, peach & gourmand' },
+/**
+ * Client change: the mood tile now carries the headline itself rather than a
+ * separate ingredient hint.
+ */
+export const moodCopy: Record<Mood, { line: string }> = {
+  Serene: { line: 'Calm, clean and quietly luminous' },
+  Bold: { line: 'Warm, spirited and unforgettable' },
+  Romantic: { line: 'Tender, powdery and full of bloom' },
+  Playful: { line: 'Bright, fruity and full of joy' },
+}
+
+export const moodIcon: Record<Mood, string> = {
+  Serene: img('mood-serene.png'),
+  Bold: img('mood-bold.png'),
+  Romantic: img('mood-romantic.png'),
+  Playful: img('mood-playful.png'),
 }
 
 export function getProduct(id: string): Product | undefined {
@@ -308,4 +397,8 @@ export function relatedProducts(product: Product, count = 4): Product[] {
 
 export function productsByMood(mood: Mood): Product[] {
   return products.filter((p) => p.moods.includes(mood))
+}
+
+export function productsByCollection(collectionId: string): Product[] {
+  return products.filter((p) => p.collectionId === collectionId)
 }

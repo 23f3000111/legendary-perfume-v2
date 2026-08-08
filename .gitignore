@@ -4,6 +4,9 @@ dist
 .playwright-mcp
 .DS_Store
 
-# Source design inputs (already copied into public/assets)
+# Source design inputs (already processed into public/assets/client
+# by scripts/prepare-assets.py — kept locally, not committed or deployed)
 UI images/
 reference images/
+client-assets/
+*.pdf

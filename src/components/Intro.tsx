@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { asset } from '../lib/asset'
 
 const WORD = 'LEGENDARY'
 
@@ -76,14 +77,14 @@ export default function Intro() {
               transition={{ delay: 1.5, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
             />
 
-            <motion.p
-              className="mt-6 font-display text-lg italic text-ivory/70"
+            <motion.img
+              src={asset('/assets/client/wordmark-scent-light.png')}
+              alt="the legend of scent"
+              className="mx-auto mt-7 w-[min(78vw,22rem)]"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 1.9, duration: 1 }}
-            >
-              A Scented Memory of Malaysia
-            </motion.p>
+              transition={{ delay: 1.9, duration: 1.2 }}
+            />
           </div>
 
           <button

@@ -3,8 +3,7 @@ import { useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import SplitText from '../components/ui/SplitText'
-import Magnetic from '../components/ui/Magnetic'
-import { ChevronDown } from '../components/ui/icons'
+import { ArrowRight, ChevronDown } from '../components/ui/icons'
 
 export default function Hero() {
   const ref = useRef<HTMLDivElement>(null)
@@ -20,9 +19,9 @@ export default function Hero() {
         <video
           className="h-full w-full object-cover"
           autoPlay muted loop playsInline
-          poster={asset("/assets/orchid-mirror.webp")}
+          poster={asset('/assets/client/signature-orchid.webp')}
         >
-          <source src={asset("/assets/hero.mp4")} type="video/mp4" />
+          <source src={asset('/assets/client/home-hero.mp4')} type="video/mp4" />
         </video>
         <div className="absolute inset-0 bg-gradient-to-b from-ink/55 via-ink/20 to-ink/75" />
         <div className="absolute inset-0 bg-gradient-to-r from-ink/50 to-transparent" />
@@ -63,12 +62,14 @@ export default function Hero() {
               className="mt-10 flex flex-wrap items-center gap-4"
               initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2, duration: 1 }}
             >
-              <Magnetic><Link to="/shop" className="btn-gold">Explore Fragrances</Link></Magnetic>
-              <Magnetic>
-                <Link to="/product/orchid" className="btn text-ivory ring-1 ring-ivory/40 hover:bg-ivory hover:text-ink">
-                  Discover Orchid
-                </Link>
-              </Magnetic>
+              <Link to="/shop" className="btn-gold group">
+                Explore Fragrances
+                <ArrowRight width={16} className="transition-transform duration-500 group-hover:translate-x-1" />
+              </Link>
+              <Link to="/product/orchid" className="btn-outline-light group">
+                Discover Orchid
+                <ArrowRight width={16} className="transition-transform duration-500 group-hover:translate-x-1" />
+              </Link>
             </motion.div>
           </div>
         </div>

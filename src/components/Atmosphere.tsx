@@ -30,14 +30,15 @@ export default function Atmosphere() {
     resize()
     window.addEventListener('resize', resize)
 
-    const N = Math.min(46, Math.floor((w * h) / 42000))
+    // Client asked for a denser, more obvious drift of gold motes.
+    const N = Math.min(160, Math.max(70, Math.floor((w * h) / 12000)))
     const parts = Array.from({ length: N }).map(() => ({
       x: Math.random() * w,
       y: Math.random() * h,
-      r: Math.random() * 1.6 + 0.4,
-      vx: (Math.random() - 0.5) * 0.16,
-      vy: -(Math.random() * 0.22 + 0.05),
-      a: Math.random() * 0.5 + 0.1,
+      r: Math.random() * 2.2 + 0.6,
+      vx: (Math.random() - 0.5) * 0.2,
+      vy: -(Math.random() * 0.28 + 0.06),
+      a: Math.random() * 0.55 + 0.25,
       tw: Math.random() * Math.PI * 2,
     }))
 
@@ -50,10 +51,13 @@ export default function Atmosphere() {
         if (p.y < -10) { p.y = h + 10; p.x = Math.random() * w }
         if (p.x < -10) p.x = w + 10
         if (p.x > w + 10) p.x = -10
-        const flick = 0.6 + Math.sin(p.tw) * 0.4
+        const flick = 0.65 + Math.sin(p.tw) * 0.35
+        const glow = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 3)
+        glow.addColorStop(0, `rgba(226, 194, 118, ${p.a * flick})`)
+        glow.addColorStop(1, 'rgba(190, 156, 78, 0)')
         ctx.beginPath()
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(190, 156, 78, ${p.a * flick})`
+        ctx.arc(p.x, p.y, p.r * 3, 0, Math.PI * 2)
+        ctx.fillStyle = glow
         ctx.fill()
       }
       raf = requestAnimationFrame(tick)

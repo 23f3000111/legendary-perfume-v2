@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { getProduct, relatedProducts } from '../data/products'
+import { productFaq } from '../data/faq'
 import { accent } from '../lib/accents'
 import { formatRM, discountPct } from '../lib/format'
 import { useShop } from '../store/shop'
@@ -11,7 +12,7 @@ import ProductCard from '../components/ProductCard'
 import Reveal from '../components/ui/Reveal'
 import { Kicker } from '../components/ui/SplitText'
 import {
-  Plus, Minus, Heart, HeartFilled, ShieldCheck, Truck, Droplet, Check, ArrowRight, ChevronDown,
+  Plus, Minus, ShieldCheck, Truck, Droplet, Check, ArrowRight, ChevronDown,
 } from '../components/ui/icons'
 
 const tabs = [
@@ -26,11 +27,10 @@ export default function Product() {
   const [qty, setQty] = useState(1)
   const [active, setActive] = useState(0)
   const [openTab, setOpenTab] = useState<string | null>('know')
+  const [openFaq, setOpenFaq] = useState<number | null>(0)
   const [added, setAdded] = useState(false)
 
   const add = useShop((s) => s.add)
-  const toggleWish = useShop((s) => s.toggleWish)
-  const wished = useShop((s) => (product ? s.wishlist.includes(product.id) : false))
   const { pulse, openCart } = useUI()
 
   if (!product) {
@@ -58,10 +58,10 @@ export default function Product() {
 
   return (
     <div className="bg-ivory pt-[62px] md:pt-[130px]">
-      {/* Main */}
-      <section className="u-container grid gap-12 py-10 md:py-16 lg:grid-cols-2 lg:gap-16">
+      {/* Main — left gallery pins while the right column scrolls past it */}
+      <section className="u-container grid items-start gap-12 py-10 md:py-16 lg:grid-cols-2 lg:gap-16">
         {/* Gallery */}
-        <div className="lg:sticky lg:top-28 lg:self-start">
+        <div className="lg:sticky lg:top-[150px] lg:self-start">
           <nav className="mb-5 flex items-center gap-2 text-[0.7rem] uppercase tracking-[0.16em] text-smoke">
             <Link to="/" className="hover:text-gold">Home</Link><span>/</span>
             <Link to="/shop" className="hover:text-gold">Fragrances</Link><span>/</span>
@@ -73,13 +73,13 @@ export default function Product() {
             className="relative overflow-hidden rounded-sm"
             style={{ background: `linear-gradient(160deg, ${tone.soft}, rgba(251,248,242,0.6))` }}
           >
-            <div className="peranakan pointer-events-none absolute inset-0 opacity-[0.05]" style={{ color: tone.hex }} />
             {off && (
               <span className="absolute left-4 top-4 z-10 px-2.5 py-1 text-[0.64rem] uppercase tracking-[0.14em] text-ivory" style={{ background: tone.hex }}>
                 Save {off}%
               </span>
             )}
-            <img src={product.gallery[active]} alt={product.name} className="aspect-[4/5] w-full object-cover" />
+            {/* Squared off so the pinned column never outgrows the viewport */}
+            <img src={product.gallery[active]} alt={product.name} className="aspect-square w-full object-cover" />
           </motion.div>
           {product.gallery.length > 1 && (
             <div className="mt-4 flex gap-3">
@@ -110,11 +110,13 @@ export default function Product() {
 
           <p className="mt-6 max-w-lg text-lg leading-relaxed text-ink-soft">{product.description}</p>
 
-          <div className="mt-6 flex flex-wrap gap-2">
-            {product.badges.map((b) => (
-              <span key={b} className="rounded-full border border-line px-3 py-1 text-[0.68rem] uppercase tracking-[0.1em] text-ink-soft">{b}</span>
-            ))}
-          </div>
+          {product.badges.length > 0 && (
+            <div className="mt-6 flex flex-wrap gap-2">
+              {product.badges.map((b) => (
+                <span key={b} className="rounded-full border border-line px-3 py-1 text-[0.68rem] uppercase tracking-[0.1em] text-ink-soft">{b}</span>
+              ))}
+            </div>
+          )}
 
           <p className="mt-6 flex items-center gap-2 text-sm text-jade">
             <span className="h-2 w-2 rounded-full bg-jade" /> In stock · {product.size}
@@ -129,13 +131,6 @@ export default function Product() {
             </div>
             <button onClick={onAdd} className="btn-solid flex-1 justify-center gap-2 min-w-[12rem]">
               {added ? <><Check width={16} /> Added to bag</> : <>Add to Bag — {formatRM(product.price * qty)}</>}
-            </button>
-            <button
-              onClick={() => toggleWish(product.id)}
-              className="grid h-12 w-12 place-items-center border border-line transition hover:border-gold"
-              aria-label="Wishlist"
-            >
-              {wished ? <HeartFilled width={18} className="text-rose" /> : <Heart width={18} />}
             </button>
           </div>
           <Link to="/checkout" onClick={onAdd} className="btn-gold mt-3 w-full justify-center">Buy it now</Link>
@@ -152,6 +147,30 @@ export default function Product() {
                 <span className="text-[0.7rem] uppercase tracking-[0.1em] text-smoke">{t}</span>
               </div>
             ))}
+          </div>
+
+          {/* What's included */}
+          <div className="mt-10 rounded-sm border border-line bg-porcelain p-6 sm:p-7">
+            <h2 className="font-display text-2xl">What’s included</h2>
+            <div className="mt-5 grid gap-6 sm:grid-cols-[1.1fr_1fr] sm:items-center">
+              <ul className="space-y-3">
+                {product.includedItems.map((item) => (
+                  <li key={item.label} className="flex gap-3">
+                    <Check width={16} className="mt-1 shrink-0 text-gold" />
+                    <span>
+                      <span className="text-[0.95rem] text-ink">{item.label}</span>
+                      <span className="block text-[0.82rem] leading-snug text-smoke">{item.detail}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <img
+                src={product.included}
+                alt={`Everything included with ${product.name}`}
+                className="w-full rounded-sm object-contain"
+                loading="lazy"
+              />
+            </div>
           </div>
 
           {/* Accordions */}
@@ -171,33 +190,82 @@ export default function Product() {
         </div>
       </section>
 
-      {/* Scent pyramid */}
-      <section className="py-20 md:py-28" style={{ background: tone.soft }}>
-        <div className="u-container">
+      {/* Composition */}
+      <section
+        className="relative overflow-hidden py-20 md:py-28"
+        style={{ background: product.compositionTint ?? tone.soft }}
+      >
+        {/* The scent's botanical, bleeding off the right edge. The supplied
+            cut-outs are cropped flush at the artboard, so fade the lower edge
+            rather than letting it end on a hard horizontal line. */}
+        {product.bloom && (
+          <img
+            src={product.bloom}
+            alt=""
+            aria-hidden
+            className="pointer-events-none absolute -right-10 bottom-0 top-0 my-auto hidden h-[85%] w-auto max-w-[38%] object-contain opacity-90 lg:block"
+            style={{
+              WebkitMaskImage: 'linear-gradient(to bottom, #000 78%, transparent 100%)',
+              maskImage: 'linear-gradient(to bottom, #000 78%, transparent 100%)',
+            }}
+          />
+        )}
+        <div className="u-container relative">
           <div className="mx-auto mb-14 max-w-xl text-center">
             <Kicker>The Composition</Kicker>
             <h2 className="mt-4 font-display text-[clamp(2rem,4vw,3rem)]">A fragrance in three acts</h2>
           </div>
-          <ScentPyramid notes={product.notes} accentKey={product.accent} />
+          <div className="lg:max-w-[78%]">
+            <ScentPyramid product={product} />
+          </div>
         </div>
       </section>
 
-      {/* Story */}
-      <section className="u-container grid items-center gap-12 py-20 md:py-28 lg:grid-cols-2">
-        <Reveal className="overflow-hidden rounded-sm">
-          <img src={product.gallery[product.gallery.length - 1]} alt={product.name} className="aspect-[5/4] w-full object-cover" />
-        </Reveal>
-        <div>
-          <Kicker>The Inspiration</Kicker>
-          <Reveal><h2 className="mt-4 font-display text-[clamp(2rem,4vw,3.2rem)] leading-[1.05]">{product.subtitle}</h2></Reveal>
-          <Reveal delay={0.1}><p className="mt-6 max-w-lg text-lg text-ink-soft">{product.story}</p></Reveal>
-          {product.place && (
-            <Reveal delay={0.15}>
-              <p className="mt-6 flex items-center gap-2 text-sm text-smoke">
-                Inspired by <span className="font-display text-lg italic text-ink" style={{ color: tone.ink }}>{product.place}</span>
+      {/* FAQ — replaces the former inspiration split, per the client */}
+      <section className="u-container py-20 md:py-28">
+        <div className="grid gap-12 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+          <div>
+            <Kicker>Good to Know</Kicker>
+            <Reveal>
+              <h2 className="mt-4 font-display text-[clamp(2rem,4vw,3.2rem)] leading-[1.05]">
+                Frequently asked questions
+              </h2>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <p className="mt-5 max-w-sm text-ink-soft">
+                Still unsure? Our concierge answers in minutes — or message us on WhatsApp.
               </p>
             </Reveal>
-          )}
+            <Reveal delay={0.15}>
+              <Link to="/contact" className="btn-ghost group mt-7">
+                Contact us
+                <ArrowRight width={16} className="transition-transform duration-500 group-hover:translate-x-1" />
+              </Link>
+            </Reveal>
+          </div>
+
+          <div className="border-t border-line">
+            {productFaq.map((f, i) => (
+              <div key={f.q} className="border-b border-line">
+                <button
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  className="flex w-full items-center justify-between gap-6 py-5 text-left"
+                  aria-expanded={openFaq === i}
+                >
+                  <span className="font-display text-xl leading-snug">{f.q}</span>
+                  <ChevronDown width={20} className={`shrink-0 text-gold transition-transform duration-500 ${openFaq === i ? 'rotate-180' : ''}`} />
+                </button>
+                <motion.div
+                  initial={false}
+                  animate={{ height: openFaq === i ? 'auto' : 0, opacity: openFaq === i ? 1 : 0 }}
+                  transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                  className="overflow-hidden"
+                >
+                  <p className="pb-6 pr-10 leading-relaxed text-ink-soft">{f.a}</p>
+                </motion.div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -207,7 +275,7 @@ export default function Product() {
           <div className="flex items-end justify-between">
             <h2 className="font-display text-[clamp(1.8rem,3.5vw,2.8rem)]">You may also like</h2>
             <Link to="/shop" className="group flex items-center gap-2 text-xs uppercase tracking-[0.16em] text-ink">
-              All fragrances <ArrowRight width={15} className="text-gold transition-transform group-hover:translate-x-1" />
+              All fragrances <ArrowRight width={15} className="text-gold transition-transform duration-500 group-hover:translate-x-1" />
             </Link>
           </div>
           <div className="mt-10 grid grid-cols-2 gap-5 sm:gap-7 lg:grid-cols-4">

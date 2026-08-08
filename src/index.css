@@ -28,10 +28,15 @@
     color: #fbf8f2;
   }
 
+  /* Client spec: titles set in Cormorant Garamond Bold, accents in Bold Italic. */
   h1, h2, h3, h4 {
     @apply font-display;
-    font-weight: 400;
-    letter-spacing: -0.01em;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+  }
+  h1 em, h2 em, h3 em, .font-display .italic, .font-display em {
+    font-weight: 700;
+    font-style: italic;
   }
 
   /* Scrollbar */
@@ -84,34 +89,53 @@
   .hairline { height: 1px; background: #D9CFBD; border: 0; }
   .hairline-dark { height: 1px; background: rgba(244,238,226,0.16); border: 0; }
 
-  /* Buttons */
+  /* Buttons
+     Client spec: no hover movement — every button simply turns gold on hover. */
   .btn {
-    @apply relative inline-flex items-center justify-center gap-2 font-sans uppercase transition-all duration-500;
+    @apply relative inline-flex items-center justify-center gap-2 font-sans uppercase;
     letter-spacing: 0.18em;
     font-size: 0.74rem;
     font-weight: 500;
     padding: 1rem 2rem;
-    transition-timing-function: var(--ease-luxe);
+    border: 1px solid transparent;
+    transition: background 0.45s var(--ease-luxe), color 0.45s var(--ease-luxe),
+      border-color 0.45s var(--ease-luxe), box-shadow 0.45s var(--ease-luxe);
   }
+
+  .btn-gold-fill {
+    background: linear-gradient(120deg, #CBAA5D, #B08D3E 55%, #8A6D2A);
+    border-color: transparent;
+    color: #1C1815;
+    box-shadow: 0 10px 30px -14px rgba(138, 109, 42, 0.7);
+  }
+
   .btn-solid {
     @apply btn text-ivory;
     background: #1C1815;
   }
-  .btn-solid:hover { background: #2f2822; transform: translateY(-2px); }
+  .btn-solid:hover { @apply btn-gold-fill; }
 
   .btn-gold {
-    @apply btn text-ink;
-    background: linear-gradient(120deg, #CBAA5D, #B08D3E 55%, #8A6D2A);
-    box-shadow: 0 10px 30px -12px rgba(138,109,42,0.6);
+    @apply btn btn-gold-fill;
   }
-  .btn-gold:hover { filter: brightness(1.06); transform: translateY(-2px); }
+  .btn-gold:hover {
+    background: linear-gradient(120deg, #DCBE73, #C29B49 55%, #9C7C31);
+  }
 
   .btn-ghost {
     @apply btn text-ink;
-    border: 1px solid #C6B48C;
+    border-color: #C6B48C;
     background: transparent;
   }
-  .btn-ghost:hover { background: #1C1815; color: #F4EEE2; border-color: #1C1815; }
+  .btn-ghost:hover { @apply btn-gold-fill; }
+
+  /* Outlined button on dark grounds (hero, CTA bands) */
+  .btn-outline-light {
+    @apply btn text-ivory;
+    border-color: rgba(244, 238, 226, 0.4);
+    background: transparent;
+  }
+  .btn-outline-light:hover { @apply btn-gold-fill; }
 
   /* Animated gold link underline */
   .link-gold {
@@ -148,6 +172,39 @@
     background: rgba(20, 17, 14, 0.55);
     backdrop-filter: blur(16px) saturate(1.1);
     -webkit-backdrop-filter: blur(16px) saturate(1.1);
+  }
+
+  /* White-transparency plate that sits behind copy laid over photography */
+  .plate-frost {
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(10px) saturate(1.05);
+    -webkit-backdrop-filter: blur(10px) saturate(1.05);
+  }
+}
+
+/* ------------------------------------------------------------------
+   Content protection — client asked that visitors not be able to lift
+   the house's imagery or copy. Deters casual saving; form fields stay
+   selectable so checkout still works.
+   ------------------------------------------------------------------ */
+@layer base {
+  body {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  input, textarea, select, [contenteditable='true'] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* pointer-events:none keeps the image itself undraggable while clicks
+     still fall through to the wrapping link or button. */
+  img {
+    -webkit-user-drag: none;
+    pointer-events: none;
   }
 }
 

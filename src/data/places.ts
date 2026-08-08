@@ -1,12 +1,27 @@
 // Places on the "A Scented Memory of Malaysia" interactive map.
-// x / y are percentage positions over the stylised map artwork.
+//
+// x / y are percentage positions over the supplied map artwork
+// (public/map.webp). That artwork is stylised — Borneo is drawn much closer to
+// the peninsula than it really is — so pins are calibrated against the drawing
+// rather than projected from raw coordinates.
+import { getProduct, productsByCollection } from './products'
+import { stores } from './stores'
+
 export interface ScentPlace {
   id: string
   place: string
   region: string
-  productId: string
-  scent: string
   note: string
+  /** Product this pin opens, or the collection it represents. */
+  productId: string
+  /** Set when the pin stands for a whole collection rather than one scent. */
+  collectionId?: string
+  /** Overrides the card headline (e.g. "Nyonya Collection"). */
+  scentLabel?: string
+  /** Overrides the family line under the headline. */
+  familyLabel?: string
+  /** Boutiques you can visit at this place, by store id. */
+  storeIds: string[]
   x: number
   y: number
 }
@@ -17,49 +32,75 @@ export const scentPlaces: ScentPlace[] = [
     place: 'Langkawi',
     region: 'Kedah · The Isles',
     productId: 'mahsuri',
-    scent: 'Mahsuri',
-    note: 'Sun-warmed peach and island petals, after the legend of the maiden Mahsuri.',
-    x: 15.5,
-    y: 26,
+    note: 'Sun-warmed apple and island petals, after the legend of the maiden Mahsuri.',
+    storeIds: ['langkawi'],
+    x: 7.1,
+    y: 15.9,
   },
   {
     id: 'genting',
     place: 'Genting Highlands',
     region: 'Pahang · The Peaks',
-    productId: 'violet',
-    scent: 'Violet',
-    note: 'Cool mountain air and powdery blooms from the cloud-wrapped highlands.',
-    x: 41,
-    y: 55,
+    productId: 'man',
+    note: 'Cool mountain air and crisp green citrus from the cloud-wrapped highlands.',
+    storeIds: ['genting'],
+    // Genting sits only ~35km from KL; nudged north-east of its true spot so
+    // the two hit areas clear each other.
+    x: 25.0,
+    y: 51.5,
   },
   {
     id: 'kuala-lumpur',
     place: 'Kuala Lumpur',
     region: 'The Capital',
     productId: 'orchid',
-    scent: 'Orchid',
     note: 'The wild orchid of the city’s rainforest heart — the scent that began it all.',
-    x: 39,
-    y: 62,
+    storeIds: ['pavilion-kl-5', 'klcc-isetan', 'pavilion-elite', 'klia-t1', 'klia-t2'],
+    x: 21.7,
+    y: 61.1,
   },
   {
     id: 'melaka',
     place: 'Melaka',
     region: 'The Straits',
     productId: 'kebaya-blooms',
-    scent: 'Kebaya Blooms',
+    collectionId: 'nyonya',
+    scentLabel: 'Nyonya Collection',
+    familyLabel: 'Floral | Aromatic | Gourmand',
     note: 'Peranakan romance — embroidered flowers and gula melaka from the old port.',
-    x: 34,
-    y: 73,
+    storeIds: ['melaka'],
+    x: 25.3,
+    y: 74.4,
   },
   {
     id: 'sabah',
     place: 'Kota Kinabalu',
     region: 'Sabah · Borneo',
     productId: 'spirit',
-    scent: 'Spirit',
+    collectionId: 'spirit',
+    scentLabel: 'Spirit I & II',
+    familyLabel: 'Hope · Love · Confidence · Passion · Dream · Life',
     note: 'Sea salt, citrus and open sky along the South China Sea coast.',
-    x: 82,
-    y: 50,
+    storeIds: ['imago-kk'],
+    x: 75.5,
+    y: 28.0,
   },
 ]
+
+/** Resolves what a pin should show: a single scent, or a whole collection. */
+export function placeTarget(place: ScentPlace) {
+  const product = getProduct(place.productId)!
+  const inCollection = place.collectionId ? productsByCollection(place.collectionId) : []
+  const boutiques = place.storeIds
+    .map((id) => stores.find((s) => s.id === id))
+    .filter((s): s is (typeof stores)[number] => !!s)
+
+  return {
+    product,
+    href: place.collectionId ? `/shop?collection=${place.collectionId}` : `/product/${product.id}`,
+    title: place.scentLabel ?? product.name,
+    meta: place.familyLabel ?? `${product.family} · RM ${product.price}`,
+    count: inCollection.length,
+    boutiques,
+  }
+}
