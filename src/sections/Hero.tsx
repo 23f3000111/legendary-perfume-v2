@@ -34,8 +34,12 @@ export default function Hero() {
         </span>
       </div>
 
-      {/* Content */}
-      <motion.div style={{ y: textY, opacity }} className="relative z-10 flex h-full items-center">
+      {/* Content — padded past the fixed header so the eyebrow never sits
+          against the navigation on short viewports */}
+      <motion.div
+        style={{ y: textY, opacity, paddingTop: 'var(--header-h)' }}
+        className="relative z-10 flex h-full items-center"
+      >
         <div className="u-container">
           <div className="max-w-3xl">
             <motion.p

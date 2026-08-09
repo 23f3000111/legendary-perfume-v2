@@ -38,7 +38,12 @@ export default function CollectionsRail() {
         className="relative hidden bg-ink text-ivory lg:block"
         style={{ height: `${maxX * PACE + (typeof window !== 'undefined' ? window.innerHeight : 900)}px` }}
       >
-        <div className="sticky top-0 flex h-screen items-center overflow-hidden">
+        {/* Padded clear of the fixed header, plus breathing room, so the cards
+            are centred in the visible band instead of running under the nav */}
+        <div
+          className="sticky top-0 flex h-screen items-center overflow-hidden"
+          style={{ paddingTop: 'calc(var(--header-h) + 2.5rem)', paddingBottom: '2.5rem' }}
+        >
           <div className="pointer-events-none absolute inset-0 opacity-[0.04] peranakan" style={{ color: '#CBAA5D' }} />
           <Particles />
           {/* Even gutters both ends so the first and last card sit inset
@@ -85,7 +90,9 @@ function RailCard({ c }: { c: (typeof collections)[number] }) {
   return (
     <Link
       to={`/shop?collection=${c.id}`}
-      className="group relative block h-[64vh] w-[min(78vw,30rem)] shrink-0 overflow-hidden rounded-sm lg:w-[30rem]"
+      // Never taller than the band left between the header and the section foot
+      style={{ height: 'min(64vh, calc(100vh - var(--header-h) - 8rem))' }}
+      className="group relative block w-[min(78vw,30rem)] shrink-0 overflow-hidden rounded-sm lg:w-[30rem]"
     >
       <img src={c.image} alt={c.name} className="h-full w-full object-cover transition-transform duration-[1200ms] ease-luxe group-hover:scale-105" />
       {/* Deep enough at the foot that the frosted plate reads as a light veil

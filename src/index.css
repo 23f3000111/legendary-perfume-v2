@@ -9,6 +9,19 @@
 @layer base {
   :root {
     --ease-luxe: cubic-bezier(0.16, 1, 0.3, 1);
+    /* Height of the fixed header. Anything that centres itself against the
+       viewport (the hero, the pinned collections rail) pads by this so it
+       never slides underneath the navigation. */
+    --header-h: 62px;
+  }
+
+  @media (min-width: 768px) {
+    :root { --header-h: 78px; }
+  }
+
+  /* The second nav row only appears from lg up */
+  @media (min-width: 1024px) {
+    :root { --header-h: 130px; }
   }
 
   html {
