@@ -11,8 +11,8 @@ export default function Gifting() {
       <div className="u-container grid items-center gap-14 lg:grid-cols-2 lg:gap-20">
         {/* Image */}
         <Reveal className="relative">
-          <div className="relative overflow-hidden rounded-sm">
-            <img src={asset('/assets/client/gifting-wishes.webp')} alt="3 Wishes gift set with ribbon" className="aspect-[4/3] w-full object-cover" />
+          <div className="relative mx-auto max-h-[56vh] w-full max-w-xl overflow-hidden rounded-sm">
+            <img src={asset('/assets/client/gifting-wishes.webp')} alt="3 Wishes gift set with ribbon" className="aspect-[4/3] max-h-[56vh] w-full object-cover" />
           </div>
           <motion.div
             className="absolute -bottom-6 -right-4 hidden rounded-full bg-ivory px-6 py-6 text-center shadow-xl sm:block"
@@ -34,7 +34,7 @@ export default function Gifting() {
           </Reveal>
           <Reveal delay={0.1}>
             <p className="mt-6 max-w-lg text-lg text-ink-soft">
-              Every set is presented in signature packaging, hand-tied and ready to delight — complete
+              Every set is presented in signature packaging, hand tied and ready to delight, complete
               with a personal note and complimentary samples to discover together.
             </p>
           </Reveal>

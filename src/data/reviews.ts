@@ -9,17 +9,18 @@ export interface Review {
 /**
  * Customer reviews replace the journal preview on the home page.
  *
- * PENDING CLIENT CONTENT: these are placeholders. Replace `quote` / `author`
- * with real reviews and set `reviewsUrl` (plus each `href`) to the storefront
- * the client wants them to link out to — the brief says the section "will be
- * hyperlink" but no destination was supplied.
+ * PENDING CLIENT CONTENT: these quotes are placeholders. Replace `quote` and
+ * `author` with real reviews when the client supplies them.
+ *
+ * The section CTA reads "What our Customers Buy" and points at the bestsellers
+ * listing, per the amendments doc.
  */
-export const reviewsUrl = '/shop'
+export const reviewsUrl = '/shop?filter=bestsellers'
 
 export const reviews: Review[] = [
   {
     quote:
-      'Orchid is everything I hoped for — soft, clean and it lasts the whole workday without ever feeling heavy.',
+      'Orchid is everything I hoped for. Soft, clean, and it lasts the whole workday without ever feeling heavy.',
     author: 'Darshini B.',
     product: 'Orchid',
   },
@@ -37,7 +38,7 @@ export const reviews: Review[] = [
   },
   {
     quote:
-      'Man is my new signature. Fresh citrus opening, warm woody finish — I get asked what I am wearing every week.',
+      'Man is my new signature. Fresh citrus opening, warm woody finish, and I get asked what I am wearing every week.',
     author: 'Jeremiah Y.',
     product: 'Man',
   },

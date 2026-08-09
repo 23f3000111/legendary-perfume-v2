@@ -9,7 +9,7 @@ import { ArrowRight } from '../components/ui/icons'
 
 export default function Finder() {
   const [mood, setMood] = useState<Mood>('Serene')
-  const matches = productsByMood(mood).slice(0, 3)
+  const matches = productsByMood(mood).slice(0, 4)
 
   return (
     <section className="bg-sand/60 py-24 md:py-32">
@@ -73,7 +73,7 @@ export default function Finder() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="grid grid-cols-2 gap-5 sm:gap-7 lg:grid-cols-3"
+              className="grid grid-cols-2 gap-5 sm:gap-7 lg:grid-cols-4"
             >
               {matches.map((p, i) => (
                 <ProductCard key={p.id} product={p} index={i} />

@@ -42,7 +42,7 @@ export default function Checkout() {
             <Check width={38} />
           </motion.span>
           <p className="eyebrow eyebrow-gold mt-8">Order Confirmed</p>
-          <h1 className="mt-4 font-display text-[clamp(2.2rem,5vw,3.4rem)] leading-tight">Thank you — your scent is on its way</h1>
+          <h1 className="mt-4 font-display text-[clamp(2.2rem,5vw,3.4rem)] leading-tight">Thank you, your scent is on its way</h1>
           <p className="mt-4 text-ink-soft">
             Order <span className="font-medium text-ink">{orderNo}</span> is confirmed. A receipt and tracking
             link are on their way to your inbox, with complimentary samples tucked inside.
@@ -144,10 +144,10 @@ export default function Checkout() {
                     )}
                     {pay !== 'Card' && (
                       <p className="rounded-sm border border-line bg-porcelain p-5 text-sm text-ink-soft">
-                        You’ll be redirected to {pay} to complete your payment securely. (Demo — no charge is made.)
+                        You’ll be redirected to {pay} to complete your payment securely. (Demo only, no charge is made.)
                       </p>
                     )}
-                    <p className="flex items-center gap-2 text-xs text-smoke"><ShieldCheck width={15} className="text-gold" /> This is a demo checkout — no real payment is processed.</p>
+                    <p className="flex items-center gap-2 text-xs text-smoke"><ShieldCheck width={15} className="text-gold" /> This is a demo checkout. No real payment is processed.</p>
                   </div>
                 )}
               </motion.div>

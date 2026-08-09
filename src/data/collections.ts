@@ -21,7 +21,7 @@ export const collections: Collection[] = [
     name: 'Signature',
     tagline: 'The scents that made us',
     description:
-      'Orchid, Mahsuri, Violet and Man — the icons of the house, inspired by Malaysia’s landscapes and worn the world over.',
+      'Orchid, Mahsuri, Violet and Man are the icons of the house. Four Malaysian eau de parfum signatures inspired by the country’s landscapes and worn the world over.',
     accent: 'gold',
     image: img('collection-signature.webp'),
     banner: img('banner-signature.webp'),
@@ -31,7 +31,7 @@ export const collections: Collection[] = [
     name: 'Nyonya',
     tagline: 'Peranakan heritage in bloom',
     description:
-      'Rooted in Nyonya culture, this collection reimagines the flavours, textiles and tiles of the Peranakan world as fragrance.',
+      'Rooted in Nyonya culture, this Peranakan collection turns the flavours, textiles and tiles of Melaka into wearable fragrance.',
     accent: 'rose',
     image: img('collection-nyonya.webp'),
     banner: img('banner-nyonya.webp'),
@@ -41,7 +41,7 @@ export const collections: Collection[] = [
     name: '3 Wishes',
     tagline: 'Alcohol-free, everyday luxury',
     description:
-      'A silken, skin-safe trio designed for gentle daily indulgence — a soft ritual for unwinding and treating yourself.',
+      'An alcohol free, skin safe trio of Malaysian perfumes made for gentle daily wear. A soft ritual for unwinding and treating yourself.',
     accent: 'gold',
     image: img('collection-3-wishes.webp'),
     banner: img('banner-3wishes.webp'),
@@ -51,7 +51,7 @@ export const collections: Collection[] = [
     name: 'Spirit',
     tagline: 'Live · Passion · Dream',
     description:
-      'A fresh, spirited discovery trio made for movement — sea air, citrus groves and open skies.',
+      'A fresh discovery trio made for movement, built on sea air, citrus groves and open skies.',
     accent: 'teal',
     image: img('collection-spirit.webp'),
   },

@@ -67,7 +67,7 @@ export default function Shop() {
       <PageHeader
         eyebrow="The Collection"
         title={activeTitle}
-        intro="Nine fragrances, each an olfactory postcard of Malaysia — crafted, Halal-certified, and made to be worn as a memory."
+        intro="Nine Malaysian fragrances, each one an olfactory postcard of the country. Shop eau de parfum for her, for him and gift sets."
         crumbs={[{ label: 'Home', to: '/' }, { label: 'Fragrances' }]}
         image={banner}
       />

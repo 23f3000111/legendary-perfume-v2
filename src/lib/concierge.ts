@@ -32,7 +32,7 @@ function ref(id: string): ProductRef | null {
 
 export const GREETING: BotReply = {
   text:
-    'Welcome to Legendary. I’m your fragrance concierge — here to help you find the perfect scent, a gift, or a boutique near you.',
+    'Welcome to Legendary. I am your fragrance concierge, here to help you find the perfect scent, a gift, or a boutique near you.',
   chips: ['Find my scent', 'Gift ideas', 'Store near me', 'Track my order', 'Talk to a human'],
 }
 
@@ -56,7 +56,7 @@ export function handle(input: string): BotReply {
   if (/gift|present|for my|anniversary|birthday|wrap/.test(t)) {
     return {
       text:
-        'A beautiful choice. Our sets arrive with complimentary gift wrapping. The 3 Wishes trio is our most-loved gift — alcohol-free and safe for every skin. Spirit is a fresh discovery trio for those who love to explore.',
+        'A beautiful choice. Our sets arrive with complimentary gift wrapping. The 3 Wishes trio is our most loved gift, alcohol free and safe for every skin. Spirit is a fresh discovery trio for those who love to explore.',
       products: ['3-wishes', 'spirit', 'kebaya-blooms'].map(ref).filter(Boolean) as ProductRef[],
       link: { label: 'See the gifting edit', to: '/shop?filter=gifts' },
     }
@@ -65,7 +65,7 @@ export function handle(input: string): BotReply {
   if (/store|boutique|shop near|location|where|visit|counter|map|direction/.test(t)) {
     return {
       text:
-        'You’ll find Legendary counters across Malaysia — Pavilion KL, KLCC Isetan, Genting Sky Avenue, our Melaka flagship, and the KLIA & Langkawi airports. Each with live maps and directions.',
+        'You will find Legendary counters across Malaysia at Pavilion KL, KLCC Isetan, Genting Sky Avenue, our Melaka flagship, and the KLIA and Langkawi airports. Each with live maps and directions.',
       link: { label: 'Open store locator', to: '/stores' },
       chips: ['Talk to a human'],
     }
@@ -74,7 +74,7 @@ export function handle(input: string): BotReply {
   if (/track|order|delivery|shipping|where is my|parcel|refund|return/.test(t)) {
     return {
       text:
-        'I can help with that. For live order tracking, returns or exchanges, our team will assist you personally on WhatsApp — just tap below and share your order number.',
+        'I can help with that. For live order tracking, returns or exchanges, our team will assist you personally on WhatsApp. Tap below and share your order number.',
       wa: {
         label: 'Track on WhatsApp',
         text: 'Hi Legendary! I’d like to track my order. My order number is: ',
@@ -82,29 +82,29 @@ export function handle(input: string): BotReply {
     }
   }
 
-  if (/halal|alcohol|ingredient|skin|safe|sensitive/.test(t)) {
+  if (/alcohol|ingredient|skin|safe|sensitive/.test(t)) {
     return {
       text:
-        'Every Legendary fragrance is Halal-certified. The 3 Wishes trio is fully alcohol-free and gentle enough for sensitive skin — a soft, everyday indulgence.',
+        'The 3 Wishes trio is fully alcohol free and gentle enough for sensitive skin, so it works as a soft everyday indulgence.',
       products: ['3-wishes'].map(ref).filter(Boolean) as ProductRef[],
     }
   }
 
   if (/orchid/.test(t))
-    return single('orchid', 'Orchid is our signature — the scent that began the house.')
+    return single('orchid', 'Orchid is our signature, the scent that began the house.')
   if (/man|him|masculine|husband|boyfriend/.test(t))
-    return single('man', 'For him, Man is citrus and spice grounded in dark woods — assured and magnetic.')
+    return single('man', 'For him, Man is citrus and spice grounded in dark woods: assured and magnetic.')
   if (/nyonya|peranakan|heritage|kebaya|ondeh/.test(t))
     return {
       text:
-        'The Nyonya Collection reimagines Peranakan heritage as scent — from embroidered kebaya florals to the gula melaka sweetness of ondeh-ondeh.',
+        'The Nyonya Collection reimagines Peranakan heritage as scent, from embroidered kebaya florals to the gula melaka sweetness of ondeh-ondeh.',
       products: ['kebaya-blooms', 'ondeh-delights', 'nyonya-aromatic'].map(ref).filter(Boolean) as ProductRef[],
     }
 
   if (/price|cost|how much|rm|cheap|expensive/.test(t)) {
     return {
       text:
-        'Our eaux de parfum begin at RM 149, with sets from RM 179. Many pieces are on offer right now — shall I show you the collection?',
+        'Our eaux de parfum begin at RM 149, with sets from RM 179. Many pieces are on offer right now. Shall I show you the collection?',
       link: { label: 'Browse all fragrances', to: '/shop' },
     }
   }

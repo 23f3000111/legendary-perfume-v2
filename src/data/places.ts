@@ -54,7 +54,7 @@ export const scentPlaces: ScentPlace[] = [
     place: 'Kuala Lumpur',
     region: 'The Capital',
     productId: 'orchid',
-    note: 'The wild orchid of the city’s rainforest heart — the scent that began it all.',
+    note: 'The wild orchid of the city’s rainforest heart, the scent that began it all.',
     storeIds: ['pavilion-kl-5', 'klcc-isetan', 'pavilion-elite', 'klia-t1', 'klia-t2'],
     x: 21.7,
     y: 61.1,
@@ -67,7 +67,7 @@ export const scentPlaces: ScentPlace[] = [
     collectionId: 'nyonya',
     scentLabel: 'Nyonya Collection',
     familyLabel: 'Floral | Aromatic | Gourmand',
-    note: 'Peranakan romance — embroidered flowers and gula melaka from the old port.',
+    note: 'Peranakan romance built from embroidered flowers and gula melaka, drawn from the old port of Melaka.',
     storeIds: ['melaka'],
     x: 25.3,
     y: 74.4,
@@ -82,8 +82,10 @@ export const scentPlaces: ScentPlace[] = [
     familyLabel: 'Hope · Love · Confidence · Passion · Dream · Life',
     note: 'Sea salt, citrus and open sky along the South China Sea coast.',
     storeIds: ['imago-kk'],
-    x: 75.5,
-    y: 28.0,
+    // Pulled inland onto Sabah. The previous spot straddled the coastline and
+    // read as sitting in the sea.
+    x: 79.8,
+    y: 27.2,
   },
 ]
 

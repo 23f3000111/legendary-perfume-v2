@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import Particles from './Particles'
 
 interface Crumb { label: string; to?: string }
 
@@ -37,7 +38,8 @@ export default function PageHeader({
         </>
       )}
 
-      <div className="u-container relative">
+      <Particles max={45} />
+      <div className="u-container relative z-10">
         {crumbs && (
           <nav className="mb-6 flex items-center gap-2 text-[0.7rem] uppercase tracking-[0.16em] text-ivory/50">
             {crumbs.map((c, i) => (

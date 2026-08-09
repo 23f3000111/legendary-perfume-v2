@@ -20,7 +20,7 @@ export default function Stores() {
       <PageHeader
         eyebrow="Find Us"
         title="Boutiques across Malaysia"
-        intro="From Pavilion KL to the shores of Langkawi — visit a Legendary counter to discover your scent in person. Live maps and directions below."
+        intro="From Pavilion KL to the shores of Langkawi, visit a Legendary perfume counter to discover your scent in person. Live maps and directions below."
         crumbs={[{ label: 'Home', to: '/' }, { label: 'Stores' }]}
         image={asset('/assets/client/banner-stores.webp')}
       />
@@ -44,7 +44,7 @@ export default function Stores() {
 
           <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_1.1fr]">
             {/* Store list */}
-            <div className="order-2 max-h-none space-y-3 lg:order-1 lg:max-h-[720px] lg:overflow-y-auto lg:pr-2">
+            <div className="order-2 max-h-none space-y-3 lg:order-1 lg:max-h-[76vh] lg:overflow-y-auto lg:pr-2">
               {list.map((s) => {
                 const isSel = s.id === selected?.id
                 return (
@@ -78,7 +78,7 @@ export default function Stores() {
             </div>
 
             {/* Map panel */}
-            <div className="order-1 lg:order-2 lg:sticky lg:top-28 lg:self-start">
+            <div className="order-1 lg:order-2 lg:sticky lg:top-[150px] lg:self-start">
               <AnimatePresence mode="wait">
                 <motion.div
                   key={selected?.id}
@@ -86,7 +86,8 @@ export default function Stores() {
                   transition={{ duration: 0.4 }}
                   className="overflow-hidden rounded-sm border border-line bg-porcelain"
                 >
-                  <div className="aspect-[16/11] w-full bg-sand">
+                  {/* Shorter frame so the map plus its details fit one screen */}
+                  <div className="aspect-[16/9] max-h-[38vh] w-full bg-sand">
                     {selected && (
                       <iframe
                         key={selected.id}

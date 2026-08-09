@@ -155,20 +155,23 @@ def render_pdf(src: str, dest: str, zoom: float, crop: tuple[float, float, float
     report(path)
 
 
-def transcode(src: str, dest: str, width: int = 1920, crf: int = 27) -> None:
+def transcode(
+    src: str, dest: str, width: int = 1920, crf: int = 27, duration: float | None = None
+) -> None:
+    """Transcode for web. `duration` trims the tail (used to drop the end card)."""
     path = os.path.join(OUT, dest)
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    subprocess.run(
-        [
-            "ffmpeg", "-y", "-loglevel", "error", "-i", src,
-            "-an",
-            "-vf", f"scale={width}:-2",
-            "-c:v", "libx264", "-crf", str(crf), "-preset", "slow",
-            "-pix_fmt", "yuv420p", "-movflags", "+faststart",
-            path,
-        ],
-        check=True,
-    )
+    cmd = ["ffmpeg", "-y", "-loglevel", "error", "-i", src]
+    if duration is not None:
+        cmd += ["-t", str(duration)]
+    cmd += [
+        "-an",
+        "-vf", f"scale={width}:-2",
+        "-c:v", "libx264", "-crf", str(crf), "-preset", "slow",
+        "-pix_fmt", "yuv420p", "-movflags", "+faststart",
+        path,
+    ]
+    subprocess.run(cmd, check=True)
     report(path)
 
 
@@ -273,7 +276,13 @@ def main() -> int:
         save_webp(find("4.0 OUR STORY/The Journey", year), f"journey-{year}.webp", 1000)
 
     print("Hero video")
-    transcode(find(f"{HOME}/A Scented Memory of Malaysia", "home page video"), "home-hero.mp4")
+    # The source fades to a Legendary end card at ~11.4s. The client asked for
+    # that logo card cut, so the clip stops just before the fade begins.
+    transcode(
+        find(f"{HOME}/A Scented Memory of Malaysia", "home page video"),
+        "home-hero.mp4",
+        duration=11.3,
+    )
 
     total = sum(
         os.path.getsize(os.path.join(dp, f))

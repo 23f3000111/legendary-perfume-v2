@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { asset } from '../lib/asset'
 import { journalPosts } from '../data/journal'
 import PageHeader from '../components/ui/PageHeader'
@@ -11,7 +12,7 @@ export default function Journal() {
       <PageHeader
         eyebrow="The Journal"
         title="Notes, rituals & heritage"
-        intro="Stories from the house — on scent, craft, and the culture that shapes every Legendary fragrance."
+        intro="Stories from the house on scent, craft and the Malaysian culture that shapes every Legendary fragrance."
         crumbs={[{ label: 'Home', to: '/' }, { label: 'Journal' }]}
         image={asset('/assets/client/banner-journal.webp')}
       />
@@ -19,7 +20,7 @@ export default function Journal() {
       <section className="bg-ivory py-14 md:py-20">
         <div className="u-container">
           {/* Feature */}
-          <a href="#" className="group grid gap-8 overflow-hidden rounded-sm md:grid-cols-2 md:items-stretch">
+          <Link to={feature.link} className="group grid gap-8 overflow-hidden rounded-sm md:grid-cols-2 md:items-stretch">
             <div className="overflow-hidden rounded-sm">
               <img src={feature.image} alt={feature.title} className="aspect-[4/3] h-full w-full object-cover transition-transform duration-[1100ms] ease-luxe group-hover:scale-105" />
             </div>
@@ -32,13 +33,13 @@ export default function Journal() {
                 Read article <ArrowUpRight width={15} />
               </span>
             </div>
-          </a>
+          </Link>
 
           {/* Grid */}
           <RevealGroup className="mt-16 grid gap-8 md:grid-cols-3">
             {rest.map((post) => (
               <RevealItem key={post.id}>
-                <a href="#" className="group block">
+                <Link to={post.link} className="group block">
                   <div className="relative overflow-hidden rounded-sm">
                     <img src={post.image} alt={post.title} className="aspect-[4/3] w-full object-cover transition-transform duration-[1100ms] ease-luxe group-hover:scale-105" />
                     <span className="absolute left-4 top-4 bg-ivory/90 px-3 py-1 text-[0.62rem] uppercase tracking-[0.16em] text-ink backdrop-blur">{post.category}</span>
@@ -46,7 +47,7 @@ export default function Journal() {
                   <p className="mt-4 text-xs text-smoke">{post.date} · {post.readTime} read</p>
                   <h3 className="mt-2 font-display text-2xl leading-snug">{post.title}</h3>
                   <p className="mt-2 text-sm text-ink-soft">{post.excerpt}</p>
-                </a>
+                </Link>
               </RevealItem>
             ))}
           </RevealGroup>

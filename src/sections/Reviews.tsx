@@ -20,7 +20,7 @@ export default function Reviews() {
             to={reviewsUrl}
             className="group flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-ink"
           >
-            Read all reviews
+            What our Customers Buy
             <ArrowRight width={15} className="text-gold transition-transform duration-500 group-hover:translate-x-1" />
           </Link>
         </div>
@@ -35,7 +35,7 @@ export default function Reviews() {
               <p className="mt-3 flex-1 font-display text-lg italic leading-snug text-ink-soft">
                 {r.quote}
               </p>
-              <p className="mt-5 text-sm text-ink">— {r.author}</p>
+              <p className="mt-5 text-sm text-ink">{r.author}</p>
               {r.product && <p className="mt-0.5 eyebrow eyebrow-gold">{r.product}</p>}
             </RevealItem>
           ))}

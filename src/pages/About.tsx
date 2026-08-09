@@ -2,39 +2,40 @@ import { asset } from '../lib/asset'
 import { Link } from 'react-router-dom'
 import PageHeader from '../components/ui/PageHeader'
 import JourneyCarousel, { type Milestone } from '../components/JourneyCarousel'
+import Services from '../sections/Services'
 import Reveal, { RevealGroup, RevealItem } from '../components/ui/Reveal'
 import { Kicker } from '../components/ui/SplitText'
 import { ArrowRight, Sparkle, ShieldCheck, Compass, Droplet } from '../components/ui/icons'
 
 // Years match the photography supplied by the client for the journey carousel.
 const timeline: Milestone[] = [
-  { year: '2015', title: 'A House is Born', body: 'Legendary opens in Kuala Lumpur with a single scent — Orchid — inspired by the wild bloom of the rainforest.' },
+  { year: '2015', title: 'A House is Born', body: 'Legendary opens in Kuala Lumpur with a single scent, Orchid, inspired by the wild bloom of the rainforest.' },
   { year: '2016', title: 'Parkson', body: 'Expanded our brand presence into Parkson, a renowned department store.' },
   { year: '2017', title: 'KLIA', body: 'Entered Valiram at KLIA T1, garnering notable recognition in the Korean and Chinese markets.' },
   { year: '2018', title: 'SaSa Expansion', body: 'Established a strong presence at SaSa Malaysia, marking our success in the market.' },
   { year: '2019', title: 'Top-Selling Brand', body: 'Achieved top-selling brand status at Parkson, reflecting strong customer demand.' },
   { year: '2022', title: 'Air Asia', body: 'Forged a strategic partnership with AirAsia, outshining as a top-3 best-selling brand on the platform.' },
-  { year: '2023', title: '3 Wishes', body: 'An alcohol-free, skin-safe trio for gentle everyday luxury becomes an instant bestseller.' },
+  { year: '2023', title: '3 Wishes', body: 'An alcohol free, skin safe trio for gentle everyday luxury becomes an instant bestseller.' },
 ]
 
 const visionMission = [
   {
     label: 'Our Vision',
     title: 'To carry the scent of Malaysia to the world',
-    body: 'To be the fragrance house that the world recognises as Malaysia’s own — proving that a scent born of this country’s landscapes, culture and craft belongs on any dressing table, anywhere.',
+    body: 'To be the fragrance house the world recognises as Malaysia’s own, proving that a scent born of this country’s landscapes, culture and craft belongs on any dressing table, anywhere.',
   },
   {
     label: 'Our Mission',
     title: 'Luxury that stays welcoming',
-    body: 'To compose Halal-certified fragrances of genuine quality at a price that invites people in rather than shutting them out — made in authenticity, worn with pride, and served with the generosity of complimentary samples, wrapping and delivery.',
+    body: 'To compose Malaysian fragrances of genuine quality at a price that invites people in rather than shutting them out. Made in authenticity, worn with pride, and served with complimentary samples, wrapping and delivery on every order.',
   },
 ]
 
 const values = [
-  { I: Sparkle, title: 'Heritage', body: 'Every scent is a memory of Malaysia — its landscapes, its culture, its soul.' },
+  { I: Sparkle, title: 'Heritage', body: 'Every scent is a memory of Malaysia: its landscapes, its culture, its soul.' },
   { I: Compass, title: 'Craft', body: 'Composed in three considered acts: a first impression, a character, a memory.' },
-  { I: ShieldCheck, title: 'Integrity', body: 'Halal certified without exception, made to be worn with confidence and pride.' },
-  { I: Droplet, title: 'Generosity', body: 'Complimentary samples, wrapping and delivery — luxury should feel welcoming.' },
+  { I: ShieldCheck, title: 'Integrity', body: 'Made to the same standard every time, so you can wear it with confidence and pride.' },
+  { I: Droplet, title: 'Generosity', body: 'Complimentary samples, wrapping and delivery, because luxury should feel welcoming.' },
 ]
 
 export default function About() {
@@ -51,11 +52,11 @@ export default function About() {
       {/* Intro split */}
       <section className="u-container grid items-center gap-14 py-20 md:py-28 lg:grid-cols-2 lg:gap-20">
         {/* Client note: image reproportioned to sit level with the copy block */}
-        <Reveal className="overflow-hidden rounded-sm">
+        <Reveal className="mx-auto max-h-[58vh] w-full max-w-sm overflow-hidden rounded-sm">
           <img
             src={asset('/assets/client/signature-orchid.webp')}
             alt="Orchid, the signature scent"
-            className="aspect-square w-full object-cover lg:aspect-[5/6]"
+            className="aspect-[4/5] max-h-[58vh] w-full object-cover"
           />
         </Reveal>
         <div>
@@ -63,7 +64,7 @@ export default function About() {
           <Reveal><h2 className="mt-5 font-display text-[clamp(2rem,4vw,3.4rem)] leading-[1.05]">It started with a single flower</h2></Reveal>
           <Reveal delay={0.1}>
             <div className="mt-6 space-y-5 text-lg text-ink-soft">
-              <p>Legendary began with Orchid — a scent drawn from the wild orchids of Malaysia’s rainforests, a timeless dance of grace and serenity. It remains the soul of the house.</p>
+              <p>Legendary began with Orchid, a scent drawn from the wild orchids of Malaysia’s rainforests and a timeless dance of grace and serenity. It remains the soul of the house.</p>
               <p>Rooted in authenticity and creativity, Legendary celebrates diversity while aspiring to global recognition. We believe the right fragrance empowers confidence and leaves a subtle, lasting impression.</p>
             </div>
           </Reveal>
@@ -75,6 +76,9 @@ export default function About() {
           </Reveal>
         </div>
       </section>
+
+      {/* Company attributes — moved here from the home page per the client */}
+      <Services />
 
       {/* Timeline */}
       <section className="bg-ink py-20 text-ivory md:py-28">

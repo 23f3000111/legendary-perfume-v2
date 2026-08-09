@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { collections } from '../data/collections'
 import { accent } from '../lib/accents'
+import Particles from '../components/ui/Particles'
 import { Kicker } from '../components/ui/SplitText'
 import { ArrowUpRight } from '../components/ui/icons'
 
@@ -25,17 +26,24 @@ export default function CollectionsRail() {
   const { scrollYProgress } = useScroll({ target: wrapRef, offset: ['start start', 'end end'] })
   const x = useTransform(scrollYProgress, [0, 1], [0, -maxX])
 
+  // Client note: pan 15% slower. The same travel spread over a taller pinned
+  // section means the viewer gets longer on each collection.
+  const PACE = 1.15
+
   return (
     <>
       {/* Desktop: pinned horizontal pan */}
       <section
         ref={wrapRef}
         className="relative hidden bg-ink text-ivory lg:block"
-        style={{ height: `${maxX + (typeof window !== 'undefined' ? window.innerHeight : 900)}px` }}
+        style={{ height: `${maxX * PACE + (typeof window !== 'undefined' ? window.innerHeight : 900)}px` }}
       >
         <div className="sticky top-0 flex h-screen items-center overflow-hidden">
           <div className="pointer-events-none absolute inset-0 opacity-[0.04] peranakan" style={{ color: '#CBAA5D' }} />
-          <motion.div ref={trackRef} style={{ x }} className="flex items-center gap-8 px-[7vw] will-change-transform">
+          <Particles />
+          {/* Even gutters both ends so the first and last card sit inset
+              rather than flush against the viewport edge */}
+          <motion.div ref={trackRef} style={{ x }} className="relative z-10 flex items-center gap-10 px-[12vw] will-change-transform">
             {/* Intro panel */}
             <div className="w-[34vw] shrink-0">
               <Kicker>The Collections</Kicker>
@@ -43,7 +51,7 @@ export default function CollectionsRail() {
                 Four worlds,<br />bottled.
               </h2>
               <p className="mt-6 max-w-sm text-ivory/60">
-                Each Legendary collection is a different memory of Malaysia — its heritage, its
+                Each Legendary collection is a different memory of Malaysia: its heritage, its
                 highlands, its islands. Scroll to wander through them.
               </p>
             </div>

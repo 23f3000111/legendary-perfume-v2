@@ -1,26 +1,49 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { collections } from '../../data/collections'
+import { Link, useLocation } from 'react-router-dom'
 import { WhatsApp, Instagram, Facebook, TikTok, ArrowRight, Check } from '../ui/icons'
 import { waLink } from '../../lib/concierge'
+import Particles from '../ui/Particles'
 
-const care = [
-  ['FAQ', '/about'],
-  ['Shipping', '/about'],
-  ['Returns & Exchange', '/about'],
-  ['Terms of Service', '/about'],
-  ['Privacy Policy', '/about'],
+// Client change: this column now mirrors the Shop menu rather than listing
+// collections, and every link resolves to a real destination.
+const shopLinks: [string, string][] = [
+  ['All Fragrances', '/shop'],
+  ['Bestsellers', '/shop?filter=bestsellers'],
+  ['For Her', '/shop?filter=her'],
+  ['For Him', '/shop?filter=him'],
+  ['Gifts & Sets', '/shop?filter=gifts'],
+]
+
+const houseLinks: [string, string][] = [
+  ['Our Story', '/about'],
+  ['Store Locator', '/stores'],
+  ['Journal', '/journal'],
+  ['Contact', '/contact'],
+]
+
+// FAQ, shipping and returns are all answered by the FAQ block on the contact
+// page. Terms and Privacy are intentionally absent until the client supplies
+// that copy — a wrong link is worse than no link.
+const careLinks: [string, string][] = [
+  ['FAQ', '/contact#faq'],
+  ['Shipping & Delivery', '/contact#faq'],
+  ['Returns & Exchange', '/contact#faq'],
+  ['Track My Order', '/contact'],
 ]
 
 export default function Footer() {
   const [email, setEmail] = useState('')
   const [done, setDone] = useState(false)
+  // Client change: the newsletter sign-up appears on the contact page only.
+  const showNewsletter = useLocation().pathname === '/contact'
 
   return (
     <footer className="relative overflow-hidden bg-ink text-ivory">
       <div className="pointer-events-none absolute inset-0 opacity-[0.04] peranakan" style={{ color: '#CBAA5D' }} />
+      <Particles max={40} />
 
-      {/* Newsletter */}
+      {/* Newsletter — contact page only */}
+      {showNewsletter && (
       <div className="u-container relative border-b border-ivory/10 py-16 md:py-20">
         <div className="grid gap-10 md:grid-cols-2 md:items-end">
           <div>
@@ -47,10 +70,11 @@ export default function Footer() {
                 {done ? <Check width={20} /> : <ArrowRight width={20} />}
               </button>
             </div>
-            {done && <p className="mt-3 text-xs text-gold">Welcome to Legendary — check your inbox.</p>}
+            {done && <p className="mt-3 text-xs text-gold">Welcome to Legendary. Check your inbox.</p>}
           </form>
         </div>
       </div>
+      )}
 
       {/* Columns */}
       <div className="u-container relative grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4">
@@ -63,7 +87,7 @@ export default function Footer() {
             {[
               { I: Facebook, href: 'https://www.facebook.com/LegendaryPerfumeMY', label: 'Facebook' },
               { I: Instagram, href: 'https://www.instagram.com/legendaryofficial.my/', label: 'Instagram' },
-              { I: TikTok, href: '#', label: 'TikTok' },
+              { I: TikTok, href: 'https://www.tiktok.com/@legendary.my', label: 'TikTok' },
               { I: WhatsApp, href: waLink('Hi Legendary!'), label: 'WhatsApp' },
             ].map(({ I, href, label }) => (
               <a
@@ -77,11 +101,10 @@ export default function Footer() {
         </div>
 
         <div>
-          <p className="eyebrow text-ivory/50">Fragrances</p>
+          <p className="eyebrow text-ivory/50">Shop</p>
           <ul className="mt-5 space-y-2.5 text-sm text-ivory/70">
-            <li><Link to="/shop" className="link-gold">All Fragrances</Link></li>
-            {collections.map((c) => (
-              <li key={c.id}><Link to={`/shop?collection=${c.id}`} className="link-gold">{c.name}</Link></li>
+            {shopLinks.map(([label, to]) => (
+              <li key={label}><Link to={to} className="link-gold">{label}</Link></li>
             ))}
           </ul>
         </div>
@@ -89,17 +112,16 @@ export default function Footer() {
         <div>
           <p className="eyebrow text-ivory/50">The House</p>
           <ul className="mt-5 space-y-2.5 text-sm text-ivory/70">
-            <li><Link to="/about" className="link-gold">Our Story</Link></li>
-            <li><Link to="/stores" className="link-gold">Store Locator</Link></li>
-            <li><Link to="/journal" className="link-gold">Journal</Link></li>
-            <li><Link to="/contact" className="link-gold">Contact</Link></li>
+            {houseLinks.map(([label, to]) => (
+              <li key={label}><Link to={to} className="link-gold">{label}</Link></li>
+            ))}
           </ul>
         </div>
 
         <div>
           <p className="eyebrow text-ivory/50">Customer Care</p>
           <ul className="mt-5 space-y-2.5 text-sm text-ivory/70">
-            {care.map(([label, to]) => (
+            {careLinks.map(([label, to]) => (
               <li key={label}><Link to={to} className="link-gold">{label}</Link></li>
             ))}
           </ul>

@@ -62,7 +62,7 @@ export default function Header() {
             <Link
               to="/"
               className={`shrink-0 font-display text-[1.5rem] leading-none tracking-[0.26em] transition-colors md:text-[2.15rem] ${dark ? 'text-ivory' : 'text-ink'}`}
-              aria-label="Legendary — home"
+              aria-label="Legendary, home"
             >
               LEGENDARY
             </Link>
@@ -95,7 +95,19 @@ export default function Header() {
               dark ? 'border-ivory/15 text-ivory' : 'border-line/70 text-ink'
             }`}
           >
-            <NavLink to="/" end className="link-gold py-1" onMouseEnter={() => setMega(false)}>Home</NavLink>
+            {/* Client change: pressing Home while already on the home page
+                returns you to the top rather than doing nothing. */}
+            <NavLink
+              to="/"
+              end
+              className="link-gold py-1"
+              onMouseEnter={() => setMega(false)}
+              onClick={() => {
+                if (isHome) window.scrollTo({ top: 0, behavior: 'smooth' })
+              }}
+            >
+              Home
+            </NavLink>
             <button
               onMouseEnter={() => setMega(true)}
               onClick={() => setMega((v) => !v)}

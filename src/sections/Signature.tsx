@@ -16,7 +16,7 @@ export default function Signature() {
           <Kicker>The Signature</Kicker>
           <Reveal>
             <h2 className="mt-5 font-display text-[clamp(2.4rem,5vw,4rem)] leading-[1.02]">
-              Orchid — the scent<br />that began it all
+              Orchid, the scent<br />that began it all
             </h2>
           </Reveal>
           <Reveal delay={0.1}>
@@ -50,7 +50,7 @@ export default function Signature() {
                 <ArrowRight width={16} className="transition-transform duration-500 group-hover:translate-x-1" />
               </Link>
               <span className="flex items-center gap-2 text-sm text-smoke">
-                <ShieldCheck width={18} className="text-gold" /> Halal Certified · 30ml EDP
+                <ShieldCheck width={18} className="text-gold" /> 30ml Eau de Parfum
               </span>
             </div>
           </Reveal>
@@ -58,7 +58,8 @@ export default function Signature() {
 
         {/* Image — static, per client note to drop the hover movement */}
         <Reveal className="order-1 lg:order-2" delay={0.1}>
-          <div className="relative mx-auto aspect-[4/5] w-full max-w-md overflow-hidden rounded-sm">
+          {/* Client note: capped so the whole image is appreciable without scrolling */}
+          <div className="relative mx-auto aspect-[4/5] max-h-[58vh] w-full max-w-sm overflow-hidden rounded-sm">
             <img
               src={asset('/assets/client/signature-orchid.webp')}
               alt="Orchid eau de parfum"

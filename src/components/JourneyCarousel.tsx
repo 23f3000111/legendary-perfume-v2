@@ -34,7 +34,7 @@ export default function JourneyCarousel({ milestones }: { milestones: Milestone[
               onMouseEnter={() => setActive(i)}
               onFocus={() => setActive(i)}
               onClick={() => setActive(i)}
-              aria-label={`${m.year} — ${m.title}`}
+              aria-label={`${m.year}: ${m.title}`}
               className={`group relative h-[22rem] shrink-0 overflow-hidden rounded-sm text-left transition-all duration-700 ease-luxe md:h-[26rem] md:shrink ${
                 isActive ? 'md:flex-[2.2]' : 'md:flex-1'
               }`}

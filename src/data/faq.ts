@@ -7,11 +7,11 @@ export interface FaqItem {
 export const productFaq: FaqItem[] = [
   {
     q: 'How long does the fragrance last?',
-    a: 'Between four and seven hours on most skin. Spray onto pulse points — wrists, neck and behind the ears — and let it settle without rubbing, which shortens the wear.',
+    a: 'Between four and seven hours on most skin. Spray onto pulse points at the wrists, neck and behind the ears, then let it settle without rubbing, which shortens the wear.',
   },
   {
-    q: 'Is it Halal certified?',
-    a: 'Yes. Every Legendary fragrance is Halal certified without exception, so it can be worn with complete confidence.',
+    q: 'How strong is the scent?',
+    a: 'Eau de parfum strength. One or two sprays carry through a full day in a tropical climate without ever feeling heavy.',
   },
   {
     q: 'How should I store my perfume?',

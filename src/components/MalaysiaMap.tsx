@@ -146,17 +146,19 @@ function MapPin({
         onBlur={() => onHoverChange(false)}
         onClick={onActivate}
         className="group relative grid h-11 w-11 place-items-center"
-        aria-label={`${place.place} — ${target.title}`}
+        aria-label={`${place.place}: ${target.title}`}
       >
+        {/* Client note: dots enlarged and brightened so the locations read at a glance */}
         {lit && (
-          <span className="absolute h-9 w-9 animate-ping rounded-full bg-gold/30 [animation-duration:2.4s]" />
+          <span className="absolute h-11 w-11 animate-ping rounded-full bg-gold/35 [animation-duration:2.4s]" />
         )}
         <span
-          className={`relative block rounded-full ring-offset-0 transition-all duration-300 ${
+          className={`relative block rounded-full transition-all duration-300 ${
             lit
-              ? 'h-3.5 w-3.5 bg-gold-light ring-[5px] ring-gold/30'
-              : 'h-2.5 w-2.5 bg-gold/70 ring-0 group-hover:bg-gold-light'
+              ? 'h-5 w-5 bg-[#F3D68A] ring-[7px] ring-gold/35'
+              : 'h-4 w-4 bg-gold-light ring-4 ring-gold/25 group-hover:bg-[#F3D68A]'
           }`}
+          style={{ boxShadow: '0 0 14px rgba(243,214,138,0.85)' }}
         />
       </button>
 

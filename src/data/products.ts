@@ -91,7 +91,7 @@ export const products: Product[] = [
     bestseller: true,
     place: 'Kuala Lumpur',
     story:
-      'Orchid is the signature of Legendary, inspired by the tropical rainforests of Malaysia. Bathed in the purity of white orchids, where elegance blossoms in every delicate petal — a timeless dance of grace and serenity captured in a luscious Eau de Parfum.',
+      'Orchid is the signature of Legendary, inspired by the tropical rainforests of Malaysia. Bathed in the purity of white orchids, it is a timeless dance of grace and serenity captured in a luscious eau de parfum.',
     description:
       'A light, fresh eau de parfum that opens on orange, lemon and mandarin, blooms into a serene garden of jasmine, magnolia and tuberose, and settles on ambergris, vetiver and cedar.',
     notes: {
@@ -125,7 +125,7 @@ export const products: Product[] = [
     story:
       'A classic symbol of love and devotion that evokes mystique and timeless elegance. With a touch of sophistication and depth, Violet captures the delicate essence of a blooming violet as it unfolds into its true beauty.',
     description:
-      'One spray wraps you in lusciousness and mystery — bergamot, lychee and red fruits over cedarwood, incense and rose, resting on musk, cashmere and vanilla.',
+      'One spray wraps you in lusciousness and mystery. Bergamot, lychee and red fruits sit over cedarwood, incense and rose, resting on musk, cashmere and vanilla.',
     notes: {
       top: ['Bergamot', 'Lychee', 'Red Fruits', 'Rhubarb', 'Nutmeg'],
       heart: ['Cedarwood', 'Incense', 'Peony', 'Rose'],
@@ -158,7 +158,7 @@ export const products: Product[] = [
     bestseller: true,
     place: 'Langkawi',
     story:
-      'Inspired by the story of Mahsuri, the fragrance embodies the grace, purity and unwavering courage that immortalised her legend. It carries a noble aura and a strong spirit — a charming scent that whispers like an enchanting tale.',
+      'Inspired by the story of Mahsuri, the fragrance embodies the grace, purity and unwavering courage that immortalised her legend. It carries a noble aura and a strong spirit, a charming scent that whispers like a tale.',
     description:
       'An elegant yet powerful scent that leaves a timeless and unforgettable impression: apple, muguet and rose over a cedarwood heart, closing on amber.',
     notes: {
@@ -191,7 +191,7 @@ export const products: Product[] = [
     bestseller: true,
     place: 'Genting Highlands',
     story:
-      'A versatile fragrance crafted for the modern man — elegant, charismatic and effortlessly sophisticated. It captures the essence of timeless elegance, making it a signature scent for any occasion.',
+      'A versatile eau de parfum crafted for the modern man: elegant, charismatic and effortlessly sophisticated. It captures the essence of timeless elegance, making it a signature scent for any occasion.',
     description:
       'Grapefruit and lemon open crisp and clean before an orchard heart of apple, raspberry and orange flower, grounded in cedarwood, sandalwood and vanilla.',
     notes: {
@@ -224,7 +224,7 @@ export const products: Product[] = [
     bestseller: true,
     place: 'Melaka',
     story:
-      'A love letter to the Nyonya kebaya — its embroidered flowers rendered in scent. Delicate, feminine and rich with Peranakan romance.',
+      'A love letter to the Nyonya kebaya, with its embroidered flowers rendered in scent. Delicate, feminine and rich with Peranakan romance.',
     description:
       'Litchi and rose petals bloom into a couture bouquet of peony and freesia, sweetened by praline and cashmere wood.',
     notes: {
@@ -256,7 +256,7 @@ export const products: Product[] = [
     badges: ['Nyonya Heritage'],
     place: 'Melaka',
     story:
-      'The beloved ondeh-ondeh, reimagined as fragrance. Pandan and coconut cradle a molten heart of gula melaka — a nostalgic, edible sweetness.',
+      'The beloved ondeh-ondeh, reimagined as fragrance. Pandan and coconut cradle a molten heart of gula melaka for a nostalgic, edible sweetness.',
     description:
       'A playful green gourmand: fresh pandan and lime over coconut water, melting into palm sugar, vanilla and tonka.',
     notes: {
@@ -288,7 +288,7 @@ export const products: Product[] = [
     badges: ['Nyonya Heritage'],
     place: 'Melaka',
     story:
-      'The warmth of a Peranakan kitchen — cardamom, clove and cinnamon folded into rose and amber. Spice as heirloom, worn on the skin.',
+      'The warmth of a Peranakan kitchen, with cardamom, clove and cinnamon folded into rose and amber. Spice as heirloom, worn on the skin.',
     description:
       'An amber-spice signature: glowing cardamom and clove over ginger flower and rose, resting on sandalwood and patchouli.',
     notes: {
@@ -321,7 +321,7 @@ export const products: Product[] = [
     story:
       'A luxurious, alcohol-free collection designed for gentle, everyday indulgence. Safe for all skin types, each of the three Wishes is a soft, silken ritual.',
     description:
-      'Three clean, second-skin musks — light, hydrating and endlessly wearable. A bestseller for a reason: comfort as a daily luxury.',
+      'Three clean, second skin musks that are light, hydrating and endlessly wearable. A bestseller for a reason: comfort as a daily luxury.',
     notes: {
       top: ['Aldehydes', 'Pear', 'Bergamot'],
       heart: ['Cotton Flower', 'Peony', 'Neroli'],
@@ -352,7 +352,7 @@ export const products: Product[] = [
     story:
       'Shine with Hope, do with Love, strive with Confidence. Enhance your journey by creating unforgettable moments with the three fragrances of Spirit I.',
     description:
-      'Hope opens floral green on aqueous pear; Love turns powdery on muguet and rose; Confidence lifts bright with bergamot, pear and jasmine.',
+      'Hope opens floral green on aqueous pear. Love turns powdery on muguet and rose. Confidence lifts bright with bergamot, pear and jasmine.',
     notes: {
       top: ['Aqueous', 'Green', 'Pear', 'Bergamot'],
       heart: ['Jasmine', 'Muguet', 'Magnolia', 'Rose'],
