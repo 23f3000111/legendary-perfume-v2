@@ -190,7 +190,7 @@ export default function Product() {
               than a white plate inside a beige box. */}
           <div className="mt-10 rounded-sm border border-line bg-porcelain p-6 sm:p-7">
             <h2 className="font-display text-2xl">What’s included</h2>
-            <div className="mt-5 grid gap-6 sm:grid-cols-[0.95fr_1.05fr] sm:items-center">
+            <div className="mt-5 grid gap-6 sm:grid-cols-[0.85fr_1.15fr] sm:items-center">
               <ul className="space-y-3">
                 {product.includedItems.map((item) => (
                   <li key={item.label} className="flex gap-3">
@@ -202,10 +202,12 @@ export default function Product() {
                   </li>
                 ))}
               </ul>
+              {/* The flat-lay gets the wider half of the panel rather than
+                  overhanging its column, so it never touches the border. */}
               <img
                 src={product.included}
                 alt={`Everything included with ${product.name}`}
-                className="w-full object-contain sm:-mr-2 sm:w-[112%] sm:max-w-none"
+                className="w-full object-contain"
                 loading="lazy"
               />
             </div>
