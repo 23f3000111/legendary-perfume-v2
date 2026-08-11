@@ -6,6 +6,22 @@ import PageHeader from '../components/ui/PageHeader'
 import { Pin, Phone, Clock, ArrowUpRight, WhatsApp } from '../components/ui/icons'
 import { waLink } from '../lib/concierge'
 
+/** Authorised stockists, from the client's Trusted Sellers artwork. */
+const sellers: { name: string; file: string }[] = [
+  { name: 'AirAsia', file: 'seller-airasia.png' },
+  { name: 'Beauty Scent', file: 'seller-beauty-scent.png' },
+  { name: 'Colours & Fragrances', file: 'seller-colours-fragrances.png' },
+  { name: 'Discover Malaysia', file: 'seller-discover-malaysia.png' },
+  { name: 'Eraman', file: 'seller-eraman.png' },
+  { name: 'Parkson', file: 'seller-parkson.png' },
+  { name: 'SaSa', file: 'seller-sasa.png' },
+  { name: 'Seibu', file: 'seller-seibu.png' },
+  { name: 'SOGO', file: 'seller-sogo.png' },
+  { name: 'Star Glory', file: 'seller-star-glory.png' },
+  { name: 'Watsons', file: 'seller-watsons.png' },
+  { name: 'Zapin', file: 'seller-zapin.png' },
+]
+
 export default function Stores() {
   const [region, setRegion] = useState('All')
   const list = useMemo(
@@ -131,14 +147,18 @@ export default function Stores() {
             <p className="mx-auto mt-3 max-w-xl text-center text-sm text-smoke">
               Beyond our own boutiques, Legendary is stocked by these authorised partners.
             </p>
-            <div className="mt-9 flex flex-wrap items-center justify-center gap-x-14 gap-y-8 md:gap-x-20">
-              {['SASA', 'AirAsia', 'Watsons', 'Parkson'].map((name) => (
-                <span
-                  key={name}
-                  className="font-display text-[clamp(1.3rem,2.4vw,1.9rem)] font-bold text-ink/45 transition-colors duration-500 hover:text-ink"
-                >
-                  {name}
-                </span>
+            {/* Logos come from the client's Trusted Sellers folder, knocked
+                out onto transparency in scripts/prepare-assets.py. */}
+            <div className="mx-auto mt-9 grid max-w-4xl grid-cols-2 items-center gap-x-10 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
+              {sellers.map((s) => (
+                <div key={s.file} className="flex items-center justify-center">
+                  <img
+                    src={asset(`/assets/client/${s.file}`)}
+                    alt={s.name}
+                    loading="lazy"
+                    className="h-10 w-auto max-w-[9rem] object-contain opacity-70 grayscale transition duration-500 hover:opacity-100 hover:grayscale-0 md:h-11"
+                  />
+                </div>
               ))}
             </div>
           </div>

@@ -11,23 +11,42 @@ type Sort = 'featured' | 'price-asc' | 'price-desc' | 'az'
 const audiences = ['All', 'For Her', 'For Him', 'Unisex'] as const
 
 function isGift(p: Product) {
-  return p.size.includes('×') || p.collectionId === 'three-wishes' || p.collectionId === 'spirit'
+  return p.gift === true
 }
 
 export default function Shop() {
   const [params, setParams] = useSearchParams()
   const collectionParam = params.get('collection') ?? 'all'
   const filterParam = params.get('filter') // bestsellers | her | him | gifts
-  const [audience, setAudience] = useState<string>(
-    filterParam === 'her' ? 'For Her' : filterParam === 'him' ? 'For Him' : 'All',
-  )
   const [sort, setSort] = useState<Sort>('featured')
+
+  /* Client amendment: "For Her" and "For Him" in the footer and mega-menu did
+     nothing once you were already on the shop, because the audience was read
+     from the URL only on first mount. The audience is now derived from the
+     URL on every render, so those links always land on the right filter. */
+  const audienceParam = params.get('for')
+  const audience: string =
+    filterParam === 'her' || audienceParam === 'her' ? 'For Her'
+    : filterParam === 'him' || audienceParam === 'him' ? 'For Him'
+    : audienceParam === 'unisex' ? 'Unisex'
+    : 'All'
 
   const setCollection = (id: string) => {
     const next = new URLSearchParams(params)
     if (id === 'all') next.delete('collection')
     else next.set('collection', id)
     next.delete('filter')
+    next.delete('for')
+    setParams(next)
+  }
+
+  const setAudience = (value: string) => {
+    const next = new URLSearchParams(params)
+    const slug = value === 'For Her' ? 'her' : value === 'For Him' ? 'him' : value === 'Unisex' ? 'unisex' : null
+    if (slug) next.set('for', slug)
+    else next.delete('for')
+    // The footer arrives with ?filter=her; keep one source of truth.
+    if (filterParam === 'her' || filterParam === 'him') next.delete('filter')
     setParams(next)
   }
 
@@ -54,6 +73,8 @@ export default function Shop() {
   const activeTitle =
     filterParam === 'bestsellers' ? 'Bestsellers'
     : filterParam === 'gifts' ? 'Gifts & Sets'
+    : filterParam === 'her' ? 'For Her'
+    : filterParam === 'him' ? 'For Him'
     : collectionParam !== 'all' ? activeCollection?.name ?? 'Fragrances'
     : 'All Fragrances'
 
@@ -67,7 +88,7 @@ export default function Shop() {
       <PageHeader
         eyebrow="The Collection"
         title={activeTitle}
-        intro="Nine Malaysian fragrances, each one an olfactory postcard of the country. Shop eau de parfum for her, for him and gift sets."
+        intro="Malaysian fragrances, each one an olfactory postcard of the country. Shop eau de parfum for her, for him and gift sets."
         crumbs={[{ label: 'Home', to: '/' }, { label: 'Fragrances' }]}
         image={banner}
       />

@@ -93,7 +93,7 @@ export default function MalaysiaMap() {
           >
             <div className="h-24 w-20 shrink-0 overflow-hidden rounded-md bg-ivory/10">
               <img
-                src={target.product.image}
+                src={target.image}
                 alt={target.title}
                 className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
               />
@@ -189,7 +189,7 @@ function MapPin({
 
               <div className="mt-3 flex items-center gap-3 border-t border-ivory/12 pt-3">
                 <img
-                  src={target.product.image}
+                  src={target.image}
                   alt=""
                   className="h-12 w-10 shrink-0 rounded object-cover"
                 />

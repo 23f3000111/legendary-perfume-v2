@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
-import type { Product, ScentNotes } from '../data/products'
+import type { ScentNotes } from '../data/products'
+import type { AccentKey } from '../data/products'
 import { accent } from '../lib/accents'
 
 const tiers: { key: keyof ScentNotes; label: string; sub: string }[] = [
@@ -11,13 +12,27 @@ const tiers: { key: keyof ScentNotes; label: string; sub: string }[] = [
 /**
  * "A fragrance in three acts".
  *
- * Client redesign: the animated diffusion rings are replaced by their supplied
- * occasion chart (Sport · Work · Social · Vacation · Casual) beside a single
- * notes plate, with the scent's botanical bleeding off the right edge.
+ * The client's occasion chart (Sport · Work · Social · Vacation · Casual) sits
+ * beside a single notes plate, with the scent's botanical bleeding off the
+ * right edge of the parent band.
+ *
+ * Client amendment: the plate used to run 14% past its column and pressed
+ * against the section edge. The overhang is now half that, so the plate still
+ * carries over the botanical but keeps a clear gutter on the right.
  */
-export default function ScentPyramid({ product }: { product: Product }) {
-  const tone = accent(product.accent)
-  const { notes } = product
+export default function ScentPyramid({
+  notes,
+  radar,
+  accentKey,
+  name,
+}: {
+  notes: ScentNotes
+  radar: string
+  accentKey: AccentKey
+  /** Used for the chart's alt text. */
+  name: string
+}) {
+  const tone = accent(accentKey)
 
   return (
     <div className="grid items-center gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:gap-12">
@@ -30,16 +45,16 @@ export default function ScentPyramid({ product }: { product: Product }) {
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
       >
         <img
-          src={product.radar}
-          alt={`Where ${product.name} is best worn: sport, work, social, vacation and casual`}
+          src={radar}
+          alt={`Where ${name} is best worn: sport, work, social, vacation and casual`}
           className="h-auto w-full"
         />
       </motion.div>
 
-      {/* Notes plate — client asked for a gradient opacity, running wider so it
-          carries over the botanical instead of stopping short of it. */}
+      {/* Notes plate — gradient opacity, running wide enough to carry over the
+          botanical without reaching the edge of the band. */}
       <motion.div
-        className="relative rounded-xl p-8 backdrop-blur-[3px] sm:p-10 lg:-mr-[14%] lg:w-[114%]"
+        className="relative rounded-xl p-8 backdrop-blur-[3px] sm:p-10 lg:-mr-[7%] lg:w-[107%]"
         style={{
           background:
             'linear-gradient(100deg, rgba(251,248,242,0.95) 0%, rgba(251,248,242,0.88) 55%, rgba(251,248,242,0.55) 100%)',

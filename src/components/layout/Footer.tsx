@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { WhatsApp, Instagram, Facebook, TikTok, ArrowRight, Check } from '../ui/icons'
 import { waLink } from '../../lib/concierge'
 import Particles from '../ui/Particles'
+import { Wordmark } from '../ui/Wordmark'
 
 // Client change: this column now mirrors the Shop menu rather than listing
 // collections, and every link resolves to a real destination.
@@ -21,13 +22,14 @@ const houseLinks: [string, string][] = [
   ['Contact', '/contact'],
 ]
 
-// FAQ, shipping and returns are all answered by the FAQ block on the contact
-// page. Terms and Privacy are intentionally absent until the client supplies
-// that copy — a wrong link is worse than no link.
+// Revision 2: the client supplied the FAQ, shipping, returns, terms and
+// privacy copy, so each of these now has a page of its own.
 const careLinks: [string, string][] = [
-  ['FAQ', '/contact#faq'],
-  ['Shipping & Delivery', '/contact#faq'],
-  ['Returns & Exchange', '/contact#faq'],
+  ['FAQ', '/faq'],
+  ['Shipping Policy', '/shipping'],
+  ['Return, Refund & Exchange', '/returns'],
+  ['Terms of Service', '/terms'],
+  ['Privacy Policy', '/privacy'],
   ['Track My Order', '/contact'],
 ]
 
@@ -79,7 +81,9 @@ export default function Footer() {
       {/* Columns */}
       <div className="u-container relative grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <Link to="/" className="font-display text-2xl tracking-[0.22em]">LEGENDARY</Link>
+          <Link to="/" aria-label="Legendary, home" className="inline-block text-ivory">
+            <Wordmark height="1.7rem" />
+          </Link>
           <p className="mt-4 max-w-xs text-sm text-ivory/55">
             A Malaysian perfume house on a mission to share the best of Malaysia’s fragrances with the world.
           </p>

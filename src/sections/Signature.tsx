@@ -23,22 +23,23 @@ export default function Signature() {
             <p className="mt-6 max-w-lg text-lg text-ink-soft">{orchid.story}</p>
           </Reveal>
 
-          {/* Client layout: years in trade beside lifetime bottles sold */}
+          {/* Client layout: years in trade beside lifetime bottles sold.
+              Revision 2 sets the copy to "Since 2015" and "bottles loved
+              worldwide", the figure in Noto Serif Medium and the year in
+              Minion Bold. */}
           <Reveal delay={0.15}>
             <div className="mt-9 flex max-w-lg flex-wrap items-center gap-x-10 gap-y-6 border-y border-line py-7">
-              <div className="text-center">
-                <p className="font-display text-[2.4rem] font-bold leading-none text-ink">2015</p>
-                <span className="mx-auto my-1.5 block h-px w-4 bg-smoke/60" />
-                <p className="font-display text-[1.5rem] font-bold uppercase leading-none tracking-[0.02em] text-ink">
-                  Till date
+              <div>
+                <p className="font-minion text-[clamp(1.9rem,3.4vw,2.5rem)] font-bold uppercase leading-[1.05] tracking-[0.01em] text-ink">
+                  Since<br />2015
                 </p>
               </div>
               <span className="hidden h-14 w-px bg-line sm:block" />
               <div>
-                <p className="font-display text-[clamp(2.2rem,4.4vw,3.2rem)] font-bold leading-none text-gold-deep">
+                <p className="font-noto text-[clamp(2rem,4.2vw,3rem)] font-medium leading-none text-gold-deep">
                   30,000,000+
                 </p>
-                <p className="mt-2 text-sm text-ink-soft">totalled bottles sold</p>
+                <p className="mt-2 text-sm text-ink-soft">bottles loved worldwide</p>
               </div>
             </div>
           </Reveal>

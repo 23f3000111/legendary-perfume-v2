@@ -27,6 +27,12 @@ export default {
       fontFamily: {
         display: ['"Cormorant Garamond"', 'Garamond', 'Georgia', 'serif'],
         sans: ['Jost', 'system-ui', 'sans-serif'],
+        // Client spec: figures set in Minion Variable Concept. That is an Adobe
+        // licence we cannot serve, so it is named first and Source Serif 4
+        // (Adobe's open sibling) carries the look everywhere else.
+        minion: ['"Minion Variable Concept"', '"Minion Pro"', '"Source Serif 4"', 'Georgia', 'serif'],
+        // Client spec: the bottles-sold figure is Noto Serif Medium.
+        noto: ['"Noto Serif"', 'Georgia', 'serif'],
       },
       letterSpacing: {
         luxe: '0.28em',

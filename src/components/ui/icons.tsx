@@ -85,6 +85,21 @@ export const Gift = (p: P) => (
 export const ShieldCheck = (p: P) => (
   <svg {...base(p)}><path d="M12 3 5 6v5c0 4.5 3 7.6 7 9 4-1.4 7-4.5 7-9V6l-7-3Z" /><path d="m9 12 2 2 4-4" /></svg>
 )
+/**
+ * The Legendary sample vial.
+ *
+ * Client amendment: the "Complimentary Samples" tile carried a raster of the
+ * vial artwork, which read at a different weight and colour to its neighbours.
+ * Drawing it here puts it on the same 1.4px stroke and currentColor as Secure
+ * Payment, Complimentary Delivery and Gift Wrapping.
+ */
+export const Vial = (p: P) => (
+  <svg {...base(p)}>
+    <rect x="8.5" y="2.6" width="7" height="3.2" rx="0.8" />
+    <path d="M9.6 5.8h4.8v14.1a1.5 1.5 0 0 1-1.5 1.5h-1.8a1.5 1.5 0 0 1-1.5-1.5V5.8Z" />
+    <path d="M9.6 10.4h4.8" />
+  </svg>
+)
 export const Compass = (p: P) => (
   <svg {...base(p)}><circle cx="12" cy="12" r="8.5" /><path d="m15.5 8.5-2 5-5 2 2-5 5-2Z" /></svg>
 )

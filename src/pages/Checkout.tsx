@@ -7,7 +7,7 @@ import { Check, ArrowRight, ArrowLeft, ShieldCheck, Sparkle, Bag } from '../comp
 
 const steps = ['Details', 'Delivery', 'Payment']
 const deliveryOptions = [
-  { id: 'standard', label: 'Standard Delivery', note: '2–4 business days · fully tracked', price: 0 },
+  { id: 'standard', label: 'Standard Delivery', note: '2 to 4 business days · fully tracked', price: 0 },
   { id: 'express', label: 'Express Delivery', note: 'Next business day', price: 20 },
 ]
 const payMethods = ['Card', 'FPX Online Banking', 'GrabPay', 'Touch ’n Go']

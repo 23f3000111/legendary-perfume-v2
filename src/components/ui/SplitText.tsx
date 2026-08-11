@@ -55,10 +55,10 @@ export default function SplitText({
   )
 }
 
-export function Kicker({ children }: { children: ReactNode }) {
+export function Kicker({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
     <motion.span
-      className="eyebrow inline-flex items-center gap-3"
+      className={`eyebrow inline-flex items-center gap-3 ${className}`}
       initial={{ opacity: 0 }}
       whileInView={{ opacity: 1 }}
       viewport={{ once: true }}

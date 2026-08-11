@@ -62,7 +62,7 @@ export default function Concierge() {
             >
               <span className="absolute inset-0 animate-ping rounded-full bg-gold/40 [animation-duration:2.6s]" />
               <img
-                src={asset('/assets/client/icon-perfume.webp')}
+                src={asset('/assets/client/icon-perfume.png')}
                 alt=""
                 className="relative h-7 w-7 object-contain"
               />
@@ -85,7 +85,7 @@ export default function Concierge() {
             <div className="relative flex items-center gap-3 bg-ink px-5 py-4 text-ivory">
               <div className="pointer-events-none absolute inset-0 opacity-10 peranakan" style={{ color: '#CBAA5D' }} />
               <div className="relative grid h-10 w-10 place-items-center rounded-full" style={{ background: 'linear-gradient(135deg,#CBAA5D,#8A6D2A)' }}>
-                <img src={asset('/assets/client/icon-perfume.webp')} alt="" className="h-5 w-5 object-contain" />
+                <img src={asset('/assets/client/icon-perfume.png')} alt="" className="h-5 w-5 object-contain" />
               </div>
               <div className="relative flex-1">
                 <p className="font-display text-lg leading-none">Concierge</p>

@@ -33,6 +33,9 @@ OUT = os.path.join(ROOT, "public", "assets", "client")
 
 INVISIBLE = dict.fromkeys(map(ord, "⁠​‎‏﻿"), None)
 
+# House gold, used to tint the supplied black line art.
+GOLD = (176, 141, 62)
+
 
 def norm(s: str) -> str:
     """Lowercase, strip invisible codepoints and collapse whitespace."""
@@ -72,6 +75,10 @@ def find(subdir: str, *needles: str) -> str:
     raise FileNotFoundError(f"{subdir} :: {needles}")
 
 
+# --------------------------------------------------------------------------
+# Writers
+# --------------------------------------------------------------------------
+
 def save_webp(src: str, dest: str, max_side: int, quality: int = 82, keep_alpha: bool = False) -> None:
     im = Image.open(src)
     if keep_alpha:
@@ -87,9 +94,63 @@ def save_webp(src: str, dest: str, max_side: int, quality: int = 82, keep_alpha:
     if max(im.size) > max_side:
         scale = max_side / max(im.size)
         im = im.resize((round(im.width * scale), round(im.height * scale)), Image.LANCZOS)
+    write(im, dest, quality=quality)
+
+
+def save_cutout(src: str, dest: str, max_side: int, quality: int = 84) -> None:
+    """A transparent product cut-out, kept as lossy WebP with its alpha intact.
+
+    The client's "…Website.png" and "…What you get.png" artboards are 3800px to
+    8300px RGBA files of 2MB to 20MB each. Lossy WebP keeps the alpha channel,
+    so the cut-out still sits on the tile's accent gradient, at a tenth of the
+    weight of the equivalent PNG.
+    """
+    im = Image.open(src).convert("RGBA")
+    if max(im.size) > max_side:
+        scale = max_side / max(im.size)
+        im = im.resize((round(im.width * scale), round(im.height * scale)), Image.LANCZOS)
+    if im.getchannel("A").getextrema() == (255, 255):
+        # A few artboards (Spirit II's flat-lay among them) ship opaque on white.
+        im = ground_to_alpha(im)
+    im = trim_alpha(im)
+    write(im, dest, quality=quality)
+
+
+def ground_to_alpha(im: Image.Image, thresh: int = 26) -> Image.Image:
+    """Knock out only the white that touches the artboard edge.
+
+    A blanket "white becomes transparent" pass would punch holes through the
+    white paper bag and gift boxes inside these flat-lays, so the fill starts
+    from the four corners and stops at the product edges.
+    """
+    from PIL import ImageDraw
+
+    KEY = (255, 0, 255)
+    rgb = im.convert("RGB")
+    w, h = rgb.size
+    for seed in ((0, 0), (w - 1, 0), (0, h - 1), (w - 1, h - 1)):
+        if sum(rgb.getpixel(seed)) < 690:  # corner is not near-white: leave it
+            continue
+        ImageDraw.floodfill(rgb, seed, KEY, thresh=thresh)
+    keyed = rgb.point(lambda v: v)  # materialise
+    mask = Image.new("L", rgb.size, 255)
+    px, mp = keyed.load(), mask.load()
+    for y in range(h):
+        for x in range(w):
+            if px[x, y] == KEY:
+                mp[x, y] = 0
+    out = im.copy()
+    out.putalpha(mask)
+    return out
+
+
+def write(im: Image.Image, dest: str, quality: int = 82) -> None:
     path = os.path.join(OUT, dest)
     os.makedirs(os.path.dirname(path), exist_ok=True)
-    im.save(path, "WEBP", quality=quality, method=6)
+    if dest.endswith(".png"):
+        im.save(path, "PNG", optimize=True)
+    else:
+        im.save(path, "WEBP", quality=quality, method=6)
     report(path)
 
 
@@ -98,23 +159,131 @@ def trim_alpha(im: Image.Image) -> Image.Image:
     return im.crop(box) if box else im
 
 
-def white_to_alpha(src: str, dest: str, max_side: int, threshold: int = 238) -> None:
-    """Client mood icons are black line art on flat white; knock the white out."""
-    im = Image.open(src).convert("RGBA")
+def opaque_to_alpha(im: Image.Image, threshold: int = 238) -> Image.Image:
+    """Knock a flat near-white background out of artwork that ships opaque."""
+    im = im.convert("RGBA")
+    if im.getchannel("A").getextrema() != (255, 255):
+        return im  # already has real transparency
     px = im.load()
     for y in range(im.height):
         for x in range(im.width):
             r, g, b, _ = px[x, y]
             if r > threshold and g > threshold and b > threshold:
                 px[x, y] = (0, 0, 0, 0)
+    return im
+
+
+def tinted_line_art(src: str, dest: str, max_side: int, colour: tuple[int, int, int] = GOLD) -> None:
+    """Client icons are black line art on flat white.
+
+    Knock the white out and repaint the strokes in the house gold, so the mood
+    tiles and the perfume roundel read as one set with the drawn SVG icons.
+    """
+    im = Image.open(src).convert("RGBA")
+    lum = im.convert("L")
+    # Ink coverage becomes the alpha channel, keeping the anti-aliasing.
+    alpha = Image.eval(lum, lambda v: 255 - v)
+    if im.getchannel("A").getextrema() != (255, 255):
+        # Artwork already has transparency: respect it as well as the ink.
+        alpha = Image.eval(
+            Image.merge("L", (alpha,)), lambda v: v
+        )
+        alpha = Image.composite(alpha, Image.new("L", im.size, 0), im.getchannel("A"))
+    out = Image.new("RGBA", im.size, colour + (0,))
+    out.putalpha(alpha)
+    out = trim_alpha(out)
+    if max(out.size) > max_side:
+        scale = max_side / max(out.size)
+        out = out.resize((round(out.width * scale), round(out.height * scale)), Image.LANCZOS)
+    write(out, dest)
+
+
+def flat_fill(src: str, dest: str, max_side: int, colour: tuple[int, int, int] = (255, 255, 255)) -> None:
+    """Repaint a supplied silhouette in a flat colour, keeping its own alpha.
+
+    The perfume bottle mark ships as a white cut-out, which is invisible in a
+    contact sheet but correct in place: it sits inside the gold concierge
+    roundel. Recolouring here rather than with a CSS filter keeps the edges
+    clean at every size.
+    """
+    im = Image.open(src).convert("RGBA")
+    alpha = im.getchannel("A")
+    out = Image.new("RGBA", im.size, colour + (0,))
+    out.putalpha(alpha)
+    out = trim_alpha(out)
+    if max(out.size) > max_side:
+        scale = max_side / max(out.size)
+        out = out.resize((round(out.width * scale), round(out.height * scale)), Image.LANCZOS)
+    write(out, dest)
+
+
+def logo_mask(src: str, dest: str, max_side: int, page: int = 0) -> None:
+    """Turn a black-on-white logo artboard into a tintable alpha mask.
+
+    Kept as a mask rather than a coloured PNG so one file serves the ivory
+    header, the ink header and the gilt intro curtain.
+    """
+    import fitz
+
+    doc = fitz.open(src)
+    pix = doc[page].get_pixmap(matrix=fitz.Matrix(4, 4), alpha=False)
+    im = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
+    alpha = Image.eval(im.convert("L"), lambda v: 255 - v)
+    out = Image.new("RGBA", im.size, (255, 255, 255, 0))
+    out.putalpha(alpha)
+    out = trim_alpha(out)
+    if max(out.size) > max_side:
+        scale = max_side / max(out.size)
+        out = out.resize((round(out.width * scale), round(out.height * scale)), Image.LANCZOS)
+    write(out, dest)
+
+
+def script_mask(src: str, dest: str, max_side: int) -> None:
+    """"the legend of scent" ships as white script on a flat grey artboard.
+
+    The client asked for that grey box gone. Reading the artboard's own
+    background colour and scaling luminance above it into alpha lifts the
+    script off cleanly and keeps the hairline strokes anti-aliased.
+    """
+    import fitz
+
+    doc = fitz.open(src)
+    pix = doc[0].get_pixmap(matrix=fitz.Matrix(4, 4), alpha=False)
+    im = Image.frombytes("RGB", (pix.width, pix.height), pix.samples)
+    # The white lockup sits on the lower half of the artboard. Inset a little
+    # so the artboard's own 1px lighter rule does not survive as a hairline.
+    pad = max(4, round(im.width * 0.004))
+    im = im.crop((pad, round(im.height * 0.52), im.width - pad, im.height - pad))
+    lum = im.convert("L")
+    # Sample the grey box along its own border. The fill is not perfectly flat,
+    # so anything within a tolerance of that value is treated as background;
+    # without the deadzone the whole rectangle survives as a faint wash.
+    w, h = lum.size
+    edge = [lum.getpixel(p) for p in ((2, 2), (w - 3, 2), (2, h - 3), (w - 3, h - 3), (w // 2, 2))]
+    ground = sorted(edge)[len(edge) // 2]
+    floor = ground + 20
+    span = max(1, 255 - floor)
+    alpha = Image.eval(lum, lambda v: 0 if v <= floor else min(255, round((v - floor) * 255 / span)))
+    out = Image.new("RGBA", im.size, (255, 255, 255, 0))
+    out.putalpha(alpha)
+    out = trim_alpha(out)
+    if max(out.size) > max_side:
+        scale = max_side / max(out.size)
+        out = out.resize((round(out.width * scale), round(out.height * scale)), Image.LANCZOS)
+    write(out, dest)
+
+
+def brand_mark(src: str, dest: str, max_side: int, pad: float = 0.06) -> None:
+    """A partner or stockist logo, knocked out onto transparency and padded."""
+    im = opaque_to_alpha(Image.open(src))
     im = trim_alpha(im)
     if max(im.size) > max_side:
         scale = max_side / max(im.size)
         im = im.resize((round(im.width * scale), round(im.height * scale)), Image.LANCZOS)
-    path = os.path.join(OUT, dest)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    im.save(path, "PNG", optimize=True)
-    report(path)
+    m = round(max(im.size) * pad)
+    canvas = Image.new("RGBA", (im.width + m * 2, im.height + m * 2), (255, 255, 255, 0))
+    canvas.paste(im, (m, m))
+    write(canvas, dest)
 
 
 def silhouette(src: str, dest: str, max_side: int) -> None:
@@ -133,26 +302,7 @@ def silhouette(src: str, dest: str, max_side: int) -> None:
     alpha = Image.eval(lum, lambda v: 255 - v)
     out = Image.new("RGBA", im.size, (255, 255, 255, 0))
     out.putalpha(alpha)
-    path = os.path.join(OUT, dest)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    out.save(path, "PNG", optimize=True)
-    report(path)
-
-
-def render_pdf(src: str, dest: str, zoom: float, crop: tuple[float, float, float, float] | None = None) -> None:
-    import fitz
-
-    doc = fitz.open(src)
-    pix = doc[0].get_pixmap(matrix=fitz.Matrix(zoom, zoom), alpha=True)
-    im = Image.frombytes("RGBA", (pix.width, pix.height), pix.samples)
-    if crop:
-        l, t, r, b = crop
-        im = im.crop((round(im.width * l), round(im.height * t), round(im.width * r), round(im.height * b)))
-    im = trim_alpha(im)
-    path = os.path.join(OUT, dest)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    im.save(path, "PNG", optimize=True)
-    report(path)
+    write(out, dest)
 
 
 def transcode(
@@ -187,31 +337,87 @@ def report(path: str) -> None:
 HOME = "1.0 HOME"
 COLL = "2.0 FRAGRANCES/Collections"
 SHOP = "2.0 FRAGRANCES/Shop"
+BANNER = "Banner Photo (ENLARGED)"
 
-# id -> (folder with box/lifestyle, radar "Asset NN", bloom "Legendary-NN", what-you-get folder)
+# id -> (source folder, radar "Asset NN", bloom "Legendary-NN" or None)
 PRODUCTS = {
-    "orchid":          (f"{COLL}/1.Signature/1.0 Orchid",        "asset 18", "legendary-01", None),
-    "violet":          (f"{COLL}/1.Signature/2.0 Violet",        "asset 19", "legendary-03", None),
-    "mahsuri":         (f"{COLL}/1.Signature/3.0 Mahsuri",       "asset 20", "legendary-05", None),
-    "man":             (f"{COLL}/1.Signature/4.0 Man",           "asset 21", "legendary-04", None),
-    "kebaya-blooms":   (f"{COLL}/2.Nyonya/Kebaya Blooms",        "asset 26", "legendary-08", None),
-    "ondeh-delights":  (f"{COLL}/2.Nyonya/Ondeh Delights",       "asset 25", "legendary-09", None),
-    "nyonya-aromatic": (f"{COLL}/2.Nyonya/Nyonya Aromatic",      "asset 24", "legendary-10", None),
-    "3-wishes":        (f"{COLL}/3.3 Wishes/3 Wishes",           "asset 31", None,           None),
-    "spirit":          (f"{COLL}/4.Spirit/Spirit 1",             "asset 22", None,           None),
+    "orchid":            (f"{COLL}/1.Signature/1.0 Orchid",   "asset 18", "legendary-01"),
+    "violet":            (f"{COLL}/1.Signature/2.0 Violet",   "asset 19", "legendary-03"),
+    "mahsuri":           (f"{COLL}/1.Signature/3.0 Mahsuri",  "asset 20", "legendary-05"),
+    "man":               (f"{COLL}/1.Signature/4.0 Man",      "asset 21", "legendary-04"),
+    "kebaya-blooms":     (f"{COLL}/2.Nyonya/Kebaya Blooms",   "asset 26", "legendary-08"),
+    "ondeh-delights":    (f"{COLL}/2.Nyonya/Ondeh Delights",  "asset 25", "legendary-09"),
+    "nyonya-aromatic":   (f"{COLL}/2.Nyonya/Nyonya Aromatic", "asset 24", "legendary-10"),
+    "3-wishes":          (f"{COLL}/3.3 Wishes/3 Wishes",      "asset 31", None),
+    "spirit":            (f"{COLL}/4.Spirit/Spirit 1",        "asset 23", None),
+    "spirit-ii":         (f"{COLL}/4.Spirit/Spirit 2",        "asset 28", None),
+    "spirit-travel-kit": (f"{COLL}/4.Spirit/Travel Kit",      None,       None),
+}
+
+# The pack shot is a transparent cut-out so the tile's SKU gradient shows
+# through it. Filenames are inconsistent across the delivery, hence the needles.
+PACK_NEEDLES = {
+    "orchid":            ("orchid website",),
+    "violet":            ("violet website",),
+    "mahsuri":           ("mahsuri.png",),
+    "man":               ("man website",),
+    "kebaya-blooms":     ("kebaya blooms website",),
+    "ondeh-delights":    ("ondeh delights website",),
+    "nyonya-aromatic":   ("nyonya aromatic website",),
+    "3-wishes":          ("3 wishes website",),
+    "spirit":            ("spirit 1 website",),
+    "spirit-ii":         ("spirit 2 website",),
+    "spirit-travel-kit": ("travel kit_spirit 1 website", ".png"),
+}
+
+# The travel kit folder holds only its own lifestyle shot and pack cut-out, so
+# the box shot and the "what you get" flat-lay come from Spirit I.
+FALLBACK_FOLDER = {"spirit-travel-kit": f"{COLL}/4.Spirit/Spirit 1"}
+
+
+def find_or_fallback(pid: str, folder: str, *needles: str) -> str:
+    """Look in the product's own folder first, then its fallback."""
+    try:
+        return find(folder, *needles)
+    except FileNotFoundError:
+        fallback = FALLBACK_FOLDER.get(pid)
+        if not fallback:
+            raise
+        return find(fallback, *needles)
+
+# Sets whose composition band repeats once per fragrance in the box.
+# (product id, source folder) -> [(slug, radar needle, bloom needle)]
+VARIANTS = {
+    "spirit": (
+        f"{COLL}/4.Spirit/Spirit 1",
+        [("hope", "asset 23", "hope"), ("love", "asset 22", "love"), ("confidence", "asset 27", "confidence")],
+    ),
+    "spirit-travel-kit": (
+        f"{COLL}/4.Spirit/Spirit 1",
+        [("hope", "asset 23", "hope"), ("love", "asset 22", "love"), ("confidence", "asset 27", "confidence")],
+    ),
+    "spirit-ii": (
+        f"{COLL}/4.Spirit/Spirit 2",
+        [("passion", "asset 28", "passion"), ("life", "asset 30", "life"), ("dream", "asset 29", "dream")],
+    ),
+    "3-wishes": (
+        f"{COLL}/3.3 Wishes/3 Wishes",
+        [("wish-i", "asset 31", "wish i.png"), ("wish-ii", "asset 32", "wish ii.png"), ("wish-iii", "asset 33", "wish iii.png")],
+    ),
 }
 
 BANNERS = {
-    "fragrances":  (f"{SHOP}/1.All Fragrances/Banner Photo", "all fragrances"),
-    "bestsellers": (f"{SHOP}/2.Bestsellers/Banner Photo",    "bestsellers"),
-    "gifts":       (f"{SHOP}/5.Gifts & Sets/Banner Photo",   "gift"),
-    "stores":      ("3.0 STORES/Banner Photo",               "stores"),
-    "our-story":   ("4.0 OUR STORY/Banner Photo",            "our story"),
-    "journal":     ("5.0 JOURNAL/Banner Photo",              "journal"),
-    "contact":     ("6.0 CONTACT/Banner Photo",              "contact"),
-    "signature":   (f"{COLL}/1.Signature/Banner Photo",      "signature"),
-    "nyonya":      (f"{COLL}/2.Nyonya/Banner Photo",         "nyonya"),
-    "3wishes":     (f"{COLL}/3.3 Wishes/Banner Photo",       "3wishes"),
+    "fragrances":  (f"{SHOP}/1.All Fragrances/{BANNER}", "all fragrances"),
+    "bestsellers": (f"{SHOP}/2.Bestsellers/{BANNER}",    "bestsellers"),
+    "gifts":       (f"{SHOP}/5.Gifts & Sets/{BANNER}",   "gift"),
+    "stores":      (f"3.0 STORES/{BANNER}",              "stores"),
+    "our-story":   (f"4.0 OUR STORY/{BANNER}",           "our story"),
+    "journal":     (f"5.0 JOURNAL/{BANNER}",             "journal"),
+    "contact":     (f"6.0 CONTACT/{BANNER}",             "contact"),
+    "signature":   (f"{COLL}/1.Signature/{BANNER}",      "signature"),
+    "nyonya":      (f"{COLL}/2.Nyonya/{BANNER}",         "nyonya"),
+    "3wishes":     (f"{COLL}/3.3 Wishes/{BANNER}",       "3wishes"),
+    "spirit":      (f"{COLL}/4.Spirit/{BANNER}",         "spirit"),
 }
 
 MOODS = {
@@ -221,7 +427,53 @@ MOODS = {
     "playful":  (f"{HOME}/What mood are you wearing today_/4.Playful",  "playful"),
 }
 
-JOURNEY_YEARS = ["2015", "2016", "2017", "2018", "2019", "2022", "2023"]
+# The four collection covers the client re-shot for "Four worlds, bottled".
+COLLECTION_COVERS = {
+    "signature": (f"{HOME}/Four worlds, bottled/Signature", "home-signature"),
+    "nyonya":    (f"{HOME}/Four worlds, bottled/Nyonya",    "home-nyonya"),
+    "3-wishes":  (f"{HOME}/Four worlds, bottled/3 Wishes",  "home-3 wishes"),
+    "spirit":    (f"{HOME}/Four worlds, bottled/Spirit",    "home-spirit"),
+}
+
+# Cards on the "Every scent is born of a place" map.
+PLACES = {
+    "melaka":        (f"{HOME}/Every scent is born of a place/Melaka",        "home-nyonya"),
+    "kota-kinabalu": (f"{HOME}/Every scent is born of a place/Kota Kinabalu", "home-spirit"),
+}
+
+PARTNERS = {
+    "airasia":          (f"{HOME}/Partnered with/AirAsia",          "airasia logo_red"),
+    "bsas":             (f"{HOME}/Partnered with/BSAS",             "bsas"),
+    "ctrip":            (f"{HOME}/Partnered with/Ctrip",            "ctrip"),
+    "eraman":           (f"{HOME}/Partnered with/Eraman",           "eraman logo"),
+    "honor":            (f"{HOME}/Partnered with/Honor",            "honor"),
+    "isetan":           (f"{HOME}/Partnered with/ISETAN",           "isetan"),
+    "parkson-elite":    (f"{HOME}/Partnered with/Parkson Elite",    "parkson"),
+    "sasa":             (f"{HOME}/Partnered with/SaSa",             "sasa"),
+    "segi":             (f"{HOME}/Partnered with/SEGI",             "segi"),
+    "seibu":            (f"{HOME}/Partnered with/Seibu TRX",        "seibu"),
+    "sogo":             (f"{HOME}/Partnered with/SOGO",             "kl-black"),
+    "tourism-malaysia": (f"{HOME}/Partnered with/Tourism Malaysia", "tourism"),
+    "valiram":          (f"{HOME}/Partnered with/Valiram",          "valiram"),
+    "watsons":          (f"{HOME}/Partnered with/Watsons/Watsons",  "watsons"),
+}
+
+SELLERS = {
+    "airasia":            ("3.0 STORES/Trusted Sellers/AirAsia",              "airasia logo_red"),
+    "beauty-scent":       ("3.0 STORES/Trusted Sellers/Beauty Scent",         "beauty"),
+    "colours-fragrances": ("3.0 STORES/Trusted Sellers/Colours & Fragrances", "logo-cf"),
+    "discover-malaysia":  ("3.0 STORES/Trusted Sellers/Discover Malaysia",    "discover malaysia logo"),
+    "eraman":             ("3.0 STORES/Trusted Sellers/Eraman",               "eraman logo"),
+    "parkson":            ("3.0 STORES/Trusted Sellers/Parkson Elite",        "parkson.png"),
+    "sasa":               ("3.0 STORES/Trusted Sellers/SaSa",                 "sasa"),
+    "seibu":              ("3.0 STORES/Trusted Sellers/Seibu TRX",            "seibu"),
+    "sogo":               ("3.0 STORES/Trusted Sellers/SOGO",                 "kl-black"),
+    "star-glory":         ("3.0 STORES/Trusted Sellers/Star Glory",           "star-glory"),
+    "watsons":            ("3.0 STORES/Trusted Sellers/Watsons/Watsons",      "watsons"),
+    "zapin":              ("3.0 STORES/Trusted Sellers/Zapin",                "black logo"),
+}
+
+JOURNEY_YEARS = ["2015", "2016", "2017", "2018", "2019", "2022", "2023", "2024", "2025"]
 
 
 def main() -> int:
@@ -233,39 +485,59 @@ def main() -> int:
     os.makedirs(OUT, exist_ok=True)
 
     print("Brand marks")
-    logo = os.path.join(SRC, "Legendary Logo", "the legend of scent.pdf")
-    # The supplied artboard stacks a dark lockup over a white one.
-    render_pdf(logo, "wordmark-scent-dark.png", 3.0, crop=(0, 0.0, 1, 0.52))
-    render_pdf(logo, "wordmark-scent-light.png", 3.0, crop=(0, 0.52, 1, 1.0))
+    logos = os.path.join(SRC, "Legendary Logo")
+    logo_mask(os.path.join(logos, "Legendary logo.pdf"), "logo-legendary.png", 1400)
+    script_mask(os.path.join(logos, "the legend of scent.pdf"), "wordmark-scent.png", 1200)
 
     print("Scented-memory map")
     silhouette(os.path.join(ROOT, "public", "map.webp"), "map-malaysia.png", 1400)
 
     print("Icons")
-    save_webp(find(f"{HOME}/ICON/Perfume Icon", "perfume icon", ".png"), "icon-perfume.webp", 420, keep_alpha=True)
-    save_webp(find(f"{HOME}/ICON/Vial Icon", "website vial", ".png"), "icon-vial.webp", 420, keep_alpha=True)
+    # The bottle mark rides inside the gold concierge roundel, so it stays white.
+    flat_fill(find(f"{HOME}/ICON/Perfume Icon", "perfume icon", ".png"), "icon-perfume.png", 360)
     for key, (folder, needle) in MOODS.items():
-        white_to_alpha(find(folder, needle), f"mood-{key}.png", 320)
+        tinted_line_art(find(folder, needle), f"mood-{key}.png", 320)
 
     print("Home sections")
-    save_webp(find(f"{HOME}/Orchid — the scent that began it all", "orchid"), "signature-orchid.webp", 1600)
+    save_webp(find(f"{HOME}/Orchid — the scent that began it all", "home-orchid"), "signature-orchid.webp", 1600)
     save_webp(find(f"{HOME}/A house rooted in Malaysian soul", "home-nyonya"), "heritage-nyonya.webp", 1800)
-    save_webp(find(f"{HOME}/The Art of Gifting", "wishes"), "gifting-wishes.webp", 1800)
 
     print("Collection covers")
-    save_webp(find(f"{HOME}/Four worlds, bottled/Signature", "signature family"), "collection-signature.webp", 1600)
-    save_webp(find(f"{HOME}/Four worlds, bottled/Spirit", "spirit 1,2 family"), "collection-spirit.webp", 1600)
-    save_webp(find(f"{HOME}/Four worlds, bottled/3 Wishes", "photo-01"), "collection-3-wishes.webp", 1600)
-    save_webp(find(f"{COLL}/2.Nyonya/Banner Photo", "nyonya"), "collection-nyonya.webp", 1600)
+    for key, (folder, needle) in COLLECTION_COVERS.items():
+        save_webp(find(folder, needle), f"collection-{key}.webp", 1600)
+
+    print("Scented-memory cards")
+    for key, (folder, needle) in PLACES.items():
+        save_webp(find(folder, needle), f"place-{key}.webp", 1200)
+
+    print("Partner logos")
+    for key, (folder, needle) in PARTNERS.items():
+        brand_mark(find(folder, needle), f"partner-{key}.png", 340)
+
+    print("Stockist logos")
+    for key, (folder, needle) in SELLERS.items():
+        brand_mark(find(folder, needle), f"seller-{key}.png", 340)
 
     print("Products")
-    for pid, (folder, radar, bloom, _) in PRODUCTS.items():
-        save_webp(find(folder, "lifestyle picture"), f"p-{pid}-life.webp", 1400)
-        save_webp(find(folder, "white background box"), f"p-{pid}-box.webp", 1400)
-        save_webp(find(folder, "what you get"), f"p-{pid}-included.webp", 1500)
-        save_webp(find(folder, radar), f"p-{pid}-radar.webp", 1100, keep_alpha=True)
+    for pid, (folder, radar, bloom) in PRODUCTS.items():
+        save_webp(find_or_fallback(pid, folder, "travel kit.jpg")
+                  if pid == "spirit-travel-kit"
+                  else find(folder, "lifestyle picture"), f"p-{pid}-life.webp", 1400)
+        save_webp(find_or_fallback(pid, folder, "white background box"), f"p-{pid}-box.webp", 1400)
+        save_cutout(find(folder, *PACK_NEEDLES[pid]), f"p-{pid}-pack.webp", 1400)
+        # Client note: the "What's included" flat-lay must sit on transparency
+        # so the panel's own paper colour carries through behind it.
+        save_cutout(find_or_fallback(pid, folder, "what you get"), f"p-{pid}-included.webp", 1600)
+        if radar:
+            save_webp(find(folder, radar), f"p-{pid}-radar.webp", 1100, keep_alpha=True)
         if bloom:
             save_webp(find(folder, bloom), f"p-{pid}-bloom.webp", 1000, keep_alpha=True)
+
+    print("Set variants")
+    for pid, (folder, entries) in VARIANTS.items():
+        for slug, radar, bloom in entries:
+            save_webp(find(folder, radar), f"p-{pid}-{slug}-radar.webp", 1100, keep_alpha=True)
+            save_webp(find(folder, bloom), f"p-{pid}-{slug}-bloom.webp", 1000, keep_alpha=True)
 
     print("Page banners")
     for key, (folder, needle) in BANNERS.items():

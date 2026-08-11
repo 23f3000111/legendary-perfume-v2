@@ -4,6 +4,7 @@
 // (public/map.webp). That artwork is stylised — Borneo is drawn much closer to
 // the peninsula than it really is — so pins are calibrated against the drawing
 // rather than projected from raw coordinates.
+import { asset } from '../lib/asset'
 import { getProduct, productsByCollection } from './products'
 import { stores } from './stores'
 
@@ -20,6 +21,12 @@ export interface ScentPlace {
   scentLabel?: string
   /** Overrides the family line under the headline. */
   familyLabel?: string
+  /**
+   * Overrides the thumbnail on the pin card. The client re-shot Melaka and
+   * Kota Kinabalu for this section, so those pins carry their own photograph
+   * rather than the linked product's lifestyle shot.
+   */
+  cardImage?: string
   /** Boutiques you can visit at this place, by store id. */
   storeIds: string[]
   x: number
@@ -32,7 +39,7 @@ export const scentPlaces: ScentPlace[] = [
     place: 'Langkawi',
     region: 'Kedah · The Isles',
     productId: 'mahsuri',
-    note: 'Sun-warmed apple and island petals, after the legend of the maiden Mahsuri.',
+    note: 'Sun warmed apple and island petals, after the legend of the maiden Mahsuri.',
     storeIds: ['langkawi'],
     x: 7.1,
     y: 15.9,
@@ -42,7 +49,7 @@ export const scentPlaces: ScentPlace[] = [
     place: 'Genting Highlands',
     region: 'Pahang · The Peaks',
     productId: 'man',
-    note: 'Cool mountain air and crisp green citrus from the cloud-wrapped highlands.',
+    note: 'Cool mountain air and crisp green citrus from the cloud wrapped highlands.',
     storeIds: ['genting'],
     // Genting sits only ~35km from KL; nudged north-east of its true spot so
     // the two hit areas clear each other.
@@ -67,6 +74,7 @@ export const scentPlaces: ScentPlace[] = [
     collectionId: 'nyonya',
     scentLabel: 'Nyonya Collection',
     familyLabel: 'Floral | Aromatic | Gourmand',
+    cardImage: asset('/assets/client/place-melaka.webp'),
     note: 'Peranakan romance built from embroidered flowers and gula melaka, drawn from the old port of Melaka.',
     storeIds: ['melaka'],
     x: 25.3,
@@ -78,8 +86,10 @@ export const scentPlaces: ScentPlace[] = [
     region: 'Sabah · Borneo',
     productId: 'spirit',
     collectionId: 'spirit',
-    scentLabel: 'Spirit I & II',
-    familyLabel: 'Hope · Love · Confidence · Passion · Dream · Life',
+    // Client amendment: this card reads simply "Spirit".
+    scentLabel: 'Spirit',
+    familyLabel: 'Hope · Love · Confidence · Passion · Life · Dream',
+    cardImage: asset('/assets/client/place-kota-kinabalu.webp'),
     note: 'Sea salt, citrus and open sky along the South China Sea coast.',
     storeIds: ['imago-kk'],
     // Pulled inland onto Sabah. The previous spot straddled the coastline and
@@ -99,6 +109,7 @@ export function placeTarget(place: ScentPlace) {
 
   return {
     product,
+    image: place.cardImage ?? product.image,
     href: place.collectionId ? `/shop?collection=${place.collectionId}` : `/product/${product.id}`,
     title: place.scentLabel ?? product.name,
     meta: place.familyLabel ?? `${product.family} · RM ${product.price}`,

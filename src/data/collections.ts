@@ -39,7 +39,7 @@ export const collections: Collection[] = [
   {
     id: 'three-wishes',
     name: '3 Wishes',
-    tagline: 'Alcohol-free, everyday luxury',
+    tagline: 'Alcohol free, everyday luxury',
     description:
       'An alcohol free, skin safe trio of Malaysian perfumes made for gentle daily wear. A soft ritual for unwinding and treating yourself.',
     accent: 'gold',
@@ -49,11 +49,14 @@ export const collections: Collection[] = [
   {
     id: 'spirit',
     name: 'Spirit',
-    tagline: 'Live · Passion · Dream',
+    tagline: 'Six fragrances, two chapters',
+    // Client amendment: Spirit II now sits alongside Spirit I in this
+    // collection, so the copy covers both sets.
     description:
-      'A fresh discovery trio made for movement, built on sea air, citrus groves and open skies.',
+      'Spirit I carries Hope, Love and Confidence. Spirit II answers with Passion, Life and Dream. Six travel sized eau de parfum, made for movement.',
     accent: 'teal',
     image: img('collection-spirit.webp'),
+    banner: img('banner-spirit.webp'),
   },
 ]
 

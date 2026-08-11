@@ -2,6 +2,9 @@ import { products, moodList, moodCopy, type Mood } from '../data/products'
 import { formatRM } from './format'
 
 export const WHATSAPP_NUMBER = '60193836633'
+/** Client house style: numbers are spaced, never hyphenated. */
+export const WHATSAPP_DISPLAY = '+60 19 383 6633'
+export const SUPPORT_EMAIL = 'legendaryteammy@gmail.com'
 
 export function waLink(text: string): string {
   return `https://api.whatsapp.com/send/?phone=%2B${WHATSAPP_NUMBER}&text=${encodeURIComponent(
@@ -97,7 +100,7 @@ export function handle(input: string): BotReply {
   if (/nyonya|peranakan|heritage|kebaya|ondeh/.test(t))
     return {
       text:
-        'The Nyonya Collection reimagines Peranakan heritage as scent, from embroidered kebaya florals to the gula melaka sweetness of ondeh-ondeh.',
+        'The Nyonya Collection reimagines Peranakan heritage as scent, from embroidered kebaya florals to the gula melaka sweetness of ondeh ondeh.',
       products: ['kebaya-blooms', 'ondeh-delights', 'nyonya-aromatic'].map(ref).filter(Boolean) as ProductRef[],
     }
 

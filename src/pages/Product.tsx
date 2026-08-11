@@ -12,7 +12,7 @@ import ProductCard from '../components/ProductCard'
 import Reveal from '../components/ui/Reveal'
 import { Kicker } from '../components/ui/SplitText'
 import {
-  Plus, Minus, ShieldCheck, Truck, Droplet, Check, ArrowRight, ChevronDown,
+  Plus, Minus, ShieldCheck, Truck, Vial, Check, ArrowRight, ChevronDown,
 } from '../components/ui/icons'
 
 const tabs = [
@@ -47,6 +47,28 @@ export default function Product() {
   const tone = accent(product.accent)
   const off = discountPct(product.price, product.compareAt)
   const related = relatedProducts(product, 4)
+
+  // A set breaks into one composition band per fragrance; anything else keeps
+  // the single band it has always had.
+  const compositions = product.variants?.length
+    ? product.variants.map((v) => ({
+        key: v.name,
+        kicker: `The Composition · ${v.name}`,
+        family: v.family,
+        label: `${product.name} ${v.name}`,
+        notes: v.notes,
+        radar: v.radar,
+        bloom: v.bloom,
+      }))
+    : [{
+        key: product.id,
+        kicker: 'The Composition',
+        family: undefined as string | undefined,
+        label: product.name,
+        notes: product.notes,
+        radar: product.radar,
+        bloom: product.bloom,
+      }]
 
   const onAdd = () => {
     add(product.id, qty)
@@ -84,7 +106,13 @@ export default function Product() {
             <img
               src={product.gallery[active]}
               alt={product.name}
-              className="aspect-square max-h-[52vh] w-full object-cover"
+              className={`aspect-square max-h-[52vh] w-full ${
+                // The pack cut-out is transparent, so it is fitted on the
+                // accent wash rather than cropped to fill.
+                product.gallery[active] === product.hoverImage
+                  ? 'object-contain p-8'
+                  : 'object-cover'
+              }`}
             />
           </motion.div>
           {product.gallery.length > 1 && (
@@ -94,8 +122,9 @@ export default function Product() {
                   key={g}
                   onClick={() => setActive(i)}
                   className={`h-20 w-16 overflow-hidden rounded-sm ring-1 transition ${active === i ? 'ring-gold' : 'ring-line hover:ring-gold/50'}`}
+                  style={{ background: `linear-gradient(160deg, ${tone.soft}, rgba(251,248,242,0.6))` }}
                 >
-                  <img src={g} alt="" className="h-full w-full object-cover" />
+                  <img src={g} alt="" className={g === product.hoverImage ? 'h-full w-full object-contain p-1.5' : 'h-full w-full object-cover'} />
                 </button>
               ))}
             </div>
@@ -146,7 +175,7 @@ export default function Product() {
             {[
               { I: ShieldCheck, t: 'Secure Checkout' },
               { I: Truck, t: 'Free Delivery' },
-              { I: Droplet, t: 'Free Samples' },
+              { I: Vial, t: 'Free Samples' },
             ].map(({ I, t }) => (
               <div key={t} className="flex flex-col items-center gap-2">
                 <I width={22} className="text-gold" />
@@ -155,10 +184,13 @@ export default function Product() {
             ))}
           </div>
 
-          {/* What's included */}
+          {/* What's included.
+              Client amendment: the flat-lay now sits on transparency and runs
+              larger, so the panel's own paper colour carries behind it rather
+              than a white plate inside a beige box. */}
           <div className="mt-10 rounded-sm border border-line bg-porcelain p-6 sm:p-7">
             <h2 className="font-display text-2xl">What’s included</h2>
-            <div className="mt-5 grid gap-6 sm:grid-cols-[1.1fr_1fr] sm:items-center">
+            <div className="mt-5 grid gap-6 sm:grid-cols-[0.95fr_1.05fr] sm:items-center">
               <ul className="space-y-3">
                 {product.includedItems.map((item) => (
                   <li key={item.label} className="flex gap-3">
@@ -173,7 +205,7 @@ export default function Product() {
               <img
                 src={product.included}
                 alt={`Everything included with ${product.name}`}
-                className="w-full rounded-sm object-contain"
+                className="w-full object-contain sm:-mr-2 sm:w-[112%] sm:max-w-none"
                 loading="lazy"
               />
             </div>
@@ -196,34 +228,51 @@ export default function Product() {
         </div>
       </section>
 
-      {/* Composition */}
-      <section
-        className="relative overflow-hidden py-20 md:py-28"
-        style={{ background: product.compositionTint ?? tone.soft }}
-      >
-        {/* The scent's botanical, bleeding off the right edge. The supplied
-            cut-outs are cropped flush at the artboard, so fade the lower edge
-            rather than letting it end on a hard horizontal line. */}
-        {product.bloom && (
-          <img
-            src={product.bloom}
-            alt=""
-            aria-hidden
-            className="pointer-events-none absolute -right-10 bottom-0 top-0 my-auto hidden h-[85%] w-auto max-w-[38%] object-contain opacity-90 lg:block"
-            style={{
-              WebkitMaskImage: 'linear-gradient(to bottom, #000 78%, transparent 100%)',
-              maskImage: 'linear-gradient(to bottom, #000 78%, transparent 100%)',
-            }}
-          />
-        )}
-        <div className="u-container relative">
-          <div className="mx-auto mb-14 max-w-xl text-center">
-            <Kicker>The Composition</Kicker>
-            <h2 className="mt-4 font-display text-[clamp(2rem,4vw,3rem)]">A fragrance in three acts</h2>
+      {/* Composition.
+          Client amendment: a set shows one band per fragrance in the box,
+          in the order the client listed, each with its own occasion chart,
+          botanical and notes. Single scents keep the one band they had. */}
+      {compositions.map((c, i) => (
+        <section
+          key={c.key}
+          className="relative overflow-hidden py-20 md:py-28"
+          style={{ background: product.compositionTint ?? tone.soft }}
+        >
+          {/* The scent's botanical, bleeding off the right edge. The supplied
+              cut-outs are cropped flush at the artboard, so fade the lower edge
+              rather than letting it end on a hard horizontal line. */}
+          {c.bloom && (
+            <img
+              src={c.bloom}
+              alt=""
+              aria-hidden
+              className="pointer-events-none absolute -right-10 bottom-0 top-0 my-auto hidden h-[85%] w-auto max-w-[38%] object-contain opacity-90 lg:block"
+              style={{
+                WebkitMaskImage: 'linear-gradient(to bottom, #000 78%, transparent 100%)',
+                maskImage: 'linear-gradient(to bottom, #000 78%, transparent 100%)',
+              }}
+            />
+          )}
+          <div className="u-container relative">
+            <div className="mx-auto mb-14 max-w-xl text-center">
+              <Kicker>{c.kicker}</Kicker>
+              <h2 className="mt-4 font-display text-[clamp(2rem,4vw,3rem)]">
+                A fragrance in three acts
+              </h2>
+              {c.family && <p className="mt-3 text-sm text-ink-soft">{c.family}</p>}
+            </div>
+            <ScentPyramid
+              notes={c.notes}
+              radar={c.radar}
+              accentKey={product.accent}
+              name={c.label}
+            />
           </div>
-          <ScentPyramid product={product} />
-        </div>
-      </section>
+          {i < compositions.length - 1 && (
+            <span className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-ink/10" />
+          )}
+        </section>
+      ))}
 
       {/* FAQ — replaces the former inspiration split, per the client */}
       <section className="u-container py-20 md:py-28">

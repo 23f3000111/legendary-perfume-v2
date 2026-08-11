@@ -13,9 +13,13 @@ const timeline: Milestone[] = [
   { year: '2016', title: 'Parkson', body: 'Expanded our brand presence into Parkson, a renowned department store.' },
   { year: '2017', title: 'KLIA', body: 'Entered Valiram at KLIA T1, garnering notable recognition in the Korean and Chinese markets.' },
   { year: '2018', title: 'SaSa Expansion', body: 'Established a strong presence at SaSa Malaysia, marking our success in the market.' },
-  { year: '2019', title: 'Top-Selling Brand', body: 'Achieved top-selling brand status at Parkson, reflecting strong customer demand.' },
-  { year: '2022', title: 'Air Asia', body: 'Forged a strategic partnership with AirAsia, outshining as a top-3 best-selling brand on the platform.' },
+  { year: '2019', title: 'Top Selling Brand', body: 'Achieved top selling brand status at Parkson, reflecting strong customer demand.' },
+  { year: '2022', title: 'Air Asia', body: 'Forged a strategic partnership with AirAsia, outshining as one of the top three best selling brands on the platform.' },
   { year: '2023', title: '3 Wishes', body: 'An alcohol free, skin safe trio for gentle everyday luxury becomes an instant bestseller.' },
+  // 2024 and 2025 artwork arrived with revision 2. Copy describes what the
+  // client's own photography shows; confirm the wording with them.
+  { year: '2024', title: 'Melaka Flagship', body: 'The house opens its own doors on Jalan Hang Lekir, a Peranakan shophouse turned flagship boutique.' },
+  { year: '2025', title: 'New Counters', body: 'Legendary counters arrive in more Malaysian malls, bringing the full house to more of the country.' },
 ]
 
 const visionMission = [

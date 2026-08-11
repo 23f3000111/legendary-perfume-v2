@@ -34,7 +34,11 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
       className="group relative"
     >
       <Link to={`/product/${product.id}`} className="block">
-        {/* Image tile — gradient wash kept, background dot pattern removed */}
+        {/* Image tile.
+            Client amendment: every SKU sits on its own accent gradient. The
+            pack shot is a transparent cut-out laid over that wash, so the
+            colour reads through instead of being covered by the artboard's
+            white. */}
         <div
           className="relative overflow-hidden"
           style={{ background: `linear-gradient(160deg, ${tone.soft}, rgba(251,248,242,0.5))` }}
@@ -44,11 +48,11 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
               className="absolute left-4 top-4 z-10 px-2.5 py-1 text-[0.62rem] font-medium uppercase tracking-[0.16em] text-ivory"
               style={{ background: product.accent === 'graphite' ? '#1C1815' : tone.hex }}
             >
-              −{off}%
+              {off}% off
             </span>
           )}
 
-          {/* Lifestyle shot cross-fades to the box + bottle pack shot on hover */}
+          {/* Lifestyle shot cross-fades to the box + bottle cut-out on hover */}
           <div className="relative aspect-[4/5] w-full">
             <img
               src={product.image}
@@ -61,7 +65,7 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
               alt=""
               aria-hidden
               loading="lazy"
-              className="absolute inset-0 h-full w-full object-cover opacity-0 transition-opacity duration-700 ease-luxe group-hover:opacity-100"
+              className="absolute inset-0 h-full w-full object-contain p-6 opacity-0 transition-opacity duration-700 ease-luxe group-hover:opacity-100"
             />
           </div>
 

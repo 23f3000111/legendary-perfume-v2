@@ -1,8 +1,18 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { asset } from '../lib/asset'
+import { Wordmark, ScentScript } from './ui/Wordmark'
 
-const WORD = 'LEGENDARY'
+/*
+ * Client amendments to the opening curtain:
+ *   1. use the supplied Legendary logo, not typeset Cormorant
+ *   2. lose the grey box behind "the legend of scent"
+ *   3. hold the finished lockup longer, around three seconds
+ *
+ * The lockup lands at roughly 1.6s and the curtain lifts at 3.9s, so the
+ * complete mark rests on screen for about three seconds before the site
+ * appears.
+ */
+const LOCKUP_REST = 3.9
 
 export default function Intro() {
   const [show, setShow] = useState(() => {
@@ -14,7 +24,7 @@ export default function Intro() {
   useEffect(() => {
     if (!show) return
     sessionStorage.setItem('legendary-intro', '1')
-    const t = setTimeout(() => setShow(false), 3200)
+    const t = setTimeout(() => setShow(false), (LOCKUP_REST + 0.8) * 1000)
     document.body.style.overflow = 'hidden'
     return () => {
       clearTimeout(t)
@@ -37,54 +47,49 @@ export default function Intro() {
             className="absolute inset-x-0 top-0 h-1/2 bg-ink"
             initial={{ y: 0 }}
             animate={{ y: '-100%' }}
-            transition={{ delay: 2.7, duration: 0.9, ease: [0.76, 0, 0.24, 1] }}
+            transition={{ delay: LOCKUP_REST, duration: 0.9, ease: [0.76, 0, 0.24, 1] }}
           />
           <motion.div
             className="absolute inset-x-0 bottom-0 h-1/2 bg-ink"
             initial={{ y: 0 }}
             animate={{ y: '100%' }}
-            transition={{ delay: 2.7, duration: 0.9, ease: [0.76, 0, 0.24, 1] }}
+            transition={{ delay: LOCKUP_REST, duration: 0.9, ease: [0.76, 0, 0.24, 1] }}
           />
 
-          <div className="relative z-10 px-6 text-center">
+          <div className="relative z-10 flex flex-col items-center px-6 text-center">
             <motion.p
-              className="eyebrow eyebrow-gold mb-6"
+              className="eyebrow eyebrow-gold mb-7"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.8 }}
+              transition={{ delay: 0.15, duration: 0.7 }}
             >
               Est. 2015 · Malaysia
             </motion.p>
 
-            <h1 className="flex justify-center overflow-hidden font-display text-[clamp(2.6rem,10vw,6rem)] leading-none tracking-[0.04em]">
-              {WORD.split('').map((c, i) => (
-                <motion.span
-                  key={i}
-                  className="text-gilt inline-block"
-                  initial={{ y: '110%', opacity: 0 }}
-                  animate={{ y: '0%', opacity: 1 }}
-                  transition={{ delay: 0.45 + i * 0.075, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-                >
-                  {c}
-                </motion.span>
-              ))}
-            </h1>
+            <motion.div
+              initial={{ opacity: 0, y: 22 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35, duration: 1, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <Wordmark height="clamp(2.4rem,7.5vw,4.6rem)" gilt />
+            </motion.div>
 
             <motion.div
-              className="mx-auto mt-6 h-px bg-gradient-to-r from-transparent via-gold to-transparent"
+              className="mt-7 h-px bg-gradient-to-r from-transparent via-gold to-transparent"
               initial={{ width: 0, opacity: 0 }}
               animate={{ width: '14rem', opacity: 1 }}
-              transition={{ delay: 1.5, duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              transition={{ delay: 1, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             />
 
-            <motion.img
-              src={asset('/assets/client/wordmark-scent-light.png')}
-              alt="the legend of scent"
-              className="mx-auto mt-7 w-[min(78vw,22rem)]"
+            {/* No grey plate here: the script is a knocked-out mask on the ink. */}
+            <motion.div
+              className="mt-7 text-ivory/90"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 1.9, duration: 1.2 }}
-            />
+              transition={{ delay: 1.25, duration: 0.9 }}
+            >
+              <ScentScript height="clamp(0.8rem,2vw,1.35rem)" />
+            </motion.div>
           </div>
 
           <button

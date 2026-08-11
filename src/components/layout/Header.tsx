@@ -6,6 +6,7 @@ import { useShop, cartCount } from '../../store/shop'
 import { useUI } from '../../store/ui'
 import { collections } from '../../data/collections'
 import { Search, User, Bag, Menu, Close, ArrowUpRight } from '../ui/icons'
+import { Wordmark } from '../ui/Wordmark'
 
 const megaShop = [
   { label: 'All Fragrances', to: '/shop' },
@@ -58,13 +59,14 @@ export default function Header() {
               </button>
             </div>
 
-            {/* Logo */}
+            {/* Logo — the client's own artwork, masked so one file paints
+                ivory over the hero and ink once the header goes solid. */}
             <Link
               to="/"
-              className={`shrink-0 font-display text-[1.5rem] leading-none tracking-[0.26em] transition-colors md:text-[2.15rem] ${dark ? 'text-ivory' : 'text-ink'}`}
+              className={`shrink-0 transition-colors ${dark ? 'text-ivory' : 'text-ink'}`}
               aria-label="Legendary, home"
             >
-              LEGENDARY
+              <Wordmark height="clamp(1.05rem, 2.4vw, 1.6rem)" />
             </Link>
 
             {/* Right icons */}
@@ -198,8 +200,8 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
             initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
             transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="flex items-center justify-between">
-              <span className="font-display text-xl tracking-[0.22em]">LEGENDARY</span>
+            <div className="flex items-center justify-between text-ink">
+              <Wordmark height="1.05rem" />
               <button onClick={onClose} aria-label="Close menu"><Close width={24} /></button>
             </div>
             <nav className="mt-10 flex flex-col gap-1">

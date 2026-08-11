@@ -17,10 +17,12 @@ export default function JourneyCarousel({ milestones }: { milestones: Milestone[
 
   return (
     <div className="mt-14">
-      {/* Year of the focused panel */}
+      {/* Year of the focused panel.
+          Client amendment: every figure in this section is set in Minion
+          Variable Concept Regular. */}
       <p
         key={milestones[active].year}
-        className="text-center font-display text-[clamp(2.4rem,5vw,3.6rem)] leading-none text-ivory"
+        className="text-center font-minion text-[clamp(2.4rem,5vw,3.6rem)] font-normal leading-none text-ivory"
       >
         {milestones[active].year}
       </p>
@@ -57,7 +59,7 @@ export default function JourneyCarousel({ milestones }: { milestones: Milestone[
               />
 
               {/* Year badge, always visible so the row reads as a timeline */}
-              <span className="absolute left-5 top-4 font-display text-2xl text-ivory/85">{m.year}</span>
+              <span className="absolute left-5 top-4 font-minion text-2xl font-normal text-ivory/85">{m.year}</span>
 
               <div className="absolute inset-x-0 bottom-0 p-5">
                 <h3 className="font-display text-xl italic text-ivory">{m.title}</h3>

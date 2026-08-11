@@ -41,16 +41,21 @@ export default function Finder() {
                     active ? 'border-gold bg-ink text-ivory' : 'border-line bg-porcelain text-ink hover:border-gold/60'
                   }`}
                 >
-                  <img
-                    src={moodIcon[m]}
-                    alt=""
-                    className={`h-8 w-8 object-contain transition duration-500 ${
-                      active ? 'opacity-100 invert' : 'opacity-55'
-                    }`}
-                  />
-                  <p className="mt-3 font-display text-xl">{m}</p>
+                  {/* Client amendment: the mood icons are gold on every tile,
+                      including the selected dark one, and the fixed icon box
+                      keeps all four titles on one baseline. */}
+                  <span className="flex h-9 items-center">
+                    <img
+                      src={moodIcon[m]}
+                      alt=""
+                      className={`max-h-9 w-9 object-contain transition duration-500 ${
+                        active ? 'opacity-100' : 'opacity-80'
+                      }`}
+                    />
+                  </span>
+                  <p className="mt-3 font-display text-xl leading-none">{m}</p>
                   {/* Client change: the mood headline replaces the ingredient hint */}
-                  <p className={`mt-1 text-[0.72rem] leading-snug ${active ? 'text-ivory/70' : 'text-smoke'}`}>
+                  <p className={`mt-2 text-[0.72rem] leading-snug ${active ? 'text-ivory/70' : 'text-smoke'}`}>
                     {moodCopy[m].line}
                   </p>
                 </button>
