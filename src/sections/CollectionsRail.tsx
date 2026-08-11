@@ -7,6 +7,26 @@ import Particles from '../components/ui/Particles'
 import { Kicker } from '../components/ui/SplitText'
 import { ArrowUpRight } from '../components/ui/icons'
 
+/**
+ * The client's collection covers are all square artboards, so the card is
+ * square too and nothing is cropped.
+ *
+ * Client note: the copy sits on the photograph with no plate behind it, the
+ * way their own 3 Wishes creative is set. Readability comes from a soft
+ * vignette confined to the last third of the card plus a tight shadow on the
+ * type, so the product still reads through the whole frame.
+ *
+ * The side is whichever is smaller: a comfortable 30rem, or the band left
+ * between the fixed header and the foot of the screen once the rail's own
+ * padding is taken off. That way the whole cover is always visible.
+ */
+const GUTTER = '3rem'
+const CARD_SIDE = `min(30rem, calc(100vh - var(--header-h) - ${GUTTER} * 2))`
+const CARD_SIDE_MOBILE = 'min(78vw, 26rem)'
+
+/** Tight enough to lift the type off the photo without reading as a plate. */
+const SHADOW = '0 1px 2px rgba(20,17,14,0.9), 0 2px 10px rgba(20,17,14,0.75)'
+
 export default function CollectionsRail() {
   const wrapRef = useRef<HTMLDivElement>(null)
   const trackRef = useRef<HTMLDivElement>(null)
@@ -38,11 +58,11 @@ export default function CollectionsRail() {
         className="relative hidden bg-ink text-ivory lg:block"
         style={{ height: `${maxX * PACE + (typeof window !== 'undefined' ? window.innerHeight : 900)}px` }}
       >
-        {/* Padded clear of the fixed header, plus breathing room, so the cards
-            are centred in the visible band instead of running under the nav */}
+        {/* Padded clear of the fixed header, with matching room at the foot, so
+            each square cover sits fully inside the visible band */}
         <div
           className="sticky top-0 flex h-screen items-center overflow-hidden"
-          style={{ paddingTop: 'calc(var(--header-h) + 2.5rem)', paddingBottom: '2.5rem' }}
+          style={{ paddingTop: `calc(var(--header-h) + ${GUTTER})`, paddingBottom: GUTTER }}
         >
           <div className="pointer-events-none absolute inset-0 opacity-[0.04] peranakan" style={{ color: '#CBAA5D' }} />
           <Particles />
@@ -61,7 +81,7 @@ export default function CollectionsRail() {
               </p>
             </div>
             {collections.map((c) => (
-              <RailCard key={c.id} c={c} />
+              <RailCard key={c.id} c={c} side={CARD_SIDE} />
             ))}
           </motion.div>
         </div>
@@ -75,8 +95,8 @@ export default function CollectionsRail() {
         </div>
         <div className="mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-4">
           {collections.map((c) => (
-            <div key={c.id} className="w-[78vw] shrink-0 snap-center">
-              <RailCard c={c} />
+            <div key={c.id} className="shrink-0 snap-center" style={{ width: CARD_SIDE_MOBILE }}>
+              <RailCard c={c} side={CARD_SIDE_MOBILE} />
             </div>
           ))}
         </div>
@@ -85,33 +105,51 @@ export default function CollectionsRail() {
   )
 }
 
-function RailCard({ c }: { c: (typeof collections)[number] }) {
+function RailCard({ c, side }: { c: (typeof collections)[number]; side: string }) {
   const tone = accent(c.accent)
   return (
     <Link
       to={`/shop?collection=${c.id}`}
-      // Never taller than the band left between the header and the section foot
-      style={{ height: 'min(64vh, calc(100vh - var(--header-h) - 8rem))' }}
-      className="group relative block w-[min(78vw,30rem)] shrink-0 overflow-hidden rounded-sm lg:w-[30rem]"
+      style={{ width: side, height: side }}
+      className="group relative block shrink-0 overflow-hidden rounded-sm"
     >
-      <img src={c.image} alt={c.name} className="h-full w-full object-cover transition-transform duration-[1200ms] ease-luxe group-hover:scale-105" />
-      {/* Deep enough at the foot that the frosted plate reads as a light veil
-          over dark, keeping both the ivory copy and the accent tagline legible
-          on the pale family photography. */}
-      <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/55 to-transparent" />
-      {/* Client note: copy sits on a white-transparency plate so it stays
-          legible over the lighter family photography. */}
-      <div className="absolute inset-x-4 bottom-4">
-        <div className="plate-frost rounded-sm p-6">
-          <p className="eyebrow" style={{ color: tone.hex }}>{c.tagline}</p>
-          <h3 className="mt-2 flex items-center gap-3 font-display text-4xl text-ivory">
-            {c.name}
-            <span className="grid h-9 w-9 place-items-center rounded-full bg-ivory/15 opacity-0 transition-all duration-500 group-hover:opacity-100">
-              <ArrowUpRight width={18} />
-            </span>
-          </h3>
-          <p className="mt-3 max-w-xs text-sm text-ivory/80">{c.description}</p>
-        </div>
+      <img
+        src={c.image}
+        alt={c.name}
+        className="h-full w-full object-cover transition-transform duration-[1200ms] ease-luxe group-hover:scale-105"
+      />
+
+      {/* A soft vignette, only across the last third, so the cover reads whole */}
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-[42%]"
+        style={{
+          background:
+            'linear-gradient(to top, rgba(20,17,14,0.86) 0%, rgba(20,17,14,0.66) 38%, rgba(20,17,14,0.28) 72%, rgba(20,17,14,0) 100%)',
+        }}
+      />
+
+      <div className="absolute inset-x-0 bottom-0 p-7" style={{ textShadow: SHADOW }}>
+        {/* The tagline is the smallest type here and can land on a highlight in
+            the photograph, so it carries its own tighter shadow. */}
+        <p
+          className="eyebrow"
+          style={{
+            color: tone.onDark,
+            fontWeight: 600,
+            textShadow: '0 0 6px rgba(20,17,14,0.95), 0 1px 2px rgba(20,17,14,1)',
+          }}
+        >
+          {c.tagline}
+        </p>
+        <h3 className="mt-1.5 flex items-center gap-3 font-display text-[clamp(1.9rem,2.4vw,2.4rem)] leading-none text-ivory">
+          {c.name}
+          <span className="grid h-8 w-8 place-items-center rounded-full bg-ivory/15 opacity-0 backdrop-blur-sm transition-all duration-500 group-hover:opacity-100">
+            <ArrowUpRight width={17} />
+          </span>
+        </h3>
+        <p className="mt-2 line-clamp-2 max-w-[24rem] text-sm leading-relaxed text-ivory/90">
+          {c.description}
+        </p>
       </div>
     </Link>
   )

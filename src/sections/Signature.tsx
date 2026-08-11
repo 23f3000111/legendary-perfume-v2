@@ -30,7 +30,7 @@ export default function Signature() {
           <Reveal delay={0.15}>
             <div className="mt-9 flex max-w-lg flex-wrap items-center gap-x-10 gap-y-6 border-y border-line py-7">
               <div>
-                <p className="font-minion text-[clamp(1.9rem,3.4vw,2.5rem)] font-bold uppercase leading-[1.05] tracking-[0.01em] text-ink">
+                <p className="font-minion text-[clamp(1.9rem,3.4vw,2.5rem)] font-bold leading-[1.05] tracking-[0.01em] text-ink">
                   Since<br />2015
                 </p>
               </div>
