@@ -2,22 +2,22 @@ import { useEffect } from 'react'
 
 /**
  * Client request: visitors should not be able to download the house's imagery
- * or lift its copy. This blocks the context menu, image dragging and the
- * copy/save/print keyboard shortcuts.
+ * or lift its copy. This blocks image dragging and the copy/save/print
+ * keyboard shortcuts.
+ *
+ * The context menu is deliberately NOT blocked. Suppressing it stopped the
+ * team inspecting the page, and it bought little: images carry
+ * `pointer-events: none` in index.css, so a right click lands on the wrapping
+ * link rather than the picture and "Save image as" never appears for them.
  *
  * This is a deterrent, not DRM — anything rendered in a browser can still be
- * captured. It stops the casual right-click → "Save image as".
+ * captured.
  */
 export function useContentGuard() {
   useEffect(() => {
     const isEditable = (el: EventTarget | null) => {
       const node = el as HTMLElement | null
       return !!node?.closest?.('input, textarea, select, [contenteditable="true"]')
-    }
-
-    const onContextMenu = (e: MouseEvent) => {
-      if (isEditable(e.target)) return
-      e.preventDefault()
     }
 
     const onDragStart = (e: DragEvent) => {
@@ -34,11 +34,9 @@ export function useContentGuard() {
       }
     }
 
-    document.addEventListener('contextmenu', onContextMenu)
     document.addEventListener('dragstart', onDragStart)
     document.addEventListener('keydown', onKeyDown)
     return () => {
-      document.removeEventListener('contextmenu', onContextMenu)
       document.removeEventListener('dragstart', onDragStart)
       document.removeEventListener('keydown', onKeyDown)
     }
