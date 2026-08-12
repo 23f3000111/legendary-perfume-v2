@@ -6,6 +6,7 @@ import Product from './pages/Product'
 import Stores from './pages/Stores'
 import About from './pages/About'
 import Journal from './pages/Journal'
+import Article from './pages/Article'
 import Contact from './pages/Contact'
 import Checkout from './pages/Checkout'
 import Faq from './pages/Faq'
@@ -22,6 +23,7 @@ export default function App() {
         <Route path="/stores" element={<Stores />} />
         <Route path="/about" element={<About />} />
         <Route path="/journal" element={<Journal />} />
+        <Route path="/journal/:slug" element={<Article />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/checkout" element={<Checkout />} />
         {/* Customer care. Slugs stay single words so no URL carries a dash. */}

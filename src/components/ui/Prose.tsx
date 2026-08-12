@@ -25,9 +25,13 @@ export type Block =
 /**
  * Inline markup understood inside any `text` field:
  *   [label](/route)  → internal link      [label](https://…) → external link
- *   **bold**         → emphasis           bare https://…     → auto-linked
+ *   **bold**         → emphasis           *italic*           → stress
+ *   bare https://…   → auto-linked
+ *
+ * The bold branch has to sit before the italic one: alternation is ordered, so
+ * a lone `\*` first would swallow the opening pair of every `**bold**`.
  */
-const TOKEN = /\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*|(https?:\/\/[^\s)]+)/g
+const TOKEN = /\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*|\*([^*]+)\*|(https?:\/\/[^\s)]+)/g
 
 const linkClass = 'link-gold text-gold-deep'
 
@@ -45,10 +49,12 @@ export function RichText({ text }: { text: string }) {
     } else if (m[3]) {
       nodes.push(<strong key={nodes.length} className="font-medium text-ink">{m[3]}</strong>)
     } else if (m[4]) {
+      nodes.push(<em key={nodes.length}>{m[4]}</em>)
+    } else if (m[5]) {
       // Bare URLs in citation lists often end a sentence — keep the full stop
       // outside the anchor so the link resolves.
-      const trail = /[.,;]$/.test(m[4]) ? m[4].slice(-1) : ''
-      const href = trail ? m[4].slice(0, -1) : m[4]
+      const trail = /[.,;]$/.test(m[5]) ? m[5].slice(-1) : ''
+      const href = trail ? m[5].slice(0, -1) : m[5]
       nodes.push(anchor(href, href, nodes.length, 'break-all'))
       if (trail) nodes.push(trail)
     }
