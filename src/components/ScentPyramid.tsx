@@ -17,9 +17,10 @@ const tiers: { key: keyof ScentNotes; label: string; sub: string }[] = [
  * right edge of the parent band.
  *
  * Client amendment: the plate used to run past its column and press against
- * the section edge. It now sits inside its column, and the parent band adds
- * padding on the right, so the plate is shifted clear of the botanical. The
- * whole block is also trimmed down to fit inside one screen.
+ * the section edge. It now sits inside its column and the parent band sets the
+ * right gutter, so the plate ends where the concierge launcher begins while
+ * still carrying over the botanical. The whole block is trimmed to fit inside
+ * one screen.
  */
 export default function ScentPyramid({
   notes,

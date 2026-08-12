@@ -246,14 +246,17 @@ export default function Product() {
               cut-outs are cropped flush at the artboard, so fade the lower edge
               rather than letting it end on a hard horizontal line. */}
           {/* Client amendment: the botanical used to be pulled past the right
-              edge, so the section's overflow clipped its leaves. It now sits
-              fully inside the frame and is fitted rather than cropped. */}
+              edge, so the section's overflow clipped its leaves. It stays at
+              right-0 and fitted rather than cropped, but at close to its
+              original size, because the notes plate sits over it again and a
+              small bloom read as an object beside the plate instead of the
+              wash behind it. */}
           {c.bloom && (
             <img
               src={c.bloom}
               alt=""
               aria-hidden
-              className="pointer-events-none absolute bottom-0 right-0 top-0 my-auto hidden h-[74%] w-auto max-w-[22%] object-contain opacity-90 lg:block"
+              className="pointer-events-none absolute bottom-0 right-0 top-0 my-auto hidden h-[88%] w-auto max-w-[32%] object-contain opacity-90 lg:block"
               style={{
                 // A few of the supplied cut-outs end flush at the artboard, so
                 // the last sliver is feathered rather than ending on a line.
@@ -262,9 +265,12 @@ export default function Product() {
               }}
             />
           )}
-          {/* Extra right padding from lg up keeps the notes plate clear of the
-              botanical and gives the whole band a gutter on that side. */}
-          <div className="u-container relative lg:pr-[26%]">
+          {/* Client amendment: 26% of right padding pushed the plate so far in
+              that the band read as left aligned. The gutter is now the
+              concierge launcher's own footprint, 5.25rem: its 1.75rem offset
+              plus its 3.5rem button. The plate therefore stops exactly where
+              the launcher begins, and rides back over the botanical. */}
+          <div className="u-container relative lg:pr-[5.25rem]">
             <div className="mx-auto mb-9 max-w-xl text-center">
               <Kicker>{c.kicker}</Kicker>
               <h2 className="mt-3 font-display text-[clamp(1.8rem,3.2vw,2.5rem)]">
