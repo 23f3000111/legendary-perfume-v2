@@ -35,14 +35,16 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
     >
       <Link to={`/product/${product.id}`} className="block">
         {/* Image tile.
-            Client amendment: every SKU sits on its own accent gradient. The
-            pack shot is a transparent cut-out laid over that wash, so the
-            colour reads through instead of being covered by the artboard's
-            white. */}
+            Client amendment: every SKU sits on its own accent gradient with
+            the Peranakan dot pattern behind it, as it was originally. The pack
+            shot is a transparent cut-out laid over that wash, so both the
+            colour and the pattern read through instead of being covered by the
+            artboard's white. */}
         <div
           className="relative overflow-hidden"
           style={{ background: `linear-gradient(160deg, ${tone.soft}, rgba(251,248,242,0.5))` }}
         >
+          <div className="peranakan pointer-events-none absolute inset-0 opacity-[0.05]" style={{ color: tone.hex }} />
           {off && (
             <span
               className="absolute left-4 top-4 z-10 px-2.5 py-1 text-[0.62rem] font-medium uppercase tracking-[0.16em] text-ivory"

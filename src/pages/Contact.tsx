@@ -6,7 +6,7 @@ import { Kicker } from '../components/ui/SplitText'
 import Accordion from '../components/ui/Accordion'
 import { WhatsApp, Instagram, Facebook, Pin, Check, ArrowRight } from '../components/ui/icons'
 import { waLink, WHATSAPP_DISPLAY } from '../lib/concierge'
-import { mapEmbedUrl, directionsUrl, HEAD_OFFICE } from '../data/stores'
+import { directionsUrl, HEAD_OFFICE } from '../data/stores'
 import { productFaq } from '../data/faq'
 
 /*
@@ -175,10 +175,11 @@ export default function Contact() {
           <div className="overflow-hidden rounded-sm border border-line">
             <iframe
               title={`Map of ${HEAD_OFFICE.name}`}
-              src={mapEmbedUrl(HEAD_OFFICE.mapQuery)}
+              src={HEAD_OFFICE.mapEmbed}
               loading="lazy"
+              allowFullScreen
               className="h-72 w-full border-0"
-              referrerPolicy="no-referrer-when-downgrade"
+              referrerPolicy="strict-origin-when-cross-origin"
             />
           </div>
         </div>

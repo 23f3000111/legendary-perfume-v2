@@ -237,31 +237,40 @@ export default function Product() {
       {compositions.map((c, i) => (
         <section
           key={c.key}
-          className="relative overflow-hidden py-20 md:py-28"
+          // Client amendment: trimmed so a whole composition band sits inside
+          // one screen without being cut off at the top or the bottom.
+          className="relative overflow-hidden py-12 md:py-16"
           style={{ background: product.compositionTint ?? tone.soft }}
         >
           {/* The scent's botanical, bleeding off the right edge. The supplied
               cut-outs are cropped flush at the artboard, so fade the lower edge
               rather than letting it end on a hard horizontal line. */}
+          {/* Client amendment: the botanical used to be pulled past the right
+              edge, so the section's overflow clipped its leaves. It now sits
+              fully inside the frame and is fitted rather than cropped. */}
           {c.bloom && (
             <img
               src={c.bloom}
               alt=""
               aria-hidden
-              className="pointer-events-none absolute -right-10 bottom-0 top-0 my-auto hidden h-[85%] w-auto max-w-[38%] object-contain opacity-90 lg:block"
+              className="pointer-events-none absolute bottom-0 right-0 top-0 my-auto hidden h-[74%] w-auto max-w-[22%] object-contain opacity-90 lg:block"
               style={{
-                WebkitMaskImage: 'linear-gradient(to bottom, #000 78%, transparent 100%)',
-                maskImage: 'linear-gradient(to bottom, #000 78%, transparent 100%)',
+                // A few of the supplied cut-outs end flush at the artboard, so
+                // the last sliver is feathered rather than ending on a line.
+                WebkitMaskImage: 'linear-gradient(to bottom, #000 90%, transparent 100%)',
+                maskImage: 'linear-gradient(to bottom, #000 90%, transparent 100%)',
               }}
             />
           )}
-          <div className="u-container relative">
-            <div className="mx-auto mb-14 max-w-xl text-center">
+          {/* Extra right padding from lg up keeps the notes plate clear of the
+              botanical and gives the whole band a gutter on that side. */}
+          <div className="u-container relative lg:pr-[26%]">
+            <div className="mx-auto mb-9 max-w-xl text-center">
               <Kicker>{c.kicker}</Kicker>
-              <h2 className="mt-4 font-display text-[clamp(2rem,4vw,3rem)]">
+              <h2 className="mt-3 font-display text-[clamp(1.8rem,3.2vw,2.5rem)]">
                 A fragrance in three acts
               </h2>
-              {c.family && <p className="mt-3 text-sm text-ink-soft">{c.family}</p>}
+              {c.family && <p className="mt-2 text-sm text-ink-soft">{c.family}</p>}
             </div>
             <ScentPyramid
               notes={c.notes}

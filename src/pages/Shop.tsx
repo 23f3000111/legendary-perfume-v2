@@ -31,13 +31,16 @@ export default function Shop() {
     : audienceParam === 'unisex' ? 'Unisex'
     : 'All'
 
+  // These are in-page controls, so they replace rather than push. Layout's
+  // ScrollToTop only jumps on a pushed navigation, which keeps you beside the
+  // grid you are filtering instead of throwing you back up to the banner.
   const setCollection = (id: string) => {
     const next = new URLSearchParams(params)
     if (id === 'all') next.delete('collection')
     else next.set('collection', id)
     next.delete('filter')
     next.delete('for')
-    setParams(next)
+    setParams(next, { replace: true })
   }
 
   const setAudience = (value: string) => {
@@ -47,7 +50,7 @@ export default function Shop() {
     else next.delete('for')
     // The footer arrives with ?filter=her; keep one source of truth.
     if (filterParam === 'her' || filterParam === 'him') next.delete('filter')
-    setParams(next)
+    setParams(next, { replace: true })
   }
 
   const list = useMemo(() => {

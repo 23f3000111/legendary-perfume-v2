@@ -16,9 +16,10 @@ const tiers: { key: keyof ScentNotes; label: string; sub: string }[] = [
  * beside a single notes plate, with the scent's botanical bleeding off the
  * right edge of the parent band.
  *
- * Client amendment: the plate used to run 14% past its column and pressed
- * against the section edge. The overhang is now half that, so the plate still
- * carries over the botanical but keeps a clear gutter on the right.
+ * Client amendment: the plate used to run past its column and press against
+ * the section edge. It now sits inside its column, and the parent band adds
+ * padding on the right, so the plate is shifted clear of the botanical. The
+ * whole block is also trimmed down to fit inside one screen.
  */
 export default function ScentPyramid({
   notes,
@@ -35,10 +36,10 @@ export default function ScentPyramid({
   const tone = accent(accentKey)
 
   return (
-    <div className="grid items-center gap-10 lg:grid-cols-[0.95fr_1.05fr] lg:gap-12">
-      {/* Occasion chart — client asked for this 20% larger */}
+    <div className="grid items-center gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:gap-10">
+      {/* Occasion chart */}
       <motion.div
-        className="mx-auto w-full max-w-[504px]"
+        className="mx-auto w-full max-w-[400px]"
         initial={{ opacity: 0, scale: 0.94 }}
         whileInView={{ opacity: 1, scale: 1 }}
         viewport={{ once: true, margin: '-10%' }}
@@ -51,10 +52,9 @@ export default function ScentPyramid({
         />
       </motion.div>
 
-      {/* Notes plate — gradient opacity, running wide enough to carry over the
-          botanical without reaching the edge of the band. */}
+      {/* Notes plate — gradient opacity, sitting inside its own column */}
       <motion.div
-        className="relative rounded-xl p-8 backdrop-blur-[3px] sm:p-10 lg:-mr-[7%] lg:w-[107%]"
+        className="relative rounded-xl p-7 backdrop-blur-[3px] sm:p-8"
         style={{
           background:
             'linear-gradient(100deg, rgba(251,248,242,0.95) 0%, rgba(251,248,242,0.88) 55%, rgba(251,248,242,0.55) 100%)',
@@ -64,14 +64,14 @@ export default function ScentPyramid({
         viewport={{ once: true, margin: '-10%' }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
       >
-        <div className="relative z-10 space-y-8">
+        <div className="relative z-10 space-y-6">
           {tiers.map((tier) => (
             <div key={tier.key}>
               <div className="flex items-baseline justify-between gap-4">
-                <h3 className="font-display text-2xl text-ink">{tier.label} Notes</h3>
+                <h3 className="font-display text-xl text-ink">{tier.label} Notes</h3>
                 <span className="eyebrow shrink-0" style={{ color: tone.ink }}>{tier.sub}</span>
               </div>
-              <p className="mt-2 text-[1.02rem] text-ink-soft">
+              <p className="mt-1.5 text-[0.97rem] text-ink-soft">
                 {notes[tier.key].map((n, i) => (
                   <span key={n}>
                     {n}

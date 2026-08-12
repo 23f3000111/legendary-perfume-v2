@@ -37,14 +37,15 @@ export default function Finder() {
                 <button
                   key={m}
                   onClick={() => setMood(m)}
-                  className={`group relative overflow-hidden rounded-sm border px-4 py-5 text-left transition-all duration-500 ${
+                  className={`group relative flex flex-col overflow-hidden rounded-sm border px-4 py-5 text-left transition-all duration-500 ${
                     active ? 'border-gold bg-ink text-ivory' : 'border-line bg-porcelain text-ink hover:border-gold/60'
                   }`}
                 >
                   {/* Client amendment: the mood icons are gold on every tile,
-                      including the selected dark one, and the fixed icon box
-                      keeps all four titles on one baseline. */}
-                  <span className="flex h-9 items-center">
+                      including the selected dark one. The icon box, the title
+                      and the description each have a fixed height, so all four
+                      tiles line up row by row however long the copy runs. */}
+                  <span className="flex h-9 shrink-0 items-center">
                     <img
                       src={moodIcon[m]}
                       alt=""
@@ -53,9 +54,9 @@ export default function Finder() {
                       }`}
                     />
                   </span>
-                  <p className="mt-3 font-display text-xl leading-none">{m}</p>
+                  <p className="mt-3 flex h-6 shrink-0 items-center font-display text-xl leading-none">{m}</p>
                   {/* Client change: the mood headline replaces the ingredient hint */}
-                  <p className={`mt-2 text-[0.72rem] leading-snug ${active ? 'text-ivory/70' : 'text-smoke'}`}>
+                  <p className={`mt-1.5 h-8 text-[0.72rem] leading-snug ${active ? 'text-ivory/70' : 'text-smoke'}`}>
                     {moodCopy[m].line}
                   </p>
                 </button>

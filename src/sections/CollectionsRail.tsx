@@ -5,7 +5,7 @@ import { collections } from '../data/collections'
 import { accent } from '../lib/accents'
 import Particles from '../components/ui/Particles'
 import { Kicker } from '../components/ui/SplitText'
-import { ArrowUpRight } from '../components/ui/icons'
+import { ArrowUpRight, ChevronDown } from '../components/ui/icons'
 
 /**
  * The client's collection covers are all square artboards, so the card is
@@ -13,7 +13,7 @@ import { ArrowUpRight } from '../components/ui/icons'
  *
  * Client note: the copy sits on the photograph with no plate behind it, the
  * way their own 3 Wishes creative is set. Readability comes from a soft
- * vignette confined to the last third of the card plus a tight shadow on the
+ * gradient confined to the last third of the card plus a tight shadow on the
  * type, so the product still reads through the whole frame.
  *
  * The side is whichever is smaller: a comfortable 30rem, or the band left
@@ -24,8 +24,16 @@ const GUTTER = '3rem'
 const CARD_SIDE = `min(30rem, calc(100vh - var(--header-h) - ${GUTTER} * 2))`
 const CARD_SIDE_MOBILE = 'min(78vw, 26rem)'
 
+/**
+ * Client amendment: the wash was flat black and read as dopling over the
+ * photograph. It now runs through the house ink, which is a warm near-black,
+ * so the fade belongs to the brand rather than sitting on top of it.
+ */
+const VEIL =
+  'linear-gradient(to top, rgba(28,24,21,0.84) 0%, rgba(34,28,23,0.62) 40%, rgba(43,35,28,0.26) 73%, rgba(43,35,28,0) 100%)'
+
 /** Tight enough to lift the type off the photo without reading as a plate. */
-const SHADOW = '0 1px 2px rgba(20,17,14,0.9), 0 2px 10px rgba(20,17,14,0.75)'
+const SHADOW = '0 1px 2px rgba(28,24,21,0.85), 0 2px 10px rgba(28,24,21,0.7)'
 
 export default function CollectionsRail() {
   const wrapRef = useRef<HTMLDivElement>(null)
@@ -45,6 +53,8 @@ export default function CollectionsRail() {
 
   const { scrollYProgress } = useScroll({ target: wrapRef, offset: ['start start', 'end end'] })
   const x = useTransform(scrollYProgress, [0, 1], [0, -maxX])
+  // The scroll cue is only useful before the pan gets going.
+  const cueOpacity = useTransform(scrollYProgress, [0, 0.08, 0.16], [1, 1, 0])
 
   // Client note: pan 15% slower. The same travel spread over a taller pinned
   // section means the viewer gets longer on each collection.
@@ -79,6 +89,15 @@ export default function CollectionsRail() {
                 Each Legendary collection is a different memory of Malaysia: its heritage, its
                 highlands, its islands. Scroll to wander through them.
               </p>
+
+              {/* Client amendment: a cue that this rail is driven by scrolling
+                  down the page. It fades once the pan is under way. */}
+              <motion.div style={{ opacity: cueOpacity }} className="mt-9 flex flex-col items-start gap-2">
+                <ChevronDown width={22} className="animate-bob text-gold" />
+                <span className="text-[0.66rem] uppercase tracking-[0.28em] text-ivory/60">
+                  Keep scrolling
+                </span>
+              </motion.div>
             </div>
             {collections.map((c) => (
               <RailCard key={c.id} c={c} side={CARD_SIDE} />
@@ -119,13 +138,11 @@ function RailCard({ c, side }: { c: (typeof collections)[number]; side: string }
         className="h-full w-full object-cover transition-transform duration-[1200ms] ease-luxe group-hover:scale-105"
       />
 
-      {/* A soft vignette, only across the last third, so the cover reads whole */}
+      {/* A soft house-toned fade, only across the last third, so the cover
+          reads whole and the veil belongs to the palette */}
       <div
         className="pointer-events-none absolute inset-x-0 bottom-0 h-[42%]"
-        style={{
-          background:
-            'linear-gradient(to top, rgba(20,17,14,0.86) 0%, rgba(20,17,14,0.66) 38%, rgba(20,17,14,0.28) 72%, rgba(20,17,14,0) 100%)',
-        }}
+        style={{ background: VEIL }}
       />
 
       <div className="absolute inset-x-0 bottom-0 p-7" style={{ textShadow: SHADOW }}>
@@ -136,7 +153,7 @@ function RailCard({ c, side }: { c: (typeof collections)[number]; side: string }
           style={{
             color: tone.onDark,
             fontWeight: 600,
-            textShadow: '0 0 6px rgba(20,17,14,0.95), 0 1px 2px rgba(20,17,14,1)',
+            textShadow: '0 0 6px rgba(28,24,21,0.9), 0 1px 2px rgba(28,24,21,0.95)',
           }}
         >
           {c.tagline}

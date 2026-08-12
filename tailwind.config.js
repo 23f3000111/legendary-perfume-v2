@@ -62,11 +62,17 @@ export default {
           '0%': { transform: 'translateX(0)' },
           '100%': { transform: 'translateX(-50%)' },
         },
+        // The "keep scrolling" cue on the pinned collections rail
+        bob: {
+          '0%,100%': { transform: 'translateY(0)', opacity: '0.75' },
+          '50%': { transform: 'translateY(6px)', opacity: '1' },
+        },
       },
       animation: {
         shimmer: 'shimmer 6s linear infinite',
         floaty: 'floaty 7s ease-in-out infinite',
         marquee: 'marquee 38s linear infinite',
+        bob: 'bob 1.8s ease-in-out infinite',
       },
     },
   },
