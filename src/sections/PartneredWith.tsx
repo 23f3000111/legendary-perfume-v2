@@ -17,11 +17,11 @@ const partners: { name: string; file: string }[] = [
   { name: 'AirAsia', file: 'partner-airasia.png' },                     // 1
   { name: 'Watsons', file: 'partner-watsons.png' },                     // 2
   { name: 'SaSa', file: 'partner-sasa.png' },                           // 3
-  { name: 'Parkson Pavilion', file: 'partner-parkson-elite.png' },      // 4
+  { name: 'Parkson Elite', file: 'partner-parkson-elite.png' },         // 4
   { name: 'Isetan', file: 'partner-isetan.png' },                       // 5
   { name: 'Honor', file: 'partner-honor.png' },                         // 6
   { name: 'SOGO', file: 'partner-sogo.png' },                           // 7
-  { name: 'Seibu', file: 'partner-seibu.png' },                         // 8
+  { name: 'Seibu TRX', file: 'partner-seibu.png' },                     // 8
   { name: 'Eraman', file: 'partner-eraman.png' },                       // 9
   { name: 'SEGi', file: 'partner-segi.png' },                           // 10
   { name: 'Tourism Malaysia', file: 'partner-tourism-malaysia.png' },   // 11
