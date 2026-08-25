@@ -139,6 +139,37 @@ function spiritOneTrio(id: string): Variant[] {
   ]
 }
 
+/** Shop copy for the Spirit II fragrances sold on their own. */
+const SPIRIT_TWO_COPY: Record<
+  'passion' | 'life' | 'dream',
+  { moods: Mood[]; accent: AccentKey; story: string; description: string }
+> = {
+  passion: {
+    moods: ['Bold', 'Romantic'],
+    accent: 'rose',
+    story:
+      'Passion ignites. Red berries and blackcurrant strike first, then a rose and ylang ylang heart holds the flame through the evening.',
+    description:
+      'A green floral with an appetite: red berries and blackcurrant over rose, muguet and ylang ylang, closing on vanilla and musk.',
+  },
+  life: {
+    moods: ['Bold', 'Serene'],
+    accent: 'jade',
+    story:
+      'Life begins. Bergamot and lychee open bright, and incense, cedar and vetiver give the fragrance somewhere to stand.',
+    description:
+      'A floral amber: bergamot, lychee and nutmeg lifting a heart of rose, peony and vanilla, resting on vetiver, cedar and incense.',
+  },
+  dream: {
+    moods: ['Serene', 'Romantic'],
+    accent: 'plum',
+    story:
+      'Dream takes flight. Lotus and freesia float above white lily and peony, and the whole thing settles into a soft white musk.',
+    description:
+      'A floral fruity built on air: lotus and freesia over muguet, white lily and peony, closing on white musk, amber and cedar.',
+  },
+}
+
 const SPIRIT_TWO_TRIO: Variant[] = [
   {
     name: 'Passion',
@@ -176,22 +207,118 @@ const SPIRIT_TWO_TRIO: Variant[] = [
 ]
 
 /**
- * The client's delivery carries one shared note list for the 3 Wishes box
- * rather than a breakdown per Wish, so all three bands quote the set. Swap
- * in per Wish notes here the moment that sheet arrives.
+ * Revision 4 amendment: Passion, Life and Dream are also sold on their own in
+ * 50ml, so each Spirit II fragrance becomes a product of its own. Everything
+ * but the shop copy is lifted straight from the set's own bands, and the
+ * artwork comes from that fragrance's folder in the delivery.
  */
-const WISH_NOTES: ScentNotes = {
-  top: ['Aldehydes', 'Pear', 'Bergamot'],
-  heart: ['Cotton Flower', 'Peony', 'Neroli'],
-  base: ['White Musk', 'Cashmere', 'Blond Wood'],
+const SPIRIT_TWO_SINGLES: Product[] = SPIRIT_TWO_TRIO.map((v) => {
+  const id = v.name.toLowerCase()
+  const copy = SPIRIT_TWO_COPY[id as keyof typeof SPIRIT_TWO_COPY]
+  return {
+    id,
+    name: v.name,
+    subtitle: 'Spirit II, on its own',
+    collection: 'Spirit',
+    collectionId: 'spirit',
+    family: v.family!,
+    audience: 'Unisex',
+    moods: copy.moods,
+    price: 189,
+    compareAt: 229,
+    size: '50ml Eau de Parfum',
+    image: img(`p-${id}-life.webp`),
+    hoverImage: img(`p-${id}-pack.webp`),
+    gallery: [img(`p-${id}-life.webp`), img(`p-${id}-pack.webp`), img(`p-${id}-box.webp`)],
+    included: img(`p-${id}-included.webp`),
+    includedItems: STANDARD_INCLUDES,
+    radar: img(`p-${id}-radar.webp`),
+    bloom: img(`p-${id}-bloom.webp`),
+    accent: copy.accent,
+    badges: ['Spirit II'],
+    place: 'Kota Kinabalu',
+    story: copy.story,
+    description: copy.description,
+    notes: v.notes,
+  }
+})
+
+/**
+ * Revision 4 amendment: the three bands used to quote one shared note list,
+ * because the original delivery carried no breakdown per Wish. The client has
+ * now sent that breakdown, so every Wish quotes its own composition.
+ */
+type WishKey = 'i' | 'ii' | 'iii'
+
+const WISH_KEYS: WishKey[] = ['i', 'ii', 'iii']
+
+const WISH_NOTES: Record<WishKey, ScentNotes> = {
+  i: {
+    top: ['Tangerine'],
+    heart: ['Peony'],
+    base: ['Musk'],
+  },
+  ii: {
+    top: ['Orange Blossom', 'Osmanthus', 'Bergamot'],
+    heart: ['Musk', 'Amber'],
+    base: ['Vetiver', 'Vanilla', 'Patchouli'],
+  },
+  iii: {
+    top: ['Apple', 'Blackcurrant', 'Clover', 'Myosotis', 'Purple Perilla'],
+    heart: ['Peach', 'Flower Scent', 'Rose Hip', 'Rose', 'Jasmine'],
+    base: ['Musk', 'Woods', 'Benzoin', 'Patchouli'],
+  },
 }
 
-const WISH_TRIO: Variant[] = ['i', 'ii', 'iii'].map((n) => ({
-  name: `Wish ${n.toUpperCase()}`,
-  notes: WISH_NOTES,
-  radar: img(`p-3-wishes-wish-${n}-radar.webp`),
-  bloom: img(`p-3-wishes-wish-${n}-bloom.webp`),
-}))
+/** The family each Wish falls into, read off its own note list. */
+const WISH_FAMILY: Record<WishKey, string> = {
+  i: 'Citrus Floral',
+  ii: 'Floral Amber',
+  iii: 'Fruity Floral',
+}
+
+/** One composition band per Wish, for whichever box the three ship in. */
+function wishTrio(id: string): Variant[] {
+  return WISH_KEYS.map((n) => ({
+    name: `Wish ${n.toUpperCase()}`,
+    family: WISH_FAMILY[n],
+    notes: WISH_NOTES[n],
+    radar: img(`p-${id}-wish-${n}-radar.webp`),
+    bloom: img(`p-${id}-wish-${n}-bloom.webp`),
+  }))
+}
+
+/** What a boxed set quotes in its own summary: the three Wishes, in one line. */
+const WISH_SET_NOTES: ScentNotes = {
+  top: ['Tangerine', 'Orange Blossom', 'Bergamot'],
+  heart: ['Peony', 'Rose', 'Amber'],
+  base: ['Musk', 'Vanilla', 'Patchouli'],
+}
+
+/** Shop copy for the 15ml singles, written from each Wish's own composition. */
+const WISH_COPY: Record<WishKey, { moods: Mood[]; story: string; description: string }> = {
+  i: {
+    moods: ['Serene', 'Romantic'],
+    story:
+      'The first Wish, and the simplest. One bright stroke of tangerine over a soft peony heart, worn close to the skin.',
+    description:
+      'Tangerine lifts, peony softens and a clean musk carries it through the day. Alcohol free, skin safe and easy to wear with anything.',
+  },
+  ii: {
+    moods: ['Serene', 'Bold'],
+    story:
+      'The second Wish turns warmer. Orange blossom and osmanthus open the bottle, then amber and vanilla settle in for the evening.',
+    description:
+      'Orange blossom and osmanthus lifted by bergamot, warming through musk and amber into vetiver, vanilla and patchouli.',
+  },
+  iii: {
+    moods: ['Playful', 'Romantic'],
+    story:
+      'The third Wish is the fullest. Orchard fruit and blackcurrant give way to a whole garden of peach, rose and jasmine.',
+    description:
+      'Apple, blackcurrant and purple perilla over a flowered heart of peach, rose hip, rose and jasmine, resting on benzoin, woods and musk.',
+  },
+}
 
 // Prices in Malaysian Ringgit (RM / MYR)
 // Order below is the merchandising sequence the client specified:
@@ -355,12 +482,13 @@ export const products: Product[] = [
     place: 'Melaka',
     story:
       'A love letter to the Nyonya kebaya, with its embroidered flowers rendered in scent. Delicate, feminine and rich with Peranakan romance.',
+    // Revision 4: the client corrected this composition.
     description:
-      'Litchi and rose petals bloom into a couture bouquet of peony and freesia, sweetened by praline and cashmere wood.',
+      'Lemon and ambrette open clean and green, unfolding into a couture bouquet of orange blossom, violet and ylang ylang over a powdery musk.',
     notes: {
-      top: ['Litchi', 'Raspberry', 'Rose Petals'],
-      heart: ['Peony', 'Freesia', 'Magnolia'],
-      base: ['Musk', 'Cashmere Wood', 'Praline'],
+      top: ['Ambrette', 'Leafy', 'Lemon'],
+      heart: ['Orange Blossom', 'Violet', 'Ylang Ylang'],
+      base: ['Musk', 'Powdery', 'Vetiver'],
     },
   },
   {
@@ -369,7 +497,9 @@ export const products: Product[] = [
     subtitle: 'Nyonya Collection',
     collection: 'Nyonya',
     collectionId: 'nyonya',
-    family: 'Green Gourmand',
+    // Revision 4 moved the pandan into the base and set orris and rice on top,
+    // so the family is no longer a green one.
+    family: 'Woody Gourmand',
     audience: 'Unisex',
     moods: ['Playful', 'Serene'],
     price: 159,
@@ -386,13 +516,14 @@ export const products: Product[] = [
     badges: ['Nyonya Heritage'],
     place: 'Melaka',
     story:
-      'The beloved ondeh ondeh, reimagined as fragrance. Pandan and coconut cradle a molten heart of gula melaka for a nostalgic, edible sweetness.',
+      'The beloved ondeh ondeh, reimagined as fragrance. Steamed rice and orris give way to vanilla, with pandan settling in the base for a nostalgic, edible sweetness.',
+    // Revision 4: the client corrected this composition.
     description:
-      'A playful green gourmand: fresh pandan and lime over coconut water, melting into palm sugar, vanilla and tonka.',
+      'A soft gourmand: orris and rice lifted by bergamot, warmed through geranium, vanilla and rose, and closed on pandan, ambergris and sandalwood.',
     notes: {
-      top: ['Pandan', 'Coconut Water', 'Lime'],
-      heart: ['Gula Melaka', 'Jasmine'],
-      base: ['Vanilla', 'Musk', 'Tonka Bean'],
+      top: ['Orris', 'Rice', 'Bergamot'],
+      heart: ['Geranium', 'Vanilla', 'Rose'],
+      base: ['Ambergris', 'Pandan', 'Sandalwood'],
     },
   },
   {
@@ -418,13 +549,14 @@ export const products: Product[] = [
     badges: ['Nyonya Heritage'],
     place: 'Melaka',
     story:
-      'The warmth of a Peranakan kitchen, with cardamom, clove and cinnamon folded into rose and amber. Spice as heirloom, worn on the skin.',
+      'The warmth of a Peranakan kitchen, with black pepper and lemongrass folded into osmanthus and rose. Spice as heirloom, worn on the skin.',
+    // Revision 4: the client corrected this composition.
     description:
-      'An amber spice signature: glowing cardamom and clove over ginger flower and rose, resting on sandalwood and patchouli.',
+      'An amber spice signature: bright bergamot, black pepper and lemongrass over osmanthus, rose and violet, resting on labdanum and amber.',
     notes: {
-      top: ['Cardamom', 'Orange', 'Clove'],
-      heart: ['Cinnamon', 'Rose', 'Ginger Flower'],
-      base: ['Sandalwood', 'Amber', 'Patchouli'],
+      top: ['Bergamot', 'Black Pepper', 'Lemongrass'],
+      heart: ['Osmanthus', 'Rose', 'Violet'],
+      base: ['Musk', 'Labdanum', 'Amber'],
     },
   },
   {
@@ -445,7 +577,7 @@ export const products: Product[] = [
     included: img('p-3-wishes-included.webp'),
     includedItems: STANDARD_INCLUDES,
     radar: img('p-3-wishes-radar.webp'),
-    variants: WISH_TRIO,
+    variants: wishTrio('3-wishes'),
     accent: 'gold',
     badges: ['Alcohol Free', 'Skin Safe'],
     bestseller: true,
@@ -453,8 +585,73 @@ export const products: Product[] = [
     story:
       'A luxurious, alcohol free collection designed for gentle, everyday indulgence. Safe for all skin types, each of the three Wishes is a soft, silken ritual.',
     description:
-      'Three clean, second skin musks that are light, hydrating and endlessly wearable. A bestseller for a reason: comfort as a daily luxury.',
-    notes: WISH_NOTES,
+      'Three clean, second skin scents that are light, hydrating and endlessly wearable. A bestseller for a reason: comfort as a daily luxury.',
+    notes: WISH_SET_NOTES,
+  },
+  /* ------------------------------------------------------------------
+     Revision 4: the client listed seven SKUs missing from the shop. The
+     first four are the 3 Wishes 15ml singles and the 3 Wishes travel kit.
+     ------------------------------------------------------------------ */
+  ...WISH_KEYS.map((n): Product => {
+    const id = `wish-${n}`
+    const copy = WISH_COPY[n]
+    return {
+      id,
+      name: `Wish ${n.toUpperCase()}`,
+      subtitle: 'Alcohol Free Eau de Parfum',
+      collection: '3 Wishes',
+      collectionId: 'three-wishes',
+      family: WISH_FAMILY[n],
+      audience: 'Unisex',
+      moods: copy.moods,
+      price: 79,
+      compareAt: 99,
+      size: '15ml Eau de Parfum',
+      image: img(`p-${id}-life.webp`),
+      hoverImage: img(`p-${id}-pack.webp`),
+      gallery: [img(`p-${id}-life.webp`), img(`p-${id}-pack.webp`), img(`p-${id}-box.webp`)],
+      included: img(`p-${id}-included.webp`),
+      includedItems: STANDARD_INCLUDES,
+      radar: img(`p-${id}-radar.webp`),
+      bloom: img(`p-${id}-bloom.webp`),
+      accent: 'gold',
+      badges: ['Alcohol Free', 'Skin Safe'],
+      story: copy.story,
+      description: copy.description,
+      notes: WISH_NOTES[n],
+    }
+  }),
+  {
+    id: '3-wishes-travel-kit',
+    name: '3 Wishes Travel Kit',
+    subtitle: 'Wish I · Wish II · Wish III, sized for the bag',
+    collection: '3 Wishes',
+    collectionId: 'three-wishes',
+    family: 'Clean Musk',
+    audience: 'Unisex',
+    moods: ['Serene', 'Playful'],
+    price: 68,
+    compareAt: 98,
+    size: 'Travel set of three eau de parfum',
+    image: img('p-3-wishes-travel-kit-life.webp'),
+    hoverImage: img('p-3-wishes-travel-kit-pack.webp'),
+    gallery: [
+      img('p-3-wishes-travel-kit-life.webp'),
+      img('p-3-wishes-travel-kit-pack.webp'),
+      img('p-3-wishes-travel-kit-box.webp'),
+    ],
+    included: img('p-3-wishes-travel-kit-included.webp'),
+    includedItems: STANDARD_INCLUDES,
+    radar: img('p-3-wishes-travel-kit-wish-i-radar.webp'),
+    variants: wishTrio('3-wishes-travel-kit'),
+    accent: 'gold',
+    badges: ['Alcohol Free', 'Travel Size'],
+    gift: true,
+    story:
+      'All three Wishes, packed for the road. Cabin friendly sprays that slip into a handbag or a carry on, alcohol free and gentle enough for daily wear.',
+    description:
+      'The 3 Wishes trio in travel sprays: the same three compositions, in a smaller pour, ready for the weekend away or the desk drawer.',
+    notes: WISH_SET_NOTES,
   },
   {
     id: 'spirit',
@@ -528,6 +725,13 @@ export const products: Product[] = [
       base: ['Vanilla', 'Musk'],
     },
   },
+  /* ------------------------------------------------------------------
+     Revision 4: the last three of the seven missing SKUs. Passion, Life
+     and Dream are the Spirit II fragrances sold on their own in 50ml.
+     Their ids carry no "spirit-ii-" prefix, because the set already
+     names its per fragrance artwork that way.
+     ------------------------------------------------------------------ */
+  ...SPIRIT_TWO_SINGLES,
   {
     // Client amendment: the Spirit travel kit was missing from the shop.
     id: 'spirit-travel-kit',

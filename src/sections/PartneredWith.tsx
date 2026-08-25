@@ -10,28 +10,31 @@ import { asset } from '../lib/asset'
  * so they sit on the porcelain band without white plates behind them.
  */
 /**
- * Order follows the numbering the client marked on the Partnered with folder,
- * and the fourteen fall into a reverse pyramid of five, four, three and two.
+ * Revision 4: the client drew the arrangement they wanted, six across, then
+ * five, then three, and set the order of the logos within it. That replaces
+ * the reverse pyramid of five, four, three and two this section opened with.
  */
 const partners: { name: string; file: string }[] = [
-  { name: 'AirAsia', file: 'partner-airasia.png' },                     // 1
-  { name: 'Watsons', file: 'partner-watsons.png' },                     // 2
-  { name: 'SaSa', file: 'partner-sasa.png' },                           // 3
-  { name: 'Parkson Elite', file: 'partner-parkson-elite.png' },         // 4
-  { name: 'Isetan', file: 'partner-isetan.png' },                       // 5
-  { name: 'Honor', file: 'partner-honor.png' },                         // 6
-  { name: 'SOGO', file: 'partner-sogo.png' },                           // 7
-  { name: 'Seibu TRX', file: 'partner-seibu.png' },                     // 8
-  { name: 'Eraman', file: 'partner-eraman.png' },                       // 9
-  { name: 'SEGi', file: 'partner-segi.png' },                           // 10
-  { name: 'Tourism Malaysia', file: 'partner-tourism-malaysia.png' },   // 11
-  { name: 'Valiram', file: 'partner-valiram.png' },                     // 12
-  { name: 'Bangunan Sultan Abdul Samad', file: 'partner-bsas.png' },    // 13
-  { name: 'Ctrip', file: 'partner-ctrip.png' },                         // 14
+  { name: 'AirAsia', file: 'partner-airasia.png' },
+  { name: 'Watsons', file: 'partner-watsons.png' },
+  { name: 'SaSa', file: 'partner-sasa.png' },
+  { name: 'Isetan', file: 'partner-isetan.png' },
+  { name: 'Seibu TRX', file: 'partner-seibu.png' },
+  { name: 'Honor', file: 'partner-honor.png' },
+
+  { name: 'Eraman', file: 'partner-eraman.png' },
+  { name: 'Parkson Elite', file: 'partner-parkson-elite.png' },
+  { name: 'SOGO', file: 'partner-sogo.png' },
+  { name: 'Bangunan Sultan Abdul Samad', file: 'partner-bsas.png' },
+  { name: 'Ctrip', file: 'partner-ctrip.png' },
+
+  { name: 'Valiram', file: 'partner-valiram.png' },
+  { name: 'SEGi', file: 'partner-segi.png' },
+  { name: 'Tourism Malaysia', file: 'partner-tourism-malaysia.png' },
 ]
 
-/** Five, four, three, two: fourteen logos, tapering to a point. */
-const PYRAMID = [5, 4, 3, 2]
+/** Six, five, three: the client's own layout for the fourteen. */
+const PYRAMID = [6, 5, 3]
 
 const rows = PYRAMID.reduce<(typeof partners)[]>((acc, count) => {
   const taken = acc.reduce((n, r) => n + r.length, 0)
@@ -52,7 +55,7 @@ export default function PartneredWith() {
 
             The rows only taper from sm up; below that they wrap, which keeps
             the narrow layout from reading as a ragged column. */}
-        <div className="mx-auto mt-11 flex max-w-5xl flex-col items-center gap-y-9">
+        <div className="mx-auto mt-11 flex max-w-6xl flex-col items-center gap-y-9">
           {rows.map((row, i) => (
             <motion.div
               key={i}
@@ -60,15 +63,15 @@ export default function PartneredWith() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: '-8% 0px' }}
               transition={{ duration: 0.8, delay: i * 0.12, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-wrap items-center justify-center gap-x-10 gap-y-9 sm:gap-x-14"
+              className="flex flex-wrap items-center justify-center gap-x-6 gap-y-9 sm:gap-x-10"
             >
               {row.map((p) => (
-                <span key={p.file} className="flex w-[7.5rem] items-center justify-center sm:w-[9rem]">
+                <span key={p.file} className="brand-cell w-[7.5rem] sm:w-[8.5rem]">
                   <img
                     src={asset(`/assets/client/${p.file}`)}
                     alt={p.name}
                     loading="lazy"
-                    className="h-11 w-auto max-w-full object-contain opacity-70 grayscale transition duration-500 hover:opacity-100 hover:grayscale-0 md:h-12"
+                    className="brand-logo h-11 md:h-12"
                   />
                 </span>
               ))}

@@ -4,7 +4,7 @@ import { asset } from '../lib/asset'
 import PageHeader from '../components/ui/PageHeader'
 import { Kicker } from '../components/ui/SplitText'
 import Accordion from '../components/ui/Accordion'
-import { WhatsApp, Instagram, Facebook, Pin, Check, ArrowRight } from '../components/ui/icons'
+import { Phone, Instagram, Facebook, Pin, Check, ArrowRight } from '../components/ui/icons'
 import { waLink, WHATSAPP_DISPLAY } from '../lib/concierge'
 import { directionsUrl, HEAD_OFFICE } from '../data/stores'
 import { productFaq } from '../data/faq'
@@ -24,7 +24,10 @@ export default function Contact() {
 
   const channels = [
     {
-      I: WhatsApp,
+      // Revision 4: the client supplied a ringed handset in place of the
+      // WhatsApp glyph here. The card draws the ring, so the house's own
+      // handset sits inside it and matches the stroke of its two neighbours.
+      I: Phone,
       label: 'WhatsApp',
       value: WHATSAPP_DISPLAY,
       href: waLink('Hi Legendary! I have a question.'),

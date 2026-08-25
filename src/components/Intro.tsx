@@ -81,9 +81,12 @@ export default function Intro() {
               transition={{ delay: 1, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
             />
 
-            {/* No grey plate here: the script is a knocked-out mask on the ink. */}
+            {/* No grey plate here: the script is a knocked-out mask on the ink.
+                Revision 4: the script carries the same gold as the
+                "Est. 2015 · Malaysia" line above it, so the lockup reads as one
+                colour rather than gold, gilt, ivory. */}
             <motion.div
-              className="mt-7 text-ivory/90"
+              className="eyebrow-gold mt-7"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1.25, duration: 0.9 }}

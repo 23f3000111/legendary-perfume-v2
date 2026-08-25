@@ -43,13 +43,13 @@ export const shippingPolicy: Policy = {
     },
 
     { t: 'h2', text: 'Shipping options and costs' },
+    /* Revision 4: the client removed the standard and express tiers, because
+       neither will exist. Delivery is free on anything bought, with no
+       minimum spend, so the table carries one line. */
     {
       t: 'table',
       head: ['Service', 'Arrives in', 'Cost'],
-      rows: [
-        ['Standard shipping', '5 to 7 business days', 'Free on orders over MYR 210. Below that, a flat MYR 25.'],
-        ['Expedited shipping', '2 to 3 business days', 'A flat MYR 67.'],
-      ],
+      rows: [['Delivery', '5 to 7 business days', 'Free on every order, whatever you buy.']],
     },
 
     { t: 'h2', text: 'Order tracking' },

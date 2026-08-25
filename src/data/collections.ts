@@ -40,8 +40,10 @@ export const collections: Collection[] = [
     id: 'three-wishes',
     name: '3 Wishes',
     tagline: 'Alcohol free, everyday luxury',
+    // Revision 4: the three Wishes are now sold singly and as a travel kit as
+    // well as in the boxed set, so the copy no longer says trio alone.
     description:
-      'An alcohol free, skin safe trio of Malaysian perfumes made for gentle daily wear. A soft ritual for unwinding and treating yourself.',
+      'Alcohol free, skin safe Malaysian perfume made for gentle daily wear. Take the three Wishes as a boxed set, one at a time in 15ml, or packed into a travel kit.',
     accent: 'gold',
     image: img('collection-3-wishes.webp'),
     banner: img('banner-3wishes.webp'),
@@ -51,9 +53,10 @@ export const collections: Collection[] = [
     name: 'Spirit',
     tagline: 'Six fragrances, two chapters',
     // Client amendment: Spirit II now sits alongside Spirit I in this
-    // collection, so the copy covers both sets.
+    // collection, so the copy covers both sets. Revision 4 adds the Spirit II
+    // fragrances as 50ml bottles of their own.
     description:
-      'Spirit I carries Hope, Love and Confidence. Spirit II answers with Passion, Life and Dream. Six travel sized eau de parfum, made for movement.',
+      'Spirit I carries Hope, Love and Confidence. Spirit II answers with Passion, Life and Dream. Six fragrances made for movement, boxed as a set or poured on their own.',
     accent: 'teal',
     image: img('collection-spirit.webp'),
     banner: img('banner-spirit.webp'),

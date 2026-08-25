@@ -5,8 +5,6 @@ import { useUI } from '../store/ui'
 import { formatRM } from '../lib/format'
 import { Close, Plus, Minus, Bag, Sparkle, ArrowRight, Truck } from './ui/icons'
 
-const FREE_SHIP = 200
-
 export default function CartDrawer() {
   const open = useUI((s) => s.cartOpen)
   const close = useUI((s) => s.closeCart)
@@ -16,8 +14,6 @@ export default function CartDrawer() {
 
   const details = cartDetails(items)
   const subtotal = cartSubtotal(items)
-  const toFree = Math.max(0, FREE_SHIP - subtotal)
-  const pct = Math.min(100, (subtotal / FREE_SHIP) * 100)
 
   return (
     <AnimatePresence>
@@ -39,16 +35,14 @@ export default function CartDrawer() {
               <button onClick={close} aria-label="Close bag" className="transition hover:text-gold"><Close width={22} /></button>
             </div>
 
-            {/* free-ship meter */}
+            {/* Client amendment (revision 4): anything bought ships free, so
+                the spend-to-unlock meter is gone and the bag simply says so. */}
             {details.length > 0 && (
               <div className="border-b border-line px-6 py-4">
                 <p className="flex items-center gap-2 text-xs text-ink-soft">
                   <Truck width={16} className="text-gold" />
-                  {toFree > 0 ? <>You’re <b className="text-ink">{formatRM(toFree)}</b> away from free delivery</> : <>You’ve unlocked <b className="text-ink">free delivery</b> ✨</>}
+                  <b className="text-ink">Free delivery</b> on every order, whatever you buy
                 </p>
-                <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-sand">
-                  <motion.div className="h-full rounded-full bg-gradient-to-r from-gold-deep to-gold-light" animate={{ width: `${pct}%` }} transition={{ ease: [0.16, 1, 0.3, 1] }} />
-                </div>
               </div>
             )}
 

@@ -73,17 +73,26 @@ export default function Shop() {
 
   const activeCollection = collections.find((c) => c.id === collectionParam)
 
+  /* Revision 4: For Her and For Him had no banner of their own in the original
+     delivery and fell back to All Fragrances. The client has now supplied both.
+     Reading them off the audience rather than the footer's ?filter= means the
+     title bar and the chip you pressed always agree. */
+  const forHer = audience === 'For Her'
+  const forHim = audience === 'For Him'
+
   const activeTitle =
     filterParam === 'bestsellers' ? 'Bestsellers'
     : filterParam === 'gifts' ? 'Gifts & Sets'
-    : filterParam === 'her' ? 'For Her'
-    : filterParam === 'him' ? 'For Him'
+    : forHer ? 'For Her'
+    : forHim ? 'For Him'
     : collectionParam !== 'all' ? activeCollection?.name ?? 'Fragrances'
     : 'All Fragrances'
 
   const banner =
     filterParam === 'bestsellers' ? asset('/assets/client/banner-bestsellers.webp')
     : filterParam === 'gifts' ? asset('/assets/client/banner-gifts.webp')
+    : forHer ? asset('/assets/client/banner-for-her.webp')
+    : forHim ? asset('/assets/client/banner-for-him.webp')
     : activeCollection?.banner ?? asset('/assets/client/banner-fragrances.webp')
 
   return (

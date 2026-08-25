@@ -29,6 +29,9 @@ Image.MAX_IMAGE_PIXELS = None
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SRC = os.path.join(ROOT, "client-assets", "Legendary digital")
+# Revision 4 arrived as its own drop rather than a replacement delivery, so
+# its files are read from here and everything else still comes from SRC.
+AMD4 = os.path.join(ROOT, "client-assets", "amendment-4")
 OUT = os.path.join(ROOT, "public", "assets", "client")
 
 INVISIBLE = dict.fromkeys(map(ord, "⁠​‎‏﻿"), None)
@@ -42,13 +45,13 @@ def norm(s: str) -> str:
     return re.sub(r"\s+", " ", unicodedata.normalize("NFC", s).translate(INVISIBLE)).strip().lower()
 
 
-def resolve_dir(subdir: str) -> str:
-    """Walk SRC/subdir one segment at a time, matching normalised folder names.
+def resolve_dir(subdir: str, root: str = SRC) -> str:
+    """Walk root/subdir one segment at a time, matching normalised folder names.
 
     Several client folders are named e.g. "3.0 ⁠Mahsuri" with a leading
     word-joiner, so an exact os.path.join never resolves.
     """
-    path = SRC
+    path = root
     for segment in subdir.split("/"):
         if not segment:
             continue
@@ -64,15 +67,20 @@ def resolve_dir(subdir: str) -> str:
     return path
 
 
-def find(subdir: str, *needles: str) -> str:
-    """First file under SRC/subdir whose normalised name contains every needle."""
-    base = resolve_dir(subdir)
+def find(subdir: str, *needles: str, root: str = SRC) -> str:
+    """First file under root/subdir whose normalised name contains every needle."""
+    base = resolve_dir(subdir, root)
     wanted = [norm(n) for n in needles]
     for entry in sorted(os.listdir(base)):
         name = norm(entry)
         if all(w in name for w in wanted):
             return os.path.join(base, entry)
     raise FileNotFoundError(f"{subdir} :: {needles}")
+
+
+def find4(subdir: str, *needles: str) -> str:
+    """The same lookup, against the revision 4 drop."""
+    return find(subdir, *needles, root=AMD4)
 
 
 # --------------------------------------------------------------------------
@@ -286,6 +294,20 @@ def brand_mark(src: str, dest: str, max_side: int, pad: float = 0.06) -> None:
     write(canvas, dest)
 
 
+def passthrough(src: str, dest: str) -> None:
+    """Copy an asset that already ships web ready.
+
+    The sample vial is delivered as finished gold artwork on transparency, so
+    unlike the black line art icons it needs no knock-out or re-tinting. It is
+    still listed here rather than left sitting in public/, because this script
+    empties public/assets/client before it writes.
+    """
+    path = os.path.join(OUT, dest)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    shutil.copyfile(src, path)
+    report(path)
+
+
 def silhouette(src: str, dest: str, max_side: int) -> None:
     """Turn flat black-on-white artwork into a tintable alpha silhouette.
 
@@ -352,6 +374,18 @@ PRODUCTS = {
     "spirit":            (f"{COLL}/4.Spirit/Spirit 1",        "asset 23", None),
     "spirit-ii":         (f"{COLL}/4.Spirit/Spirit 2",        "asset 28", None),
     "spirit-travel-kit": (f"{COLL}/4.Spirit/Travel Kit",      None,       None),
+    # Revision 4: the seven SKUs the client listed as missing from the shop.
+    # The 3 Wishes 15ml singles, the 3 Wishes travel kit and the Spirit II
+    # 50ml singles all have their own folders in the delivery already.
+    "wish-i":              (f"{COLL}/3.3 Wishes/Wish 1",           "asset 31", "legendary-02"),
+    "wish-ii":             (f"{COLL}/3.3 Wishes/Wish 2",           "asset 32", "legendary-06"),
+    "wish-iii":            (f"{COLL}/3.3 Wishes/Wish 3",           "asset 33", "legendary-07"),
+    "3-wishes-travel-kit": (f"{COLL}/3.3 Wishes/Travel Kit",       None,       None),
+    # Named for the fragrance alone, the way the bottles are: prefixing them
+    # "spirit-ii-" would collide with the Spirit II set's own per-fragrance art.
+    "passion":             (f"{COLL}/4.Spirit/Spirit 2 - Passion", "asset 28", "copy of passion"),
+    "life":                (f"{COLL}/4.Spirit/Spirit 2 - Life",    "asset 30", "copy of life"),
+    "dream":               (f"{COLL}/4.Spirit/Spirit 2 - Dream",   "asset 29", "copy of dream"),
 }
 
 # The pack shot is a transparent cut-out so the tile's SKU gradient shows
@@ -368,11 +402,35 @@ PACK_NEEDLES = {
     "spirit":            ("spirit 1 website",),
     "spirit-ii":         ("spirit 2 website",),
     "spirit-travel-kit": ("travel kit_spirit 1 website", ".png"),
+    "wish-i":              ("website_wish 1",),
+    "wish-ii":             ("website_wish 2",),
+    "wish-iii":            ("website_wish 3",),
+    "3-wishes-travel-kit": ("travel kit_3 wishes website",),
+    # The Spirit II singles ship their cut-outs named "Spirit 1_…", a client
+    # typo; the folder they sit in is the authority.
+    "passion":             ("passion website",),
+    "life":                ("spirit 1_life",),
+    "dream":               ("dream website",),
+}
+
+# The lifestyle shot is normally "lifestyle picture_<name>"; the two travel
+# kits name theirs after the kit instead.
+LIFE_NEEDLES = {
+    "spirit-travel-kit":   ("travel kit.jpg",),
+    "3-wishes-travel-kit": ("travel kit.jpg",),
+}
+
+# "What you get" flat-lays that only arrived with the revision 4 drop.
+AMD4_INCLUDED = {
+    "3-wishes-travel-kit": "Collections/3.3 Wishes/Travel Kit",
 }
 
 # The travel kit folder holds only its own lifestyle shot and pack cut-out, so
 # the box shot and the "what you get" flat-lay come from Spirit I.
-FALLBACK_FOLDER = {"spirit-travel-kit": f"{COLL}/4.Spirit/Spirit 1"}
+FALLBACK_FOLDER = {
+    "spirit-travel-kit": f"{COLL}/4.Spirit/Spirit 1",
+    "3-wishes-travel-kit": f"{COLL}/3.3 Wishes/3 Wishes",
+}
 
 
 def find_or_fallback(pid: str, folder: str, *needles: str) -> str:
@@ -404,6 +462,12 @@ VARIANTS = {
         f"{COLL}/3.3 Wishes/3 Wishes",
         [("wish-i", "asset 31", "wish i.png"), ("wish-ii", "asset 32", "wish ii.png"), ("wish-iii", "asset 33", "wish iii.png")],
     ),
+    # The 3 Wishes travel kit holds the same three wishes, so it borrows their
+    # charts and botanicals.
+    "3-wishes-travel-kit": (
+        f"{COLL}/3.3 Wishes/3 Wishes",
+        [("wish-i", "asset 31", "wish i.png"), ("wish-ii", "asset 32", "wish ii.png"), ("wish-iii", "asset 33", "wish iii.png")],
+    ),
 }
 
 BANNERS = {
@@ -418,6 +482,13 @@ BANNERS = {
     "nyonya":      (f"{COLL}/2.Nyonya/{BANNER}",         "nyonya"),
     "3wishes":     (f"{COLL}/3.3 Wishes/{BANNER}",       "3wishes"),
     "spirit":      (f"{COLL}/4.Spirit/{BANNER}",         "spirit"),
+}
+
+# Revision 4: For Her and For Him were the two shop views with no banner of
+# their own in the original delivery, so they fell back to All Fragrances.
+BANNERS_4 = {
+    "for-her": ("", "banner photo_for her"),
+    "for-him": ("", "banner photo_for him"),
 }
 
 MOODS = {
@@ -495,16 +566,23 @@ def main() -> int:
     print("Icons")
     # The bottle mark rides inside the gold concierge roundel, so it stays white.
     flat_fill(find(f"{HOME}/ICON/Perfume Icon", "perfume icon", ".png"), "icon-perfume.png", 360)
+    # Complimentary Samples on the trust row. Already gold, so it passes through.
+    passthrough(find(f"{HOME}/ICON/Vial Icon", "website vial", ".png"), "icon-vial.png")
     for key, (folder, needle) in MOODS.items():
         tinted_line_art(find(folder, needle), f"mood-{key}.png", 320)
 
     print("Home sections")
     save_webp(find(f"{HOME}/Orchid — the scent that began it all", "home-orchid"), "signature-orchid.webp", 1600)
     save_webp(find(f"{HOME}/A house rooted in Malaysian soul", "home-nyonya"), "heritage-nyonya.webp", 1800)
+    # Revision 4: Our Story's "It started with a single flower" was reusing the
+    # home page orchid shot; the client supplied its own photograph.
+    save_webp(find4("", "it started with a single flower"), "about-beginning.webp", 1800)
 
     print("Collection covers")
     for key, (folder, needle) in COLLECTION_COVERS.items():
-        save_webp(find(folder, needle), f"collection-{key}.webp", 1600)
+        # Revision 4 re-shot the Signature family photo.
+        src = find4("", "home-signature") if key == "signature" else find(folder, needle)
+        save_webp(src, f"collection-{key}.webp", 1600)
 
     print("Scented-memory cards")
     for key, (folder, needle) in PLACES.items():
@@ -520,14 +598,18 @@ def main() -> int:
 
     print("Products")
     for pid, (folder, radar, bloom) in PRODUCTS.items():
-        save_webp(find_or_fallback(pid, folder, "travel kit.jpg")
-                  if pid == "spirit-travel-kit"
-                  else find(folder, "lifestyle picture"), f"p-{pid}-life.webp", 1400)
+        life = LIFE_NEEDLES.get(pid, ("lifestyle picture",))
+        save_webp(find_or_fallback(pid, folder, *life), f"p-{pid}-life.webp", 1400)
         save_webp(find_or_fallback(pid, folder, "white background box"), f"p-{pid}-box.webp", 1400)
         save_cutout(find(folder, *PACK_NEEDLES[pid]), f"p-{pid}-pack.webp", 1400)
         # Client note: the "What's included" flat-lay must sit on transparency
         # so the panel's own paper colour carries through behind it.
-        save_cutout(find_or_fallback(pid, folder, "what you get"), f"p-{pid}-included.webp", 1600)
+        included = (
+            find4(AMD4_INCLUDED[pid], "what you get")
+            if pid in AMD4_INCLUDED
+            else find_or_fallback(pid, folder, "what you get")
+        )
+        save_cutout(included, f"p-{pid}-included.webp", 1600)
         if radar:
             save_webp(find(folder, radar), f"p-{pid}-radar.webp", 1100, keep_alpha=True)
         if bloom:
@@ -542,6 +624,8 @@ def main() -> int:
     print("Page banners")
     for key, (folder, needle) in BANNERS.items():
         save_webp(find(folder, needle), f"banner-{key}.webp", 2000, quality=78)
+    for key, (folder, needle) in BANNERS_4.items():
+        save_webp(find4(folder, needle), f"banner-{key}.webp", 2000, quality=78)
 
     print("Our Story journey")
     for year in JOURNEY_YEARS:

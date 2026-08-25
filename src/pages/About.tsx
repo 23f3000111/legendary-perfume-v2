@@ -55,10 +55,13 @@ export default function About() {
 
       {/* Intro split */}
       <section className="u-container grid items-center gap-14 py-20 md:py-28 lg:grid-cols-2 lg:gap-20">
-        {/* Client note: image reproportioned to sit level with the copy block */}
+        {/* Client note: image reproportioned to sit level with the copy block.
+            Revision 4: this was borrowing the home page's orchid shot. The
+            client supplied a photograph of its own for "It started with a
+            single flower". */}
         <Reveal className="mx-auto max-h-[58vh] w-full max-w-sm overflow-hidden rounded-sm">
           <img
-            src={asset('/assets/client/signature-orchid.webp')}
+            src={asset('/assets/client/about-beginning.webp')}
             alt="Orchid, the signature scent"
             className="aspect-[4/5] max-h-[58vh] w-full object-cover"
           />

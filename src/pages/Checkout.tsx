@@ -5,11 +5,13 @@ import { useShop, cartDetails, cartSubtotal } from '../store/shop'
 import { formatRM } from '../lib/format'
 import { Check, ArrowRight, ArrowLeft, ShieldCheck, Sparkle, Bag } from '../components/ui/icons'
 
-const steps = ['Details', 'Delivery', 'Payment']
-const deliveryOptions = [
-  { id: 'standard', label: 'Standard Delivery', note: '2 to 4 business days · fully tracked', price: 0 },
-  { id: 'express', label: 'Express Delivery', note: 'Next business day', price: 20 },
-]
+/*
+ * Client amendment (revision 4): neither a standard nor an express service
+ * will exist, and anything bought ships free. With nothing left to choose,
+ * the delivery step is gone rather than left as a dead click, and the summary
+ * simply reads Free.
+ */
+const steps = ['Details', 'Payment']
 const payMethods = ['Card', 'FPX Online Banking', 'GrabPay', 'Touch ’n Go']
 
 export default function Checkout() {
@@ -20,12 +22,10 @@ export default function Checkout() {
 
   const [step, setStep] = useState(0)
   const [done, setDone] = useState(false)
-  const [delivery, setDelivery] = useState('standard')
   const [pay, setPay] = useState('Card')
   const [orderNo] = useState(() => 'LGD-' + Math.floor(100000 + Math.random() * 899999))
 
-  const shipping = delivery === 'express' ? 20 : subtotal >= 200 ? 0 : 10
-  const total = subtotal + shipping
+  const total = subtotal
 
   if (done) {
     return (
@@ -69,7 +69,7 @@ export default function Checkout() {
     )
   }
 
-  const next = () => setStep((s) => Math.min(2, s + 1))
+  const next = () => setStep((s) => Math.min(steps.length - 1, s + 1))
   const back = () => setStep((s) => Math.max(0, s - 1))
   const placeOrder = () => { clear(); setDone(true) }
 
@@ -102,26 +102,6 @@ export default function Checkout() {
               >
                 {step === 0 && <DetailsStep />}
                 {step === 1 && (
-                  <div className="space-y-3">
-                    <h2 className="font-display text-2xl">Delivery method</h2>
-                    {deliveryOptions.map((o) => (
-                      <button
-                        key={o.id} onClick={() => setDelivery(o.id)}
-                        className={`flex w-full items-center justify-between rounded-sm border p-4 text-left transition ${
-                          delivery === o.id ? 'border-gold bg-porcelain' : 'border-line hover:border-gold/50'
-                        }`}
-                      >
-                        <span>
-                          <span className="block font-display text-lg">{o.label}</span>
-                          <span className="block text-xs text-smoke">{o.note}</span>
-                        </span>
-                        <span className="text-sm">{o.price === 0 ? (subtotal >= 200 ? 'Free' : formatRM(10)) : formatRM(o.price)}</span>
-                      </button>
-                    ))}
-                    <p className="flex items-center gap-2 pt-2 text-xs text-ink-soft"><Sparkle width={14} className="text-gold" /> Complimentary samples included with every order.</p>
-                  </div>
-                )}
-                {step === 2 && (
                   <div className="space-y-5">
                     <h2 className="font-display text-2xl">Payment</h2>
                     <div className="grid grid-cols-2 gap-2">
@@ -160,7 +140,7 @@ export default function Checkout() {
                   <ArrowLeft width={16} /> Back
                 </button>
               ) : <Link to="/shop" className="flex items-center gap-2 text-sm text-ink-soft transition hover:text-ink"><ArrowLeft width={16} /> Continue shopping</Link>}
-              {step < 2 ? (
+              {step < steps.length - 1 ? (
                 <button onClick={next} className="btn-solid gap-2">Continue <ArrowRight width={16} /></button>
               ) : (
                 <button onClick={placeOrder} className="btn-gold gap-2">Place order · {formatRM(total)}</button>
@@ -191,9 +171,12 @@ export default function Checkout() {
               </ul>
               <dl className="mt-4 space-y-2 border-t border-line pt-4 text-sm">
                 <div className="flex justify-between text-ink-soft"><dt>Subtotal</dt><dd>{formatRM(subtotal)}</dd></div>
-                <div className="flex justify-between text-ink-soft"><dt>Delivery</dt><dd>{shipping === 0 ? 'Free' : formatRM(shipping)}</dd></div>
+                <div className="flex justify-between text-ink-soft"><dt>Delivery</dt><dd>Free</dd></div>
                 <div className="flex justify-between border-t border-line pt-3 font-display text-xl text-ink"><dt>Total</dt><dd>{formatRM(total)}</dd></div>
               </dl>
+              <p className="mt-4 flex items-center gap-2 text-xs text-ink-soft">
+                <Sparkle width={14} className="text-gold" /> Complimentary samples included with every order.
+              </p>
             </div>
           </aside>
         </div>

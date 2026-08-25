@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { asset } from '../lib/asset'
 import { getProduct } from '../data/products'
 import Reveal from '../components/ui/Reveal'
+import RollingNumber from '../components/ui/RollingNumber'
 import { Kicker } from '../components/ui/SplitText'
 import { ArrowRight, ShieldCheck } from '../components/ui/icons'
 
@@ -36,8 +37,9 @@ export default function Signature() {
               </div>
               <span className="hidden h-14 w-px bg-line sm:block" />
               <div>
+                {/* Revision 4: the figure rolls up when the section arrives. */}
                 <p className="font-noto text-[clamp(2rem,4.2vw,3rem)] font-medium leading-none text-gold-deep">
-                  30,000,000+
+                  <RollingNumber value={30_000_000} suffix="+" />
                 </p>
                 <p className="mt-2 text-sm text-ink-soft">bottles loved worldwide</p>
               </div>

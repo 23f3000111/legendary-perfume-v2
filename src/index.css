@@ -98,6 +98,29 @@
   }
   .text-gilt-anim { animation: shimmer 7s linear infinite; }
 
+  /* Partner and stockist logos.
+     Client amendment (revision 4): a logo should come up in its own colour
+     when it is hovered. The whole cell is the target, not just the artwork,
+     so a logo with plenty of white space around it still lights up. Pointers
+     that cannot hover, phones and tablets among them, get the coloured state
+     outright, which is the fallback the client asked for. */
+  .brand-cell {
+    @apply flex items-center justify-center;
+  }
+  .brand-logo {
+    @apply w-auto max-w-full object-contain;
+    filter: grayscale(1);
+    opacity: 0.62;
+    transition: filter 0.5s var(--ease-luxe), opacity 0.5s var(--ease-luxe);
+  }
+  .brand-cell:hover .brand-logo {
+    filter: grayscale(0);
+    opacity: 1;
+  }
+  @media (hover: none) {
+    .brand-logo { filter: grayscale(0); opacity: 1; }
+  }
+
   /* Hairline divider */
   .hairline { height: 1px; background: #D9CFBD; border: 0; }
   .hairline-dark { height: 1px; background: rgba(244,238,226,0.16); border: 0; }

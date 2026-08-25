@@ -148,15 +148,17 @@ export default function Stores() {
               Beyond our own boutiques, Legendary is stocked by these authorised partners.
             </p>
             {/* Logos come from the client's Trusted Sellers folder, knocked
-                out onto transparency in scripts/prepare-assets.py. */}
+                out onto transparency in scripts/prepare-assets.py. Revision 4:
+                each one comes up in its own colour when its cell is hovered,
+                and shows coloured outright where there is no hover to give. */}
             <div className="mx-auto mt-9 grid max-w-4xl grid-cols-2 items-center gap-x-10 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
               {sellers.map((s) => (
-                <div key={s.file} className="flex items-center justify-center">
+                <div key={s.file} className="brand-cell">
                   <img
                     src={asset(`/assets/client/${s.file}`)}
                     alt={s.name}
                     loading="lazy"
-                    className="h-10 w-auto max-w-[9rem] object-contain opacity-70 grayscale transition duration-500 hover:opacity-100 hover:grayscale-0 md:h-11"
+                    className="brand-logo h-10 max-w-[9rem] md:h-11"
                   />
                 </div>
               ))}

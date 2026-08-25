@@ -4,8 +4,8 @@ A premium, cinematic build of the Legendary Perfume storefront. Heritage luxe
 aesthetic (ivory, antique gold, Peranakan motifs), scroll driven storytelling and
 a working shop experience.
 
-This repository carries **revision 2**, the client's amendments from
-*Legendary New Website (rev 2, 10 August 2026)*.
+This repository carries the client's amendments up to and including
+**amendment 4** (the deck itself is titled *Revision #3*, dated 24 August 2026).
 
 ### 🔗 Live demo → **https://23f3000111.github.io/legendary-perfume-v2/**
 
@@ -77,6 +77,36 @@ Applied from the client's annotated deck, in deck order:
 | Contact | "Collaborate With Us", WhatsApp only, head office address, single centred form |
 | Site wide | No hyphen or dash characters anywhere in the copy |
 
+## Amendment 4
+
+Applied from `amendament_4.pdf`, in deck order. Source artwork for this round
+lives in `client-assets/amendment-4/`.
+
+| Page | Change |
+| --- | --- |
+| Intro | "the legend of scent" set in the same gold as "Est. 2015 · Malaysia" |
+| Home | The 30,000,000+ figure rolls up on an odometer as the Signature section arrives (`src/components/ui/RollingNumber.tsx`) |
+| Home | New Signature family photograph on the "Four worlds, bottled" rail |
+| Home | "Partnered With" laid out six, five, three, in the order the client drew |
+| Home / Stores | Partner and stockist logos come up in their own colour when hovered. They were already meant to, but `img { pointer-events: none }` meant the hover could never fire; the whole cell is the target now. Pointers with no hover to give show them coloured outright |
+| Shop | Seven SKUs added: Wish I, Wish II and Wish III in 15ml, the 3 Wishes Travel Kit, and Passion, Life and Dream in 50ml |
+| Shop | For Her and For Him carry the banners the client supplied, and the title bar follows the chip you pressed |
+| Product | The three Wishes quote their own notes rather than one list shared across the box; Kebaya Blooms, Ondeh Delights and Nyonya Aromatic corrected to the client's sheet |
+| Bag | Free delivery on every order, so the spend to unlock meter is gone |
+| Checkout | Standard and express delivery removed. With nothing left to choose, the delivery step goes with them and the summary reads Free |
+| Shipping Policy | Cost table reduced to one line, free on every order |
+| Our Story | Its own "It started with a single flower" photograph, rather than the home page's orchid shot |
+| Our Story | The Journey panel brings its title forward first, then unfolds the body under it |
+| Contact | The WhatsApp card carries the client's ringed handset |
+
+Two notes for the client on this round:
+
+- The Orchid photograph supplied for "Orchid, the scent that began it all" is
+  byte for byte the one already on the site, so there was nothing to swap.
+- Prices for the seven new SKUs follow the house's existing ladder and need
+  confirming: RM 79 (was RM 99) for a 15ml Wish, RM 68 (was RM 98) for the
+  3 Wishes Travel Kit, RM 189 (was RM 229) for a 50ml Spirit II.
+
 ## Notes
 
 - Prices are in **RM (MYR)**.
@@ -85,7 +115,10 @@ Applied from the client's annotated deck, in deck order:
 - All product, store, collection and policy copy lives in `src/data/`.
 - Web assets in `public/assets/client/` are generated from the client's delivery by
   `python scripts/prepare-assets.py`. The originals live in `client-assets/`, which is
-  deliberately outside `public/` and not committed.
+  deliberately outside `public/` and not committed: `Legendary digital/` is the main
+  delivery, `amendment-4/` the later drop. The script empties
+  `public/assets/client/` before it writes, so anything the site references has to be
+  produced by it rather than dropped in by hand.
 - "Minion Variable Concept" is an Adobe licence the site cannot host. The CSS names it
   first and falls back to Source Serif 4, so the real family takes over automatically on
   any machine where it is installed.
