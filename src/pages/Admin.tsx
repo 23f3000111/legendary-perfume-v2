@@ -208,6 +208,23 @@ function Chrome({
           <code>DATABASE_URL</code> to make the dashboard durable.
         </p>
       )}
+      {/* A shop sending as a provider's shared address looks perfectly healthy
+          from outside: orders are taken, recorded and shown, and the house's
+          own notification still arrives. Only the customer hears nothing, and
+          nobody finds out until one of them asks. */}
+      {session.email && !session.email.canReachCustomers && (
+        <p className="border-t border-[#A4352C]/20 bg-[#A4352C]/5 px-5 py-2 text-center text-xs text-[#A4352C]">
+          Sending as <code>{session.email.from}</code>, which only reaches your own
+          inbox. <strong>Customers are not receiving their order confirmations.</strong>{' '}
+          Set <code>ORDER_FROM_EMAIL</code> to an address on your verified domain and
+          redeploy.
+        </p>
+      )}
+      {session.email && !session.email.configured && (
+        <p className="border-t border-gold/30 bg-gold/5 px-5 py-2 text-center text-xs text-gold-deep">
+          No <code>RESEND_API_KEY</code> is set, so no email is being sent at all.
+        </p>
+      )}
     </header>
   )
 }

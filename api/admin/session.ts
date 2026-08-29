@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { checkPassword, clearSession, isSignedIn, issueSession } from '../_lib/auth.js'
 import { handler, json, optionalEnv } from '../_lib/http.js'
 import { overrideStore } from '../_lib/overrides.js'
+import { senderHealth } from '../_lib/email.js'
 import { callerKey, clearRateLimit, rateLimit } from '../_lib/ratelimit.js'
 
 /**
@@ -22,6 +23,9 @@ export default handler(async (req: VercelRequest, res: VercelResponse) => {
     storage: store.kind,
     durable: store.durable,
     passwordSet: Boolean(optionalEnv('ADMIN_PASSWORD')),
+    // Surfaced because a shop sending as the shared address looks entirely
+    // healthy from outside while no customer ever hears from it.
+    email: senderHealth(),
   }
 
   if (req.method === 'POST') {

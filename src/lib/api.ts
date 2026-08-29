@@ -157,6 +157,12 @@ export interface AdminSession {
   storage: 'postgres' | 'file'
   durable: boolean
   passwordSet: boolean
+  email: {
+    from: string
+    /** False while sending as a provider's shared address. */
+    canReachCustomers: boolean
+    configured: boolean
+  }
   expiresAt?: number
 }
 

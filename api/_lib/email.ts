@@ -36,6 +36,18 @@ const HOUSE_CC = (ccRaw === undefined ? 'legendaryteammy@gmail.com' : ccRaw)
   .filter((a) => a && a !== PRIMARY_INBOX)
   .filter((a, i, all) => all.indexOf(a) === i)
 
+/** The address the site sends as, and whether it can reach a customer. */
+export function senderHealth(): { from: string; canReachCustomers: boolean; configured: boolean } {
+  const from = optionalEnv('ORDER_FROM_EMAIL') ?? 'Legendary <noreply@legendary.com.my>'
+  return {
+    from,
+    // Resend's shared sender only delivers to the account's own address, so a
+    // deployment on it takes orders and tells no customer about them.
+    canReachCustomers: !from.includes('resend.dev'),
+    configured: Boolean(optionalEnv('RESEND_API_KEY')),
+  }
+}
+
 let client: Resend | undefined
 
 function resend(): Resend | null {
