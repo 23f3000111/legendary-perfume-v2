@@ -182,11 +182,24 @@ writeFileSync(resolve(DIST, 'llms.txt'), llms, 'utf8')
  * case server side.
  */
 const index = readFileSync(resolve(DIST, 'index.html'), 'utf8')
+
+/*
+ * Where the app actually lives, read back off the built index.html.
+ *
+ * This has to be the real base and not "/". On Pages the site is served from a
+ * repository subpath, so redirecting to "/" leaves the visitor at the root of
+ * github.io, which is not this site at all and answers with GitHub's own 404.
+ * There is no <base> tag to read at runtime either, Vite does not emit one, so
+ * the value is baked in here where the built asset paths already carry it.
+ */
+const assetSrc = index.match(/src="([^"]*)assets\/index-[^"]*\.js"/)
+const base = assetSrc ? assetSrc[1] : '/'
+
 const redirect = `<script>
-  // Remember where the visitor was actually going, then load the app at the
-  // root so its own router can take them there.
+  // Remember where the visitor was actually going, then load the app at its
+  // own base so the router can take them there.
   sessionStorage.setItem('legendary:redirect', location.pathname + location.search + location.hash)
-  location.replace(document.querySelector('base')?.href || '/')
+  location.replace(${JSON.stringify(base || '/')})
 </script>`
 writeFileSync(resolve(DIST, '404.html'), index.replace('</head>', `${redirect}</head>`), 'utf8')
 
