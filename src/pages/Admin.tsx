@@ -24,16 +24,33 @@ import { Check, ArrowRight, ShieldCheck, Truck, Bag, Sparkle } from '../componen
  */
 export default function Admin() {
   const [session, setSession] = useState<AdminSession | null>(null)
+  // A failed session request is not the same as one still in flight. Without
+  // this the page sat on "Loading the dashboard" for ever whenever the API was
+  // unreachable, which is exactly when someone needs to be told why.
+  const [unreachable, setUnreachable] = useState(false)
   const [tab, setTab] = useState<'overview' | 'products' | 'orders'>('overview')
 
   useEffect(() => {
-    adminSession().then(setSession).catch(() => setSession(null))
+    adminSession()
+      .then(setSession)
+      .catch(() => setUnreachable(true))
   }, [])
 
   return (
     <div className="min-h-screen bg-porcelain">
       <Seo title="Dashboard" description="Legendary shop administration." noindex />
-      {!session ? (
+      {unreachable ? (
+        <Centred>
+          <div className="max-w-sm px-6 text-center">
+            <p className="font-display text-xl text-ink">The dashboard is not available here</p>
+            <p className="mt-3 leading-relaxed">
+              This build has no API behind it, so there is nothing to sign in to. The dashboard
+              lives on the deployed shop.
+            </p>
+            <Link to="/" className="btn-ghost mt-6">Back to the shop</Link>
+          </div>
+        </Centred>
+      ) : !session ? (
         <Centred>Loading the dashboard…</Centred>
       ) : !session.signedIn ? (
         <SignIn session={session} onSignedIn={setSession} />
