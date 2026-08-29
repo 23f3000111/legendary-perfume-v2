@@ -1,0 +1,4 @@
+{
+  "//": "The root package.json says \"type\": \"module\", because Vite and the build scripts are ES modules. The serverless functions are compiled and bundled by the platform, which picks its output format from the nearest package.json. Leaving them under the root's \"module\" made the emitted bundle and the declared type disagree, and every function then crashed on import before any handler could run. Declaring the format here removes the ambiguity: the functions are resolved as CommonJS, which is what the bundler emits.",
+  "type": "commonjs"
+}

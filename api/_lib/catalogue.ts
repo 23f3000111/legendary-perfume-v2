@@ -1,5 +1,5 @@
 import { HttpError } from './http'
-import catalogue from '../_catalogue.json'
+import { CURRENCY as GENERATED_CURRENCY, PRODUCTS } from '../_catalogue'
 
 export interface CatalogueItem {
   id: string
@@ -20,8 +20,7 @@ export interface OrderLine {
   lineTotal: number
 }
 
-export const CURRENCY = catalogue.currency as 'MYR'
-const PRODUCTS = catalogue.products as Record<string, CatalogueItem>
+export const CURRENCY = GENERATED_CURRENCY
 
 /** Malaysian ringgit is a two decimal currency, so Stripe wants sen. */
 export function toMinorUnits(ringgit: number): number {
@@ -39,7 +38,7 @@ const MAX_LINES = 30
  * Price a basket from the server's own catalogue.
  *
  * The browser sends product ids and quantities and nothing else. Every price
- * comes from `_catalogue.json`, which is generated from src/data/products.ts at
+ * comes from `_catalogue.ts`, which is generated from src/data/products.ts at
  * build time, so a tampered basket cannot change what is charged.
  *
  * `overrides` is the dashboard's layer on top: a price set there wins, and a

@@ -4,7 +4,11 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "functions": {
-    "api/**/*.ts": {
+    "api/*.ts": {
+      "memory": 512,
+      "maxDuration": 30
+    },
+    "api/admin/*.ts": {
       "memory": 512,
       "maxDuration": 30
     }
