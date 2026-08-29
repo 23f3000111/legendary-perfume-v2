@@ -432,6 +432,47 @@ dashboard. Confirm along the way that the order reaches the dashboard as paid,
 that `/track` finds it, and that the notification email arrives. Nothing short
 of that proves the live path.
 
+---
+
+## Checking a live deployment
+
+`/api/admin/session` answers without a password and reports the shop's own
+health, which is the quickest way to see whether a deploy picked up its
+environment:
+
+```bash
+curl -s https://legendary.com.my/api/admin/session
+```
+
+```json
+{
+  "signedIn": false,
+  "storage": "postgres",
+  "durable": true,
+  "passwordSet": true,
+  "email": {
+    "from": "Legendary <noreply@legendary.com.my>",
+    "canReachCustomers": true,
+    "configured": true
+  }
+}
+```
+
+`storage: "file"` means `DATABASE_URL` did not reach the deployment.
+`canReachCustomers: false` means the shop is taking orders and telling no
+customer about them. The dashboard shows both as banners.
+
+The webhook will not reveal its secret, but it will say whether it has one:
+
+```bash
+curl -s -X POST https://legendary.com.my/api/webhook   -H "stripe-signature: t=1,v1=bogus" -d '{}'
+```
+
+- `400 Signature verification failed` — the secret is set and being checked.
+- `500 Webhook is not configured` — `STRIPE_WEBHOOK_SECRET` is missing, and
+  paid orders will sit at pending until the reconciler catches them.
+
+
 ## Environment variables, in full
 
 | Variable | Needed | What it is |
