@@ -30,7 +30,7 @@ const careLinks: [string, string][] = [
   ['Return, Refund & Exchange', '/returns'],
   ['Terms of Service', '/terms'],
   ['Privacy Policy', '/privacy'],
-  ['Track My Order', '/contact'],
+  ['Track My Order', '/track'],
 ]
 
 export default function Footer() {

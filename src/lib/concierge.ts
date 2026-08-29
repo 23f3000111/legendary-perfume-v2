@@ -4,7 +4,11 @@ import { formatRM } from './format'
 export const WHATSAPP_NUMBER = '60193836633'
 /** Client house style: numbers are spaced, never hyphenated. */
 export const WHATSAPP_DISPLAY = '+60 19 383 6633'
-export const SUPPORT_EMAIL = 'legendaryteammy@gmail.com'
+/**
+ * The house's primary address. Everything the site sends is sent from here,
+ * and contact form messages and order notifications both arrive here.
+ */
+export const SUPPORT_EMAIL = 'noreply@legendary.com.my'
 
 export function waLink(text: string): string {
   return `https://api.whatsapp.com/send/?phone=%2B${WHATSAPP_NUMBER}&text=${encodeURIComponent(

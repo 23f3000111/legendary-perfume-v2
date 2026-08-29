@@ -4,11 +4,35 @@ import { asset } from '../lib/asset'
 import { products, type Product } from '../data/products'
 import { collections } from '../data/collections'
 import ProductCard from '../components/ProductCard'
+import { isBestseller, isListed, useStock } from '../store/stock'
 import PageHeader from '../components/ui/PageHeader'
+import Seo from '../components/Seo'
+import { absolute } from '../lib/seo'
 
 type Sort = 'featured' | 'price-asc' | 'price-desc' | 'az'
 
 const audiences = ['All', 'For Her', 'For Him', 'Unisex'] as const
+
+/**
+ * Standfirsts for the title bar, from the client's "Fragrance Page Headline"
+ * and "All Fragrance Page" sheets.
+ *
+ * Every view used to share one line about olfactory postcards, whichever chip
+ * or collection you had pressed. The client wrote a paragraph for each, so the
+ * bar now introduces the edit you are actually looking at. Keys are the view
+ * the header resolves to; `all` is the fallback.
+ */
+const INTROS: Record<string, string> = {
+  all: 'Discover our complete realm of fragrances, where rich Malaysian heritage meets haute perfumery. Find your signature scent, personal rituals and timeless gifts.',
+  bestsellers: 'Discover the acclaimed fragrances that lead our collections. Perfect for defining your daily ritual or presenting a gift of distinguished elegance.',
+  gifts: 'Thoughtfully curated trios and boxed collections. Discover a variety of distinct scents in one set, perfect for thoughtful gifting, travel or everyday discovery.',
+  her: 'A diverse range of fine perfumes for women. Discover uplifting daytime scents, bold evening blends and memorable gift sets.',
+  him: 'A curated edit of fine fragrances for men. Discover crisp, refreshing daytime notes and bold deep woody blends crafted for a lasting impression.',
+  signature: 'Explore the foundational scents that built our reputation. A collection of timeless, versatile eau de parfums made to accompany every moment.',
+  nyonya: 'Celebrating Malaysia’s unique Peranakan roots. Discover storytelling scents crafted with delicate floral, gourmand and aromatic notes.',
+  'three-wishes': 'Pure, gentle and alcohol free. Explore everyday fragrances crafted for effortless wear, delicate layering and ultimate skin comfort.',
+  spirit: 'Infused with fine, light catching shimmers. Discover captivating eau de parfums that give your skin a luminous glow and a lasting, beautiful scent.',
+}
 
 function isGift(p: Product) {
   return p.gift === true
@@ -53,11 +77,16 @@ export default function Shop() {
     setParams(next, { replace: true })
   }
 
+  // Anything the dashboard has hidden is gone from the shop entirely. Out of
+  // stock is different: those still list, marked sold out.
+  const hidden = useStock((s) => s.hidden)
+  const changes = useStock((s) => s.changes)
+
   const list = useMemo(() => {
-    let out = [...products]
+    let out = products.filter((p) => isListed(p, hidden))
     if (collectionParam !== 'all') out = out.filter((p) => p.collectionId === collectionParam)
     if (audience !== 'All') out = out.filter((p) => p.audience === audience)
-    if (filterParam === 'bestsellers') out = out.filter((p) => p.bestseller)
+    if (filterParam === 'bestsellers') out = out.filter((p) => isBestseller(p, changes))
     if (filterParam === 'gifts') out = out.filter(isGift)
 
     switch (sort) {
@@ -69,7 +98,7 @@ export default function Shop() {
       default: break
     }
     return out
-  }, [collectionParam, audience, filterParam, sort])
+  }, [collectionParam, audience, filterParam, sort, hidden, changes])
 
   const activeCollection = collections.find((c) => c.id === collectionParam)
 
@@ -88,6 +117,13 @@ export default function Shop() {
     : collectionParam !== 'all' ? activeCollection?.name ?? 'Fragrances'
     : 'All Fragrances'
 
+  const intro =
+    filterParam === 'bestsellers' ? INTROS.bestsellers
+    : filterParam === 'gifts' ? INTROS.gifts
+    : forHer ? INTROS.her
+    : forHim ? INTROS.him
+    : (collectionParam !== 'all' ? INTROS[collectionParam] : undefined) ?? INTROS.all
+
   const banner =
     filterParam === 'bestsellers' ? asset('/assets/client/banner-bestsellers.webp')
     : filterParam === 'gifts' ? asset('/assets/client/banner-gifts.webp')
@@ -95,12 +131,48 @@ export default function Shop() {
     : forHim ? asset('/assets/client/banner-for-him.webp')
     : activeCollection?.banner ?? asset('/assets/client/banner-fragrances.webp')
 
+  /* Every filter combination is a distinct URL, and most of them list the same
+     fragrances in a different order. Canonicalising each view onto its own
+     clean path keeps the shop out of duplicate content territory while still
+     letting the four the client merchandises be indexed in their own right. */
+  const canonicalPath =
+    filterParam === 'bestsellers' ? '/shop?filter=bestsellers'
+    : filterParam === 'gifts' ? '/shop?filter=gifts'
+    : forHer ? '/shop?for=her'
+    : forHim ? '/shop?for=him'
+    : collectionParam !== 'all' ? `/shop?collection=${collectionParam}`
+    : '/shop'
+
   return (
     <>
+      <Seo
+        title={activeTitle}
+        description={intro}
+        image={banner}
+        canonicalPath={canonicalPath}
+        crumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Fragrances', path: '/shop' },
+          ...(canonicalPath === '/shop' ? [] : [{ name: activeTitle, path: canonicalPath }]),
+        ]}
+        jsonLd={[
+          {
+            '@type': 'ItemList',
+            name: activeTitle,
+            numberOfItems: list.length,
+            itemListElement: list.map((p, i) => ({
+              '@type': 'ListItem',
+              position: i + 1,
+              name: p.name,
+              url: absolute(`/product/${p.id}`),
+            })),
+          },
+        ]}
+      />
       <PageHeader
         eyebrow="The Collection"
         title={activeTitle}
-        intro="Malaysian fragrances, each one an olfactory postcard of the country. Shop eau de parfum for her, for him and gift sets."
+        intro={intro}
         crumbs={[{ label: 'Home', to: '/' }, { label: 'Fragrances' }]}
         image={banner}
       />

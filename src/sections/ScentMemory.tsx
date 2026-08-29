@@ -20,8 +20,9 @@ export default function ScentMemory() {
           </Reveal>
           <Reveal delay={0.1}>
             <p className="mt-5 text-ivory/60">
-              From the isles of Langkawi to the streets of old Melaka, each fragrance is a postcard
-              of the country that made us. Choose a place to uncover its scent.
+              From the sun kissed shores of Langkawi to the historic heart of Melaka, our scents
+              translate the spirit of Malaysia into fine perfumery. Select a place to begin your
+              sensory journey.
             </p>
           </Reveal>
         </div>

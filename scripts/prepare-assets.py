@@ -11,7 +11,7 @@ verbatim into `dist/`, so keeping them there would publish ~500MB of source
 artwork plus the .docx price sheets on the live site.
 
 Run:  python scripts/prepare-assets.py
-Needs: Pillow, PyMuPDF, ffmpeg on PATH.
+Needs: Pillow, NumPy, PyMuPDF, ffmpeg on PATH.
 """
 
 from __future__ import annotations
@@ -103,6 +103,141 @@ def save_webp(src: str, dest: str, max_side: int, quality: int = 82, keep_alpha:
         scale = max_side / max(im.size)
         im = im.resize((round(im.width * scale), round(im.height * scale)), Image.LANCZOS)
     write(im, dest, quality=quality)
+
+
+def subject_band(im: Image.Image, centre: float = 0.42, keep: float = 0.22) -> tuple[float, float]:
+    """Where the product sits in a banner, top and bottom as fractions of height.
+
+    The bottle is the sharpest thing in any of these frames: the backdrop is a
+    soft gradient or a defocused set, and the glass carries hard specular edges.
+    So each row is scored by the edge energy it carries across the middle of the
+    frame, and the rows standing clear of that image's own baseline are the
+    subject.
+
+    Checked against two bands read by hand off a grid overlay: For Her measured
+    0.245 to 0.80 and detects 0.258 to 0.787; For Him measured 0.165 to 0.79 and
+    detects 0.178 to 0.792.
+    """
+    import numpy as np
+
+    small = im.convert("L")
+    small.thumbnail((1400, 1400), Image.LANCZOS)
+    a = np.asarray(small, dtype=float)
+    h, w = a.shape
+
+    lo, hi = round(w * (0.5 - centre / 2)), round(w * (0.5 + centre / 2))
+    strip = a[:, lo:hi]
+
+    # Mean absolute gradient per row, both axes. Pillow's FIND_EDGES is a
+    # sharper kernel and reads the soft fabric in the For Her frame as subject,
+    # which is why this is done numerically rather than with a filter.
+    gy = np.abs(np.diff(strip, axis=0)).mean(axis=1)
+    gx = np.abs(np.diff(strip, axis=1)).mean(axis=1)[: len(gy)]
+    score = gy + gx
+
+    # Smooth, so one bright speck cannot pass for the subject.
+    k = max(3, h // 60)
+    score = np.convolve(score, np.ones(k) / k, mode="same")
+
+    floor = float(np.percentile(score, 40))
+    peak = float(score.max())
+    if peak <= floor:
+        return 0.0, 1.0
+    hits = np.where(score > floor + (peak - floor) * keep)[0]
+    if hits.size == 0:
+        return 0.0, 1.0
+    return float(hits.min()) / h, float(hits.max()) / h
+
+
+def save_banner(
+    src: str,
+    dest: str,
+    width: int = 2400,
+    ratio: float = 3.0,
+    safe: float = 0.66,
+    quality: int = 80,
+) -> None:
+    """A page banner, re-framed so its subject survives a wide title bar.
+
+    The delivery shoots every banner at roughly 2:1 with the bottle close to
+    full bleed top to bottom. A page header is nearer 3.5:1, so `object-fit:
+    cover` scales the shot by width and takes the crop out of the height. The
+    client's note, twice, was that the perfume was being cut off.
+
+    Two things happen here rather than growing the header until a 2:1 frame
+    fits, which would push the title bar off the bottom of a laptop screen:
+
+    1. The frame is rebuilt at 3:1, with the width either side filled by a
+       blown-up, blurred copy of the same shot and feathered into it. The
+       extension carries the shot's own light rather than a flat band, and the
+       header's dark scrim sits over the join.
+    2. The product is placed inside a safe band. `subject_band` finds where the
+       bottle actually is, and the frame is scaled and offset so that band sits
+       centred and occupies no more than `safe` of the canvas height. A centre
+       crop keeping at least that fraction therefore always holds the whole
+       bottle, whatever the header's proportions turn out to be.
+
+    `safe` is set against the tightest crop the header can produce, which is
+    about 0.70 once its height is capped to the viewport. See PageHeader.
+    """
+    from PIL import ImageFilter
+
+    im = Image.open(src)
+    if im.mode in ("RGBA", "LA", "P"):
+        im = im.convert("RGBA")
+        flat = Image.new("RGB", im.size, (255, 255, 255))
+        flat.paste(im, mask=im.split()[-1])
+        im = flat
+    im = im.convert("RGB")
+
+    height = round(width / ratio)
+
+    # A little air, so the crop never lands exactly on the bottle's edge.
+    top, bottom = subject_band(im)
+    top, bottom = max(0.0, top - 0.02), min(1.0, bottom + 0.02)
+    span = max(bottom - top, 0.05)
+
+    # Scale so the subject fills at most `safe` of the canvas. Never enlarge
+    # past filling the canvas: that would only throw source away.
+    scale = min(1.0, safe / span)
+    inner_h = round(height * scale)
+    inner_w = round(im.width * inner_h / im.height)
+    inner = im.resize((inner_w, inner_h), Image.LANCZOS)
+
+    # Offset so the subject's own centre lands on the canvas centre, then keep
+    # the frame inside the canvas so no edge of it is left floating in blur.
+    subject_mid = (top + bottom) / 2
+    offset_y = round(height / 2 - subject_mid * inner_h)
+    offset_y = max(min(offset_y, 0), height - inner_h) if inner_h >= height else max(0, min(offset_y, height - inner_h))
+    offset_x = (width - inner_w) // 2
+
+    cover = max(width / im.width, height / im.height)
+    ground = im.resize((round(im.width * cover) + 2, round(im.height * cover) + 2), Image.LANCZOS)
+    gx, gy = (ground.width - width) // 2, (ground.height - height) // 2
+    ground = ground.crop((gx, gy, gx + width, gy + height)).filter(
+        ImageFilter.GaussianBlur(max(8, width * 0.022))
+    )
+
+    # Feather every edge of the sharp frame into the blur, so no join reads as
+    # a seam under the header's scrim.
+    fx = max(24, round(inner_w * 0.06))
+    fy = max(16, round(inner_h * 0.06))
+    mask = Image.new("L", inner.size, 255)
+    px = mask.load()
+    for x in range(min(fx, inner_w // 2)):
+        v = round(255 * x / fx)
+        for y in range(inner_h):
+            px[x, y] = min(px[x, y], v)
+            px[inner_w - 1 - x, y] = min(px[inner_w - 1 - x, y], v)
+    if inner_h < height:
+        for y in range(min(fy, inner_h // 2)):
+            v = round(255 * y / fy)
+            for x in range(inner_w):
+                px[x, y] = min(px[x, y], v)
+                px[x, inner_h - 1 - y] = min(px[x, inner_h - 1 - y], v)
+
+    ground.paste(inner, (offset_x, offset_y), mask)
+    write(ground, dest, quality=quality)
 
 
 def save_cutout(src: str, dest: str, max_side: int, quality: int = 84) -> None:
@@ -281,9 +416,7 @@ def script_mask(src: str, dest: str, max_side: int) -> None:
     write(out, dest)
 
 
-def brand_mark(src: str, dest: str, max_side: int, pad: float = 0.06) -> None:
-    """A partner or stockist logo, knocked out onto transparency and padded."""
-    im = opaque_to_alpha(Image.open(src))
+def _padded(im: Image.Image, max_side: int, pad: float) -> Image.Image:
     im = trim_alpha(im)
     if max(im.size) > max_side:
         scale = max_side / max(im.size)
@@ -291,7 +424,82 @@ def brand_mark(src: str, dest: str, max_side: int, pad: float = 0.06) -> None:
     m = round(max(im.size) * pad)
     canvas = Image.new("RGBA", (im.width + m * 2, im.height + m * 2), (255, 255, 255, 0))
     canvas.paste(im, (m, m))
-    write(canvas, dest)
+    return canvas
+
+
+def ink_median(lum: Image.Image, alpha: Image.Image, cutoff: int = 110) -> float:
+    """Median luminance of the solid ink, ignoring anti-aliased edges."""
+    mask = alpha.point(lambda v: 255 if v > cutoff else 0)
+    hist = lum.histogram(mask)
+    total = sum(hist)
+    if total == 0:
+        mask = alpha.point(lambda v: 255 if v > 40 else 0)
+        hist = lum.histogram(mask)
+        total = sum(hist)
+    if total == 0:
+        return -1.0
+    half, run = total / 2, 0
+    for value, count in enumerate(hist):
+        run += count
+        if run >= half:
+            return float(value)
+    return 255.0
+
+
+def monochrome(im: Image.Image, target: int = 46) -> Image.Image:
+    """A legible black and white rendition of a partner logo.
+
+    The client asked for the logo wall to sit in black and white and come up in
+    real colour on hover. A plain CSS `grayscale(1)` cannot do it: half the
+    supplied marks are gold or white cut-outs drawn for a dark ground, and
+    desaturating those leaves a pale ghost on the ivory band. Parkson vanished
+    outright.
+
+    So the mono state is rendered here instead. The body of the mark is found as
+    the median luminance of its solid ink, then a gamma curve pins that median
+    to one house tone. Every logo therefore arrives at the same weight, while
+    tones lighter or darker than the body keep their relative order: Watsons
+    keeps its knocked-out white wordmark, SOGO keeps the rule under it darker
+    than the mark above.
+    """
+    import math
+
+    im = im.convert("RGBA")
+    alpha = im.getchannel("A")
+    lum = im.convert("L")
+
+    mid = ink_median(lum, alpha)
+    if mid < 0:
+        return im
+
+    # Only artwork that is essentially white, drawn to sit on a dark ground,
+    # is read the other way up. Gold and pastel lockups are left alone: they
+    # are already darker than ivory, and flipping them would turn the black
+    # halves of two tone marks like Zapin white.
+    if mid > 200:
+        lum = Image.eval(lum, lambda v: 255 - v)
+        mid = 255.0 - mid
+
+    if mid > target:
+        gamma = math.log(target / 255.0) / math.log(max(mid, 1.0) / 255.0)
+        lut = [round(255 * (v / 255.0) ** gamma) for v in range(256)]
+        lum = lum.point(lut)
+
+    return Image.merge("RGBA", (lum, lum, lum, alpha))
+
+
+def brand_mark(src: str, dest: str, max_side: int, pad: float = 0.06) -> None:
+    """A partner or stockist logo, in real colour and in black and white.
+
+    Writes two files: `dest` carries the supplied colours for the hover state,
+    and `<dest stem>-mono.png` the black and white rendition the wall rests in.
+    """
+    im = opaque_to_alpha(Image.open(src))
+    colour = _padded(im, max_side, pad)
+    write(colour, dest)
+
+    stem, ext = os.path.splitext(dest)
+    write(_padded(monochrome(im), max_side, pad), f"{stem}-mono{ext}")
 
 
 def passthrough(src: str, dest: str) -> None:
@@ -523,7 +731,10 @@ PARTNERS = {
     "sasa":             (f"{HOME}/Partnered with/SaSa",             "sasa"),
     "segi":             (f"{HOME}/Partnered with/SEGI",             "segi"),
     "seibu":            (f"{HOME}/Partnered with/Seibu TRX",        "seibu"),
-    "sogo":             (f"{HOME}/Partnered with/SOGO",             "kl-black"),
+    # Revision 5: the client asked for real logo colour on hover and named
+    # SOGO Kuala Lumpur specifically, red over dark grey. The delivery holds
+    # that file alongside the flat black and white ones; take the colour one.
+    "sogo":             (f"{HOME}/Partnered with/SOGO",             "kl.png"),
     "tourism-malaysia": (f"{HOME}/Partnered with/Tourism Malaysia", "tourism"),
     "valiram":          (f"{HOME}/Partnered with/Valiram",          "valiram"),
     "watsons":          (f"{HOME}/Partnered with/Watsons/Watsons",  "watsons"),
@@ -535,10 +746,12 @@ SELLERS = {
     "colours-fragrances": ("3.0 STORES/Trusted Sellers/Colours & Fragrances", "logo-cf"),
     "discover-malaysia":  ("3.0 STORES/Trusted Sellers/Discover Malaysia",    "discover malaysia logo"),
     "eraman":             ("3.0 STORES/Trusted Sellers/Eraman",               "eraman logo"),
-    "parkson":            ("3.0 STORES/Trusted Sellers/Parkson Elite",        "parkson.png"),
+    # The plain Parkson file is a white cut-out, invisible on the ivory band.
+    # The gold lockup is the one that belongs on a light ground.
+    "parkson":            ("3.0 STORES/Trusted Sellers/Parkson Elite",        "gold"),
     "sasa":               ("3.0 STORES/Trusted Sellers/SaSa",                 "sasa"),
     "seibu":              ("3.0 STORES/Trusted Sellers/Seibu TRX",            "seibu"),
-    "sogo":               ("3.0 STORES/Trusted Sellers/SOGO",                 "kl-black"),
+    "sogo":               ("3.0 STORES/Trusted Sellers/SOGO",                 "kl.png"),
     "star-glory":         ("3.0 STORES/Trusted Sellers/Star Glory",           "star-glory"),
     "watsons":            ("3.0 STORES/Trusted Sellers/Watsons/Watsons",      "watsons"),
     "zapin":              ("3.0 STORES/Trusted Sellers/Zapin",                "black logo"),
@@ -623,9 +836,9 @@ def main() -> int:
 
     print("Page banners")
     for key, (folder, needle) in BANNERS.items():
-        save_webp(find(folder, needle), f"banner-{key}.webp", 2000, quality=78)
+        save_banner(find(folder, needle), f"banner-{key}.webp")
     for key, (folder, needle) in BANNERS_4.items():
-        save_webp(find4(folder, needle), f"banner-{key}.webp", 2000, quality=78)
+        save_banner(find4(folder, needle), f"banner-{key}.webp")
 
     print("Our Story journey")
     for year in JOURNEY_YEARS:

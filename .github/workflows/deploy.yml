@@ -32,6 +32,17 @@ jobs:
 
       - name: Build
         run: npm run build
+        env:
+          # This job publishes the static preview to GitHub Pages. It carries
+          # no Stripe key, so the checkout shows its "not connected to a
+          # payment account" notice rather than taking money from a preview,
+          # and no order data can reach it. The live shop is the Vercel
+          # deployment, which holds the keys and serves the /api functions.
+          #
+          # The canonical URL still points at the real domain, so the preview
+          # cannot compete with production in an index.
+          SITE_URL: https://legendary.com.my
+          VITE_SITE_URL: https://legendary.com.my
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

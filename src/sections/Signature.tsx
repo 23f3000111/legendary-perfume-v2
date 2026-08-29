@@ -39,9 +39,9 @@ export default function Signature() {
               <div>
                 {/* Revision 4: the figure rolls up when the section arrives. */}
                 <p className="font-noto text-[clamp(2rem,4.2vw,3rem)] font-medium leading-none text-gold-deep">
-                  <RollingNumber value={30_000_000} suffix="+" />
+                  <RollingNumber value={300_000} suffix="+" />
                 </p>
-                <p className="mt-2 text-sm text-ink-soft">bottles loved worldwide</p>
+                <p className="mt-2 text-sm text-ink-soft">Bottles Loved Worldwide</p>
               </div>
             </div>
           </Reveal>

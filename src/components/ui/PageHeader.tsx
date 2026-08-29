@@ -41,8 +41,30 @@ export default function PageHeader({
     size === 'compact'
       ? 'max-w-3xl text-[clamp(1.9rem,4vw,3.1rem)] leading-[1.1]'
       : 'max-w-4xl text-[clamp(2.4rem,6vw,4.6rem)] leading-[1.0]'
+
+  /* Client note on For Her and For Him, twice: the perfume was being cut off.
+     The first pass grew the bar until a wide crop could not reach the bottle,
+     which fixed the crop and broke something else: on a laptop the bar was
+     taller than the space under the navigation, so the bottle fell below the
+     fold and still read as cut.
+
+     So the height is bounded on both axes. It grows with the viewport's width,
+     which keeps the bar's proportions close to the banner's own 3:1 and the
+     crop shallow, but never takes more than 62svh, so the whole thing is on
+     screen on a short display. `svh` rather than `vh` because a mobile
+     browser's toolbars are part of the height that vh promises and svh does
+     not. Content still sets the floor, and centring it means the extra height
+     reads as composition rather than as padding.
+
+     The remaining crop is covered by the banners themselves: prepare-assets.py
+     places each bottle inside the middle 66% of the frame, and the bounds here
+     keep the visible band wider than that. An article's header keeps its old
+     size, since its photograph is a normal frame rather than a 3:1 banner. */
+  const depth = size === 'compact' ? '' : 'min-h-[max(19rem,min(28vw,62svh))]'
   return (
-    <header className="relative overflow-hidden bg-ink pb-16 pt-32 text-ivory md:pb-20 md:pt-40">
+    <header
+      className={`relative flex flex-col justify-center overflow-hidden bg-ink pb-12 pt-28 text-ivory md:pb-16 md:pt-36 ${depth}`}
+    >
       {image ? (
         <>
           <img src={image} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover" />

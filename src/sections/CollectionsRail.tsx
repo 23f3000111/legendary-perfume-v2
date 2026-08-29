@@ -86,8 +86,9 @@ export default function CollectionsRail() {
                 Four worlds,<br />bottled.
               </h2>
               <p className="mt-6 max-w-sm text-ivory/60">
-                Each Legendary collection is a different memory of Malaysia: its heritage, its
-                highlands, its islands. Scroll to wander through them.
+                Each Legendary collection is a sensory journey through Malaysia, bridging
+                tropical wilderness, cultural artistry and modern elegance. Scroll to wander
+                through them.
               </p>
 
               {/* Client amendment: a cue that this rail is driven by scrolling

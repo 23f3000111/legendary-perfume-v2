@@ -1,12 +1,27 @@
 node_modules
+
+# Secrets: Stripe and Resend keys live here, never committed
+.env
+.env.*
+!.env.example
 dist
+
+# Dashboard overrides when running without a database, local only
+.data/
 *.tsbuildinfo
+__pycache__/
+*.pyc
 .playwright-mcp
 .DS_Store
 
 # Source design inputs (already processed into public/assets/client
-# by scripts/prepare-assets.py — kept locally, not committed or deployed)
+# by scripts/prepare-assets.py, kept locally, not committed or deployed)
 UI images/
 reference images/
 client-assets/
 *.pdf
+# The client's copy and price sheet. 88MB of embedded artwork, and the source
+# of truth for prices rather than something the site reads at runtime, so it
+# stays local like the rest of the delivery.
+Website.xlsx
+~$*.xlsx

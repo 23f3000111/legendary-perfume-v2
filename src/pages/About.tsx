@@ -6,20 +6,27 @@ import Services from '../sections/Services'
 import Reveal, { RevealGroup, RevealItem } from '../components/ui/Reveal'
 import { Kicker } from '../components/ui/SplitText'
 import { ArrowRight, Sparkle, ShieldCheck, Compass, Droplet } from '../components/ui/icons'
+import Seo from '../components/Seo'
+import { SITE } from '../lib/seo'
 
-// Years match the photography supplied by the client for the journey carousel.
+/**
+ * The Journey, rewritten from the client's Our Story copy sheet.
+ *
+ * Revision 5: every panel takes the client's own title and wording. 2019 was
+ * struck out on their sheet and is gone. 2026 is new and has no photograph in
+ * the delivery yet, so its panel falls back to the house pattern; send the
+ * Bangunan Sultan Abdul Samad shot and it picks it up with no code change.
+ */
 const timeline: Milestone[] = [
-  { year: '2015', title: 'A House is Born', body: 'Legendary opens in Kuala Lumpur with a single scent, Orchid, inspired by the wild bloom of the rainforest.' },
-  { year: '2016', title: 'Parkson', body: 'Expanded our brand presence into Parkson, a renowned department store.' },
-  { year: '2017', title: 'KLIA', body: 'Entered Valiram at KLIA T1, garnering notable recognition in the Korean and Chinese markets.' },
-  { year: '2018', title: 'SaSa Expansion', body: 'Established a strong presence at SaSa Malaysia, marking our success in the market.' },
-  { year: '2019', title: 'Top Selling Brand', body: 'Achieved top selling brand status at Parkson, reflecting strong customer demand.' },
-  { year: '2022', title: 'Air Asia', body: 'Forged a strategic partnership with AirAsia, outshining as one of the top three best selling brands on the platform.' },
-  { year: '2023', title: '3 Wishes', body: 'An alcohol free, skin safe trio for gentle everyday luxury becomes an instant bestseller.' },
-  // 2024 and 2025 artwork arrived with revision 2. Copy describes what the
-  // client's own photography shows; confirm the wording with them.
-  { year: '2024', title: 'Melaka Flagship', body: 'The house opens its own doors on Jalan Hang Lekir, a Peranakan shophouse turned flagship boutique.' },
-  { year: '2025', title: 'New Counters', body: 'Legendary counters arrive in more Malaysian malls, bringing the full house to more of the country.' },
+  { year: '2015', title: 'A House is Born', body: 'Founded in this year, marking the beginning of a captivating journey in fine fragrance, inspired by Malaysia’s blooming orchids.' },
+  { year: '2016', title: 'Into the Department Store', body: 'Marking our retail expansion with an official presence in Parkson, bringing our fine fragrances to department store shoppers nationwide.' },
+  { year: '2017', title: 'Taking Flight to the World', body: 'Debuted in travel retail with Valiram at KLIA Terminal 1, capturing the hearts of global travellers across Asia and beyond.' },
+  { year: '2018', title: 'Expanding Beauty Retail', body: 'Partnered with SaSa Malaysia, establishing a nationwide presence to bring our signature scents closer to beauty enthusiasts everywhere.' },
+  { year: '2022', title: 'Soaring to New Heights', body: 'Partnered with AirAsia to take Legendary to the skies, quickly ranking among the top three best selling fragrance brands on board.' },
+  { year: '2023', title: 'Expanding at KLIA2', body: 'Established our presence at KLIA Terminal 2, continuing to expand our reach in the global travel retail market.' },
+  { year: '2024', title: 'Melaka Flagship', body: 'Opened our flagship doors on Jalan Hang Lekir, Melaka, breathing new life into a historic Peranakan shophouse through fine fragrance.' },
+  { year: '2025', title: 'Cultural Revival and Expansion', body: 'Debuted our new counter in Genting Highlands while celebrating the release of the Nyonya Collection, weaving heritage notes into modern fine perfumery.' },
+  { year: '2026', title: 'Heritage Beyond Retail', body: 'Debuted at the historic Bangunan Sultan Abdul Samad, extending the house beyond retail into iconic cultural spaces that celebrate Malaysian identity and storytelling.', art: false },
 ]
 
 const visionMission = [
@@ -45,10 +52,23 @@ const values = [
 export default function About() {
   return (
     <>
+      <Seo
+        title="Our Story"
+        description="Founded in 2015, Legendary is an artisanal Malaysian perfume house capturing the botanical heritage and soul of Malaysia through modern, world class perfumery."
+        image="/assets/client/banner-our-story.webp"
+        crumbs={[{ name: 'Home', path: '/' }, { name: 'Our Story', path: '/about' }]}
+        jsonLd={[
+          {
+            '@type': 'AboutPage',
+            name: 'The Legend of Scent',
+            mainEntity: { '@id': `${SITE.url}/#organisation` },
+          },
+        ]}
+      />
       <PageHeader
         eyebrow="The House"
-        title="A scented memory of the country we call home"
-        intro="Established in 2015, Legendary is a Malaysian perfume house on a mission to share the best of Malaysia’s fragrances with the world."
+        title="The Legend of Scent"
+        intro="Founded in 2015, Legendary is an artisanal Malaysian perfume house dedicated to capturing the rich botanical heritage and soulful essence of Malaysia through modern, world class perfumery."
         crumbs={[{ label: 'Home', to: '/' }, { label: 'Our Story' }]}
         image={asset('/assets/client/banner-our-story.webp')}
       />
@@ -71,8 +91,8 @@ export default function About() {
           <Reveal><h2 className="mt-5 font-display text-[clamp(2rem,4vw,3.4rem)] leading-[1.05]">It started with a single flower</h2></Reveal>
           <Reveal delay={0.1}>
             <div className="mt-6 space-y-5 text-lg text-ink-soft">
-              <p>Legendary began with Orchid, a scent drawn from the wild orchids of Malaysia’s rainforests and a timeless dance of grace and serenity. It remains the soul of the house.</p>
-              <p>Rooted in authenticity and creativity, Legendary celebrates diversity while aspiring to global recognition. We believe the right fragrance empowers confidence and leaves a subtle, lasting impression.</p>
+              <p>Legendary began with Orchid, a signature scent born from the wild blooms of Malaysia’s ancient rainforests. Embodying a timeless balance of grace and serenity, it remains the eternal soul of the house.</p>
+              <p>Rooted in heritage yet crafted for the modern world, each Legendary creation is an authentic expression of art and emotion. We believe the right fragrance does more than linger. It awakens confidence, captures memories and leaves an unforgettable impression.</p>
             </div>
           </Reveal>
           <Reveal delay={0.15}>
@@ -92,7 +112,7 @@ export default function About() {
         <div className="u-container">
           <div className="mx-auto max-w-2xl text-center">
             <Kicker>The Journey</Kicker>
-            <h2 className="mt-4 font-display text-[clamp(2rem,4vw,3.4rem)]">Eleven years, in scent</h2>
+            <h2 className="mt-4 font-display text-[clamp(2rem,4vw,3.4rem)]">Twelve years, in scent</h2>
           </div>
           <JourneyCarousel milestones={timeline} />
         </div>

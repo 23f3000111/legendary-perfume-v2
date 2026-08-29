@@ -25,19 +25,38 @@ export default function Reviews() {
           </Link>
         </div>
 
-        <RevealGroup className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Revision 5: the client's ten real Shopee reviews replaced four
+            placeholders, and they run to very different lengths. A fixed grid
+            left a ragged half row and stretched the short ones to match the
+            long ones, so the wall is set in columns instead: each card keeps
+            its own height and the copy packs tightly whatever the count. */}
+        <RevealGroup className="mt-12 sm:columns-2 lg:columns-3 xl:columns-4 [column-gap:1.5rem]">
           {reviews.map((r) => (
-            <RevealItem
-              key={r.author}
-              className="flex h-full flex-col border-t border-line pt-6"
-            >
-              <span className="font-display text-3xl leading-none text-gold/50" aria-hidden>“</span>
-              <p className="mt-3 flex-1 font-display text-lg italic leading-snug text-ink-soft">
-                {r.quote}
-              </p>
-              <p className="mt-5 text-sm text-ink">{r.author}</p>
-              {r.product && <p className="mt-0.5 eyebrow eyebrow-gold">{r.product}</p>}
-            </RevealItem>
+            /* The column child is a plain element and the animated one sits
+               inside it: a transform on the child itself can upset how a
+               browser breaks the column. */
+            <div key={`${r.author}-${r.product ?? ''}`} className="mb-6 break-inside-avoid">
+              <RevealItem className="flex flex-col border-t border-line pt-6">
+                <span className="font-display text-3xl leading-none text-gold/50" aria-hidden>“</span>
+                <p className="mt-3 font-display text-base italic leading-snug text-ink-soft">
+                  {r.quote}
+                </p>
+                <p className="mt-5 text-sm text-ink">{r.author}</p>
+                {r.product &&
+                  (r.href ? (
+                    <a
+                      href={r.href}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="eyebrow eyebrow-gold mt-0.5 self-start transition hover:text-gold-deep"
+                    >
+                      {r.product}
+                    </a>
+                  ) : (
+                    <p className="eyebrow eyebrow-gold mt-0.5">{r.product}</p>
+                  ))}
+              </RevealItem>
+            </div>
           ))}
         </RevealGroup>
       </div>

@@ -4,6 +4,8 @@ import PageHeader from '../components/ui/PageHeader'
 import Prose from '../components/ui/Prose'
 import { getPolicy, policies } from '../data/policies'
 import { ArrowRight } from '../components/ui/icons'
+import Seo from '../components/Seo'
+import { SITE } from '../lib/seo'
 
 /**
  * One template for shipping, returns, terms and privacy. Copy lives in
@@ -29,6 +31,25 @@ export default function Policy() {
 
   return (
     <>
+      <Seo
+        title={policy.title}
+        description={policy.intro}
+        image="/assets/client/banner-journal.webp"
+        canonicalPath={`/${policy.slug}`}
+        crumbs={[
+          { name: 'Home', path: '/' },
+          { name: policy.title, path: `/${policy.slug}` },
+        ]}
+        jsonLd={[
+          {
+            '@type': 'WebPage',
+            name: policy.title,
+            description: policy.intro,
+            dateModified: policy.updated,
+            isPartOf: { '@id': `${SITE.url}/#website` },
+          },
+        ]}
+      />
       <PageHeader
         eyebrow={policy.eyebrow}
         title={policy.title}

@@ -7,6 +7,7 @@ import Concierge from '../Concierge'
 import Atmosphere from '../Atmosphere'
 import Intro from '../Intro'
 import { useContentGuard } from '../../lib/contentGuard'
+import { useStock } from '../../store/stock'
 
 /**
  * Every followed link opens at the top of the page.
@@ -39,6 +40,15 @@ function ScrollToTop() {
 
 export default function Layout() {
   useContentGuard()
+
+  /* Stock and any price the dashboard has changed, fetched once for the whole
+     session. It resolves in the background: nothing waits on it, and if it
+     never arrives the shop simply shows the catalogue it was built with. */
+  const loadStock = useStock((s) => s.load)
+  useEffect(() => {
+    void loadStock()
+  }, [loadStock])
+
   return (
     <div className="grain relative min-h-screen">
       <Intro />

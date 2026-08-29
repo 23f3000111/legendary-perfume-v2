@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { asset } from '../lib/asset'
+import BrandLogo from '../components/ui/BrandLogo'
 
 /**
  * "Partnered With" — sits directly above the customer reviews.
@@ -14,7 +14,13 @@ import { asset } from '../lib/asset'
  * five, then three, and set the order of the logos within it. That replaces
  * the reverse pyramid of five, four, three and two this section opened with.
  */
-const partners: { name: string; file: string }[] = [
+/**
+ * Revision 5: the client circled Tourism Malaysia and asked for it bigger.
+ * It is the one square mark in a wall of wide ones, so the shared height cap
+ * leaves it reading much smaller than its neighbours. `tall` lifts those out
+ * of the common height onto their own.
+ */
+const partners: { name: string; file: string; tall?: boolean }[] = [
   { name: 'AirAsia', file: 'partner-airasia.png' },
   { name: 'Watsons', file: 'partner-watsons.png' },
   { name: 'SaSa', file: 'partner-sasa.png' },
@@ -30,7 +36,7 @@ const partners: { name: string; file: string }[] = [
 
   { name: 'Valiram', file: 'partner-valiram.png' },
   { name: 'SEGi', file: 'partner-segi.png' },
-  { name: 'Tourism Malaysia', file: 'partner-tourism-malaysia.png' },
+  { name: 'Tourism Malaysia', file: 'partner-tourism-malaysia.png', tall: true },
 ]
 
 /** Six, five, three: the client's own layout for the fourteen. */
@@ -66,14 +72,13 @@ export default function PartneredWith() {
               className="flex flex-wrap items-center justify-center gap-x-6 gap-y-9 sm:gap-x-10"
             >
               {row.map((p) => (
-                <span key={p.file} className="brand-cell w-[7.5rem] sm:w-[8.5rem]">
-                  <img
-                    src={asset(`/assets/client/${p.file}`)}
-                    alt={p.name}
-                    loading="lazy"
-                    className="brand-logo h-11 md:h-12"
-                  />
-                </span>
+                <BrandLogo
+                  key={p.file}
+                  file={p.file}
+                  name={p.name}
+                  cellClassName={p.tall ? 'h-[4.5rem] w-[7.5rem] sm:h-20 sm:w-[8.5rem]' : 'h-11 w-[7.5rem] sm:h-12 sm:w-[8.5rem]'}
+                  className={p.tall ? 'h-[4.5rem] sm:h-20' : 'h-11 md:h-12'}
+                />
               ))}
             </motion.div>
           ))}

@@ -6,6 +6,7 @@ import Finder from '../sections/Finder'
 import Bestsellers from '../sections/Bestsellers'
 import PartneredWith from '../sections/PartneredWith'
 import Reviews from '../sections/Reviews'
+import Seo from '../components/Seo'
 
 /**
  * Client note: the Our Story block and the company attributes strip have both
@@ -18,6 +19,12 @@ import Reviews from '../sections/Reviews'
 export default function Home() {
   return (
     <>
+      <Seo
+        title="Legendary"
+        description="Legendary is a Malaysian perfume house founded in 2015, bottling the botanical heritage and soul of Malaysia. Shop eau de parfum for her, for him and gift sets, with free delivery across Malaysia."
+        image="/assets/client/banner-fragrances.webp"
+        canonicalPath="/"
+      />
       <Hero />
       <Signature />
       <CollectionsRail />

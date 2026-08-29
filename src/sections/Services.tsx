@@ -16,11 +16,13 @@ type Service = {
  * given. The vial is far taller than it is wide, so it is sized by height and
  * allowed to fill more of the ring than a 24px glyph would.
  */
+/* Revision 5: wording from the client's Our Story copy sheet. "Secure Payment"
+   becomes "Secure Checkout" and "Gift Wrapping" becomes "Art of Gifting". */
 const services: Service[] = [
-  { I: ShieldCheck, title: 'Secure Payment', copy: 'SSL encrypted checkout for complete peace of mind.' },
-  { art: asset('/assets/client/icon-vial.png'), title: 'Complimentary Samples', copy: 'Discover new scents with every purchase.' },
-  { I: Truck, title: 'Complimentary Delivery', copy: 'Free, fully tracked shipping across Malaysia.' },
-  { I: Gift, title: 'Gift Wrapping', copy: 'Elegantly wrapped, perfect for gifting.' },
+  { I: ShieldCheck, title: 'Secure Checkout', copy: 'SSL encrypted payments for complete peace of mind.' },
+  { art: asset('/assets/client/icon-vial.png'), title: 'Complimentary Samples', copy: 'Discover new iconic scents with every order.' },
+  { I: Truck, title: 'Complimentary Delivery', copy: 'Fully tracked delivery across Malaysia.' },
+  { I: Gift, title: 'Art of Gifting', copy: 'Elegantly packaged in our signature box, ready to gift.' },
 ]
 
 export default function Services() {

@@ -3,15 +3,25 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { asset } from '../lib/asset'
 import { stores, regions, mapEmbedUrl, directionsUrl } from '../data/stores'
 import PageHeader from '../components/ui/PageHeader'
+import BrandLogo from '../components/ui/BrandLogo'
 import { Pin, Phone, Clock, ArrowUpRight, WhatsApp } from '../components/ui/icons'
 import { waLink } from '../lib/concierge'
+import Seo from '../components/Seo'
+import { absolute, SITE } from '../lib/seo'
 
-/** Authorised stockists, from the client's Trusted Sellers artwork. */
-const sellers: { name: string; file: string }[] = [
+/**
+ * Authorised stockists, from the client's Trusted Sellers artwork.
+ *
+ * Revision 5: the client circled Discover Malaysia and asked for it bigger.
+ * It is the one square mark among wide wordmarks, so the shared height cap
+ * left it reading much smaller than everything beside it; `tall` gives it and
+ * any other upright mark a height of its own.
+ */
+const sellers: { name: string; file: string; tall?: boolean }[] = [
   { name: 'AirAsia', file: 'seller-airasia.png' },
   { name: 'Beauty Scent', file: 'seller-beauty-scent.png' },
   { name: 'Colours & Fragrances', file: 'seller-colours-fragrances.png' },
-  { name: 'Discover Malaysia', file: 'seller-discover-malaysia.png' },
+  { name: 'Discover Malaysia', file: 'seller-discover-malaysia.png', tall: true },
   { name: 'Eraman', file: 'seller-eraman.png' },
   { name: 'Parkson', file: 'seller-parkson.png' },
   { name: 'SaSa', file: 'seller-sasa.png' },
@@ -33,6 +43,21 @@ export default function Stores() {
 
   return (
     <>
+      <Seo
+        title="Store locator"
+        description="Visit a Legendary perfume counter across Malaysia, from Pavilion Kuala Lumpur to the Melaka flagship. Live maps, opening hours and directions."
+        image="/assets/client/banner-stores.webp"
+        crumbs={[{ name: 'Home', path: '/' }, { name: 'Stores', path: '/stores' }]}
+        jsonLd={stores.map((s) => ({
+          '@type': 'Store',
+          '@id': absolute(`/stores#${s.id}`),
+          name: `${SITE.name} ${s.name}`,
+          parentOrganization: { '@id': `${SITE.url}/#organisation` },
+          address: { '@type': 'PostalAddress', streetAddress: s.address, addressCountry: 'MY' },
+          telephone: s.phone,
+          openingHours: s.hours,
+        }))}
+      />
       <PageHeader
         eyebrow="Find Us"
         title="Boutiques across Malaysia"
@@ -148,19 +173,18 @@ export default function Stores() {
               Beyond our own boutiques, Legendary is stocked by these authorised partners.
             </p>
             {/* Logos come from the client's Trusted Sellers folder, knocked
-                out onto transparency in scripts/prepare-assets.py. Revision 4:
-                each one comes up in its own colour when its cell is hovered,
-                and shows coloured outright where there is no hover to give. */}
-            <div className="mx-auto mt-9 grid max-w-4xl grid-cols-2 items-center gap-x-10 gap-y-8 sm:grid-cols-3 md:grid-cols-4">
+                out onto transparency in scripts/prepare-assets.py. Revision 5:
+                the wall sits in black and white and each mark comes up in its
+                own colour when its cell is hovered. See BrandLogo. */}
+            <div className="mx-auto mt-9 grid max-w-4xl grid-cols-2 items-center gap-x-10 gap-y-9 sm:grid-cols-3 md:grid-cols-4">
               {sellers.map((s) => (
-                <div key={s.file} className="brand-cell">
-                  <img
-                    src={asset(`/assets/client/${s.file}`)}
-                    alt={s.name}
-                    loading="lazy"
-                    className="brand-logo h-10 max-w-[9rem] md:h-11"
-                  />
-                </div>
+                <BrandLogo
+                  key={s.file}
+                  file={s.file}
+                  name={s.name}
+                  cellClassName={s.tall ? 'h-[4.5rem] md:h-[5rem]' : 'h-10 md:h-11'}
+                  className={s.tall ? 'h-[4.5rem] max-w-[9rem] md:h-[5rem]' : 'h-10 max-w-[9rem] md:h-11'}
+                />
               ))}
             </div>
           </div>

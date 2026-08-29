@@ -74,6 +74,15 @@ export interface Product {
   gift?: boolean
   story: string
   description: string
+  /**
+   * Client copy sheet: the "Good to know" and "Care" notes used to be one
+   * pair of lines shared by every product page. The sheet gives several
+   * fragrances their own, and the shimmer SKUs in particular have to be
+   * stored flat. Anything without its own line falls back to the house
+   * default in Product.tsx.
+   */
+  goodToKnow?: string
+  care?: string
   notes: ScentNotes
   /** links a scent to a place on the Scented Memory map */
   place?: string
@@ -81,14 +90,45 @@ export interface Product {
 
 const img = (name: string) => asset(`/assets/client/${name}`)
 
-/** Every product ships with the same presentation set. */
-const STANDARD_INCLUDES: IncludedItem[] = [
-  { label: 'Eau de Parfum', detail: 'Your fragrance in its signature faceted bottle' },
-  { label: 'Signature carrier', detail: 'Legendary Malaysia paper bag, ready to gift' },
-  { label: 'Gift box', detail: 'Hand finished box in house ivory & gold' },
+/**
+ * The presentation set every order ships with.
+ *
+ * Revision 5: the client's copy sheet rewrote this list and, importantly,
+ * named the fragrance and its pour on the first line rather than opening with
+ * a generic "Eau de Parfum". That line is per product, so it is passed in.
+ */
+const SHARED_INCLUDES: IncludedItem[] = [
+  { label: 'Signature carrier', detail: 'Legendary gold embossed shopping bag, ready for gifting' },
+  { label: 'Gift box', detail: 'Hand finished rigid box in house ivory and gold' },
   { label: 'Post card', detail: 'A personalised card to write your own note' },
-  { label: 'Discovery samples', detail: 'Vials to try the rest of the house' },
+  { label: 'Discovery samples', detail: 'Complimentary vials to explore other iconic scents from the house' },
 ]
+
+/**
+ * Two entries on the client's sheet word the card line differently.
+ *
+ * Nyonya Aromatic and Ondeh Delights ask for "Personalised Card, a
+ * complimentary handwritten note card for your personal message" where the
+ * other sixteen ask for "Post card, a personalised card to write your own
+ * note". It is the same card in the same box, so this reads like drafting
+ * drift rather than a real distinction, but the sheet is the brief and it is
+ * followed as written. Worth confirming with the client.
+ */
+const PERSONALISED_CARD: IncludedItem = {
+  label: 'Personalised card',
+  detail: 'A complimentary handwritten note card for your personal message',
+}
+
+function includedWith(
+  label: string,
+  detail: string,
+  opts?: { card?: IncludedItem },
+): IncludedItem[] {
+  const shared = opts?.card
+    ? SHARED_INCLUDES.map((item) => (item.label === 'Post card' ? opts.card! : item))
+    : SHARED_INCLUDES
+  return [{ label, detail }, ...shared]
+}
 
 /* ------------------------------------------------------------------
    Set fragrances.
@@ -150,7 +190,7 @@ const SPIRIT_TWO_COPY: Record<
     story:
       'Passion ignites. Red berries and blackcurrant strike first, then a rose and ylang ylang heart holds the flame through the evening.',
     description:
-      'A green floral with an appetite: red berries and blackcurrant over rose, muguet and ylang ylang, closing on vanilla and musk.',
+      'An empowering celebration of inner drive and vibrant romance, Passion is a radiant signature scent created to ignite your spirit. Opening with a joyful, tangy explosion of red berries and juicy blackcurrant, it unfolds into a luminous floral heart of blooming rose, muguet and exotic ylang ylang. Settling gracefully into a warm, inviting base of creamy vanilla and soft musk, this shimmering eau de parfum leaves a captivating presence wherever you go.',
   },
   life: {
     moods: ['Bold', 'Serene'],
@@ -158,7 +198,7 @@ const SPIRIT_TWO_COPY: Record<
     story:
       'Life begins. Bergamot and lychee open bright, and incense, cedar and vetiver give the fragrance somewhere to stand.',
     description:
-      'A floral amber: bergamot, lychee and nutmeg lifting a heart of rose, peony and vanilla, resting on vetiver, cedar and incense.',
+      'A vibrant, uplifting celebration of living life to the fullest, Life is a sophisticated signature scent created to empower your daily journey. Opening with a refreshing splash of zesty bergamot, exotic lychee and warm nutmeg, it unfolds into a romantic heart of velvety rose, soft peony, vanilla and white musk. Settling gracefully into a deep, grounding base of earthy vetiver, rich cedarwood and smoky incense, this shimmering eau de parfum leaves a wise, unforgettable impression.',
   },
   dream: {
     moods: ['Serene', 'Romantic'],
@@ -166,7 +206,7 @@ const SPIRIT_TWO_COPY: Record<
     story:
       'Dream takes flight. Lotus and freesia float above white lily and peony, and the whole thing settles into a soft white musk.',
     description:
-      'A floral fruity built on air: lotus and freesia over muguet, white lily and peony, closing on white musk, amber and cedar.',
+      'An ethereal homage to the beauty of your highest aspirations, Dream is a sophisticated signature scent created to inspire your journey. Opening with a fresh, dreamy breeze of aquatic lotus and delicate freesia, it unfolds into a romantic floral heart of luminous white lily, muguet and soft peony. Settling gracefully into a cosy base of clean white musk, rich cedarwood and warm amber, this shimmering eau de parfum leaves a poetic and unforgettable presence.',
   },
 }
 
@@ -224,14 +264,14 @@ const SPIRIT_TWO_SINGLES: Product[] = SPIRIT_TWO_TRIO.map((v) => {
     family: v.family!,
     audience: 'Unisex',
     moods: copy.moods,
-    price: 189,
-    compareAt: 229,
+    price: 188,
+    compareAt: 238,
     size: '50ml Eau de Parfum',
     image: img(`p-${id}-life.webp`),
     hoverImage: img(`p-${id}-pack.webp`),
     gallery: [img(`p-${id}-life.webp`), img(`p-${id}-pack.webp`), img(`p-${id}-box.webp`)],
     included: img(`p-${id}-included.webp`),
-    includedItems: STANDARD_INCLUDES,
+    includedItems: includedWith(v.name, '50ml shimmering eau de parfum'),
     radar: img(`p-${id}-radar.webp`),
     bloom: img(`p-${id}-bloom.webp`),
     accent: copy.accent,
@@ -302,21 +342,21 @@ const WISH_COPY: Record<WishKey, { moods: Mood[]; story: string; description: st
     story:
       'The first Wish, and the simplest. One bright stroke of tangerine over a soft peony heart, worn close to the skin.',
     description:
-      'Tangerine lifts, peony softens and a clean musk carries it through the day. Alcohol free, skin safe and easy to wear with anything.',
+      'An invitation to begin your journey of self love, Wish I is a radiant, alcohol free fragrance crafted to pamper your senses. Powered by microencapsulation, its weightless, hydrating formula glides effortlessly onto skin. Opening with a cheerful burst of vibrant tangerine, it unfolds into a graceful, soothing heart of soft blooming peony. Settling smoothly into a cosy, lingering base of warm musk, it envelops you in an aura of pure comfort and timeless elegance.',
   },
   ii: {
     moods: ['Serene', 'Bold'],
     story:
       'The second Wish turns warmer. Orange blossom and osmanthus open the bottle, then amber and vanilla settle in for the evening.',
     description:
-      'Orange blossom and osmanthus lifted by bergamot, warming through musk and amber into vetiver, vanilla and patchouli.',
+      'A soulful celebration of self awareness and inner connection, Wish II is a romantic, alcohol free fragrance designed for a captivating sensory experience. Powered by microencapsulation, its weightless, hydrating formula glides effortlessly onto skin. Opening with a radiant blend of orange blossom, exotic osmanthus and sparkling bergamot, it unfolds into an alluring heart of warm musk and rich amber. Settling gracefully into a mature base of grounding patchouli, velvety vanilla and earthy vetiver, it leaves a sensual and unforgettable impression.',
   },
   iii: {
     moods: ['Playful', 'Romantic'],
     story:
       'The third Wish is the fullest. Orchard fruit and blackcurrant give way to a whole garden of peach, rose and jasmine.',
     description:
-      'Apple, blackcurrant and purple perilla over a flowered heart of peach, rose hip, rose and jasmine, resting on benzoin, woods and musk.',
+      'Embodying the vibrant fulfilment of your self love journey, Wish III is a luxurious, alcohol free fragrance designed to celebrate inner confidence. Powered by microencapsulation, its weightless, hydrating formula glides effortlessly onto skin. Opening with a lively, orchard fresh breeze of crisp apple, blackcurrant and subtle purple perilla, it unfolds into a romantic heart of juicy peach, blooming rose and delicate jasmine. Settling into a warm, lingering base of rich woods, benzoin and grounding patchouli, it leaves an opulent and enchanting impression.',
   },
 }
 
@@ -333,14 +373,14 @@ export const products: Product[] = [
     family: 'Floral Fruity',
     audience: 'For Her',
     moods: ['Serene', 'Romantic'],
-    price: 159,
-    compareAt: 199,
+    price: 188,
+    compareAt: 238,
     size: '30ml Eau de Parfum',
     image: img('p-orchid-life.webp'),
     hoverImage: img('p-orchid-pack.webp'),
     gallery: [img('p-orchid-life.webp'), img('p-orchid-pack.webp'), img('p-orchid-box.webp')],
     included: img('p-orchid-included.webp'),
-    includedItems: STANDARD_INCLUDES,
+    includedItems: includedWith('Orchid', '30ml eau de parfum'),
     radar: img('p-orchid-radar.webp'),
     bloom: img('p-orchid-bloom.webp'),
     accent: 'gold',
@@ -348,9 +388,9 @@ export const products: Product[] = [
     bestseller: true,
     place: 'Kuala Lumpur',
     story:
-      'Orchid is the signature of Legendary, inspired by the tropical rainforests of Malaysia. Bathed in the purity of white orchids, it is a timeless dance of grace and serenity captured in a luscious eau de parfum.',
+      'Orchid is the definitive signature of Legendary, deeply rooted in the tropical rainforests of Malaysia. Embodying our ethos, ‘Exotic Orchid for an Extraordinary Soul’, this fragrance is an exquisite creation crafted for those who possess a truly remarkable spirit.',
     description:
-      'A light, fresh eau de parfum that opens on orange, lemon and mandarin, blooms into a serene garden of jasmine, magnolia and tuberose, and settles on ambergris, vetiver and cedar.',
+      'Orchid is the definitive signature of Legendary, deeply rooted in the tropical rainforests of Malaysia. Opening with a crisp burst of zesty citrus, aqueous breezes and a hint of warm clove, it unfolds into a serene floral haven of rare orchids, jasmine and tuberose. Settling gently on a luxurious base of ambergris, vetiver and warm cedar, it is a timeless creation crafted for an extraordinary spirit.',
     notes: {
       top: ['Orange', 'Aqueous', 'Clove', 'Lemon', 'Mandarin'],
       heart: ['Jasmine', 'Magnolia', 'Muguet', 'Tuberose', 'Orchid'],
@@ -366,14 +406,14 @@ export const products: Product[] = [
     family: 'Powdery Floral',
     audience: 'For Her',
     moods: ['Romantic', 'Serene'],
-    price: 149,
-    compareAt: 189,
+    price: 188,
+    compareAt: 238,
     size: '30ml Eau de Parfum',
     image: img('p-violet-life.webp'),
     hoverImage: img('p-violet-pack.webp'),
     gallery: [img('p-violet-life.webp'), img('p-violet-pack.webp'), img('p-violet-box.webp')],
     included: img('p-violet-included.webp'),
-    includedItems: STANDARD_INCLUDES,
+    includedItems: includedWith('Violet', '30ml eau de parfum'),
     radar: img('p-violet-radar.webp'),
     bloom: img('p-violet-bloom.webp'),
     accent: 'plum',
@@ -382,7 +422,9 @@ export const products: Product[] = [
     story:
       'A classic symbol of love and devotion that evokes mystique and timeless elegance. With a touch of sophistication and depth, Violet captures the delicate essence of a blooming violet as it unfolds into its true beauty.',
     description:
-      'One spray wraps you in lusciousness and mystery. Bergamot, lychee and red fruits sit over cedarwood, incense and rose, resting on musk, cashmere and vanilla.',
+      'A timeless symbol of love, devotion and mystery, Violet envelopes you in sheer sophistication. Opening with a captivating blend of sparkling bergamot, juicy lychee, red fruits and a touch of warm nutmeg, it unfolds into a rich heart of velvety rose, peony and smoky incense. Settling elegantly into a cosy base of cashmere, vanilla, musk and vetiver, it is an alluring scent crafted for romantic date nights and unforgettable evenings.',
+    goodToKnow:
+      'Mysterious, captivating and long lasting, four to seven hours. An elegant eau de parfum crafted for evening wear and romantic occasions.',
     notes: {
       top: ['Bergamot', 'Lychee', 'Red Fruits', 'Rhubarb', 'Nutmeg'],
       heart: ['Cedarwood', 'Incense', 'Peony', 'Rose'],
@@ -398,14 +440,14 @@ export const products: Product[] = [
     family: 'Fruity Floral',
     audience: 'For Her',
     moods: ['Romantic', 'Playful'],
-    price: 159,
-    compareAt: 199,
+    price: 188,
+    compareAt: 238,
     size: '30ml Eau de Parfum',
     image: img('p-mahsuri-life.webp'),
     hoverImage: img('p-mahsuri-pack.webp'),
     gallery: [img('p-mahsuri-life.webp'), img('p-mahsuri-pack.webp'), img('p-mahsuri-box.webp')],
     included: img('p-mahsuri-included.webp'),
-    includedItems: STANDARD_INCLUDES,
+    includedItems: includedWith('Mahsuri', '30ml eau de parfum'),
     radar: img('p-mahsuri-radar.webp'),
     bloom: img('p-mahsuri-bloom.webp'),
     accent: 'rose',
@@ -417,7 +459,7 @@ export const products: Product[] = [
     story:
       'Inspired by the story of Mahsuri, the fragrance embodies the grace, purity and unwavering courage that immortalised her legend. It carries a noble aura and a strong spirit, a charming scent that whispers like a tale.',
     description:
-      'An elegant yet powerful scent that leaves a timeless and unforgettable impression: apple, muguet and rose over a cedarwood heart, closing on amber.',
+      'Inspired by the enduring legend of Mahsuri, this fragrance embodies grace, purity and unwavering courage. Opening with a crisp, vibrant melody of fresh apple, romantic rose and delicate muguet, it evolves into a noble heart of grounding cedarwood. Settling seamlessly on a rich base of dry amber, ambergris and soft woods, it is an elegant yet powerful scent that leaves a timeless, unforgettable impression.',
     notes: {
       top: ['Apple', 'Muguet', 'Rose'],
       heart: ['Cedarwood'],
@@ -433,14 +475,14 @@ export const products: Product[] = [
     family: 'Woody Aromatic',
     audience: 'For Him',
     moods: ['Bold'],
-    price: 189,
-    compareAt: 229,
+    price: 188,
+    compareAt: 238,
     size: '50ml Eau de Parfum',
     image: img('p-man-life.webp'),
     hoverImage: img('p-man-pack.webp'),
     gallery: [img('p-man-life.webp'), img('p-man-pack.webp'), img('p-man-box.webp')],
     included: img('p-man-included.webp'),
-    includedItems: STANDARD_INCLUDES,
+    includedItems: includedWith('Man', '50ml eau de parfum'),
     radar: img('p-man-radar.webp'),
     bloom: img('p-man-bloom.webp'),
     accent: 'graphite',
@@ -450,7 +492,7 @@ export const products: Product[] = [
     story:
       'A versatile eau de parfum crafted for the modern man: elegant, charismatic and effortlessly sophisticated. It captures the essence of timeless elegance, making it a signature scent for any occasion.',
     description:
-      'Grapefruit and lemon open crisp and clean before an orchard heart of apple, raspberry and orange flower, grounded in cedarwood, sandalwood and vanilla.',
+      'Crafted for the modern gentleman, Man is an effortlessly sophisticated fragrance embodying the perfect balance of strength and warmth. Opening with an invigorating burst of sparkling grapefruit and crisp lemon, it transitions into a bold, fruity floral heart of apple, sweet raspberry, orange blossom and jasmine. Grounded gracefully by a rich masculine base of cedarwood, creamy sandalwood, musk and a hint of vanilla, it is an indispensable signature scent for every occasion.',
     notes: {
       top: ['Grapefruit', 'Lemon'],
       heart: ['Apple', 'Raspberry', 'Orange Flower', 'Muguet', 'Jasmine'],
@@ -466,14 +508,14 @@ export const products: Product[] = [
     family: 'Floral',
     audience: 'For Her',
     moods: ['Romantic', 'Playful'],
-    price: 159,
-    compareAt: 199,
+    price: 188,
+    compareAt: 238,
     size: '30ml Eau de Parfum',
     image: img('p-kebaya-blooms-life.webp'),
     hoverImage: img('p-kebaya-blooms-pack.webp'),
     gallery: [img('p-kebaya-blooms-life.webp'), img('p-kebaya-blooms-pack.webp'), img('p-kebaya-blooms-box.webp')],
     included: img('p-kebaya-blooms-included.webp'),
-    includedItems: STANDARD_INCLUDES,
+    includedItems: includedWith('Kebaya Blooms', '30ml eau de parfum'),
     radar: img('p-kebaya-blooms-radar.webp'),
     bloom: img('p-kebaya-blooms-bloom.webp'),
     accent: 'rose',
@@ -484,7 +526,9 @@ export const products: Product[] = [
       'A love letter to the Nyonya kebaya, with its embroidered flowers rendered in scent. Delicate, feminine and rich with Peranakan romance.',
     // Revision 4: the client corrected this composition.
     description:
-      'Lemon and ambrette open clean and green, unfolding into a couture bouquet of orange blossom, violet and ylang ylang over a powdery musk.',
+      'Inspired by the intricate botanical motifs of the traditional Baju Kebaya, Kebaya Blooms is a poetic homage to Peranakan elegance. Opening with a fresh, dew kissed breeze of green leaves, zesty lemon and subtle ambrette, it unfolds into a captivating floral heart of luminous orange blossom, romantic violet and exotic ylang ylang. Settling into a velvety, soothing base of soft musk, powdery accords and earthy vetiver, it translates timeless cultural artistry into an unforgettable fine fragrance.',
+    goodToKnow:
+      'Graceful, romantic and long lasting, four to seven hours. A delicate, powdery floral eau de parfum crafted for elegant daily wear and cultural celebrations.',
     notes: {
       top: ['Ambrette', 'Leafy', 'Lemon'],
       heart: ['Orange Blossom', 'Violet', 'Ylang Ylang'],
@@ -502,14 +546,14 @@ export const products: Product[] = [
     family: 'Woody Gourmand',
     audience: 'Unisex',
     moods: ['Playful', 'Serene'],
-    price: 159,
-    compareAt: 199,
+    price: 188,
+    compareAt: 238,
     size: '30ml Eau de Parfum',
     image: img('p-ondeh-delights-life.webp'),
     hoverImage: img('p-ondeh-delights-pack.webp'),
     gallery: [img('p-ondeh-delights-life.webp'), img('p-ondeh-delights-pack.webp'), img('p-ondeh-delights-box.webp')],
     included: img('p-ondeh-delights-included.webp'),
-    includedItems: STANDARD_INCLUDES,
+    includedItems: includedWith('Ondeh Delights', '30ml eau de parfum', { card: PERSONALISED_CARD }),
     radar: img('p-ondeh-delights-radar.webp'),
     bloom: img('p-ondeh-delights-bloom.webp'),
     accent: 'jade',
@@ -519,7 +563,9 @@ export const products: Product[] = [
       'The beloved ondeh ondeh, reimagined as fragrance. Steamed rice and orris give way to vanilla, with pandan settling in the base for a nostalgic, edible sweetness.',
     // Revision 4: the client corrected this composition.
     description:
-      'A soft gourmand: orris and rice lifted by bergamot, warmed through geranium, vanilla and rose, and closed on pandan, ambergris and sandalwood.',
+      'Inspired by the nostalgic sweetness of traditional Peranakan kuih, Ondeh Delights is an irresistible green gourmand fragrance. Opening with a comforting blend of velvety rice accords, powdery orris and a touch of sparkling bergamot, it reveals a rich, inviting heart of warm vanilla, romantic rose and geranium. Settling smoothly into a soothing base of aromatic pandan, creamy sandalwood and ambergris, it translates joyous culinary celebration into a delightfully nostalgic scent.',
+    goodToKnow:
+      'Playful, comforting and long lasting, four to seven hours. A rice and pandan gourmand eau de parfum crafted for sweet daily indulgence and nostalgic moments.',
     notes: {
       top: ['Orris', 'Rice', 'Bergamot'],
       heart: ['Geranium', 'Vanilla', 'Rose'],
@@ -535,14 +581,14 @@ export const products: Product[] = [
     family: 'Spicy Aromatic',
     audience: 'Unisex',
     moods: ['Bold', 'Serene'],
-    price: 159,
-    compareAt: 199,
+    price: 188,
+    compareAt: 238,
     size: '30ml Eau de Parfum',
     image: img('p-nyonya-aromatic-life.webp'),
     hoverImage: img('p-nyonya-aromatic-pack.webp'),
     gallery: [img('p-nyonya-aromatic-life.webp'), img('p-nyonya-aromatic-pack.webp'), img('p-nyonya-aromatic-box.webp')],
     included: img('p-nyonya-aromatic-included.webp'),
-    includedItems: STANDARD_INCLUDES,
+    includedItems: includedWith('Nyonya Aromatic', '30ml eau de parfum', { card: PERSONALISED_CARD }),
     radar: img('p-nyonya-aromatic-radar.webp'),
     bloom: img('p-nyonya-aromatic-bloom.webp'),
     accent: 'amber',
@@ -552,7 +598,7 @@ export const products: Product[] = [
       'The warmth of a Peranakan kitchen, with black pepper and lemongrass folded into osmanthus and rose. Spice as heirloom, worn on the skin.',
     // Revision 4: the client corrected this composition.
     description:
-      'An amber spice signature: bright bergamot, black pepper and lemongrass over osmanthus, rose and violet, resting on labdanum and amber.',
+      'Inspired by the vibrant herbs and spices central to traditional Peranakan culinary heritage, Nyonya Aromatic is a captivating fusion of culture and fragrance. Opening with an invigorating spark of fresh lemongrass, zesty bergamot and warm black pepper, it reveals a refined heart of sweet osmanthus, romantic rose and delicate violet. Settling into a rich, resonant base of amber, labdanum and soft musk, it translates generations of cultural legacy into a sophisticated signature scent.',
     notes: {
       top: ['Bergamot', 'Black Pepper', 'Lemongrass'],
       heart: ['Osmanthus', 'Rose', 'Violet'],
@@ -568,14 +614,14 @@ export const products: Product[] = [
     family: 'Clean Musk',
     audience: 'Unisex',
     moods: ['Serene'],
-    price: 199,
-    compareAt: 249,
+    price: 188,
+    compareAt: 278,
     size: '3 × 15ml Eau de Parfum',
     image: img('p-3-wishes-life.webp'),
     hoverImage: img('p-3-wishes-pack.webp'),
     gallery: [img('p-3-wishes-life.webp'), img('p-3-wishes-pack.webp'), img('p-3-wishes-box.webp')],
     included: img('p-3-wishes-included.webp'),
-    includedItems: STANDARD_INCLUDES,
+    includedItems: includedWith('3 Wishes', 'Three 15ml eau de parfums, Wish I, Wish II and Wish III'),
     radar: img('p-3-wishes-radar.webp'),
     variants: wishTrio('3-wishes'),
     accent: 'gold',
@@ -585,7 +631,9 @@ export const products: Product[] = [
     story:
       'A luxurious, alcohol free collection designed for gentle, everyday indulgence. Safe for all skin types, each of the three Wishes is a soft, silken ritual.',
     description:
-      'Three clean, second skin scents that are light, hydrating and endlessly wearable. A bestseller for a reason: comfort as a daily luxury.',
+      'Crafted as an intimate ritual of self love, 3 Wishes is an alcohol free fragrance trio designed for a nourishing sensory experience. Powered by microencapsulation, its milky, weightless formula glides seamlessly onto skin and unfolds in three chapters. Wish I, self love: a cheerful, graceful blend of radiant tangerine and soft peony, anchored by a lingering musk. Wish II, self awareness: a romantic fusion of orange blossom, osmanthus and rich amber, grounded in warm patchouli. Wish III, fulfilment: a lively, luxurious bouquet of crisp apple, blackcurrant and blooming rose, settling into warm woods. An indulgent, skin safe collection made to pamper and cherish every moment.',
+    goodToKnow:
+      'Zero alcohol, skin safe and long lasting, four to seven hours. A weightless, alcohol free fragrance crafted for sensitive skin and daily self love rituals.',
     notes: WISH_SET_NOTES,
   },
   /* ------------------------------------------------------------------
@@ -604,14 +652,14 @@ export const products: Product[] = [
       family: WISH_FAMILY[n],
       audience: 'Unisex',
       moods: copy.moods,
-      price: 79,
-      compareAt: 99,
+      price: 88,
+      compareAt: 128,
       size: '15ml Eau de Parfum',
       image: img(`p-${id}-life.webp`),
       hoverImage: img(`p-${id}-pack.webp`),
       gallery: [img(`p-${id}-life.webp`), img(`p-${id}-pack.webp`), img(`p-${id}-box.webp`)],
       included: img(`p-${id}-included.webp`),
-      includedItems: STANDARD_INCLUDES,
+      includedItems: includedWith(`Wish ${n.toUpperCase()}`, '15ml alcohol free eau de parfum'),
       radar: img(`p-${id}-radar.webp`),
       bloom: img(`p-${id}-bloom.webp`),
       accent: 'gold',
@@ -641,7 +689,7 @@ export const products: Product[] = [
       img('p-3-wishes-travel-kit-box.webp'),
     ],
     included: img('p-3-wishes-travel-kit-included.webp'),
-    includedItems: STANDARD_INCLUDES,
+    includedItems: includedWith('3 Wishes Travel Kit', 'Three 3ml eau de parfums, Wish I, Wish II and Wish III'),
     radar: img('p-3-wishes-travel-kit-wish-i-radar.webp'),
     variants: wishTrio('3-wishes-travel-kit'),
     accent: 'gold',
@@ -650,7 +698,9 @@ export const products: Product[] = [
     story:
       'All three Wishes, packed for the road. Cabin friendly sprays that slip into a handbag or a carry on, alcohol free and gentle enough for daily wear.',
     description:
-      'The 3 Wishes trio in travel sprays: the same three compositions, in a smaller pour, ready for the weekend away or the desk drawer.',
+      'The whole self love ritual, packed for the road. Three alcohol free travel sprays, their milky, weightless formula powered by microencapsulation, unfolding in three chapters. Wish I, self love: a cheerful, graceful blend of radiant tangerine and soft peony, anchored by a lingering musk. Wish II, self awareness: a romantic fusion of orange blossom, osmanthus and rich amber, grounded in warm patchouli. Wish III, fulfilment: a lively, luxurious bouquet of crisp apple, blackcurrant and blooming rose, settling into warm woods. An indulgent, skin safe collection made to pamper and cherish every moment.',
+    goodToKnow:
+      'Zero alcohol, skin safe and long lasting, four to seven hours. A weightless, alcohol free fragrance crafted for sensitive skin and daily self love rituals.',
     notes: WISH_SET_NOTES,
   },
   {
@@ -662,14 +712,14 @@ export const products: Product[] = [
     family: 'Fresh Discovery',
     audience: 'Unisex',
     moods: ['Bold', 'Playful'],
-    price: 179,
-    compareAt: 219,
+    price: 188,
+    compareAt: 238,
     size: '3 × 15ml Eau de Parfum',
     image: img('p-spirit-life.webp'),
     hoverImage: img('p-spirit-pack.webp'),
     gallery: [img('p-spirit-life.webp'), img('p-spirit-pack.webp'), img('p-spirit-box.webp')],
     included: img('p-spirit-included.webp'),
-    includedItems: STANDARD_INCLUDES,
+    includedItems: includedWith('Spirit I Eau de Parfum Trio', 'Three 15ml eau de parfums, Hope, Love and Confidence'),
     radar: img('p-spirit-radar.webp'),
     variants: spiritOneTrio('spirit'),
     accent: 'teal',
@@ -681,7 +731,11 @@ export const products: Product[] = [
     story:
       'Shine with Hope, do with Love, strive with Confidence. Enhance your journey by creating unforgettable moments with the three fragrances of Spirit I.',
     description:
-      'Hope opens floral green on aqueous pear. Love turns powdery on muguet and rose. Confidence lifts bright with bergamot, pear and jasmine.',
+      'Embodying the core spirit of a vibrant life, Spirit I is a curated set of three fragrances designed to inspire and empower. Hope: a luminous, airy harmony of crisp aqueous pear, blooming jasmine and magnolia, grounded in warm woods. Love: a soft, romantic embrace of fresh rose and lemon, turning into cosy linen, powdery ambrette and cedarwood. Confidence: an empowering burst of sparkling bergamot, juicy pear and vibrant leafy florals, anchored by rich sandalwood.',
+    goodToKnow:
+      'Shimmering, radiant and long lasting, four to seven hours. A glowing eau de parfum crafted for an effortless, lingering shine.',
+    care:
+      'Store flat so the delicate shimmer particles do not settle at the spray tube, and away from direct sunlight and heat. Shake well before use. Spray onto pulse points at the wrists, neck and behind the ears, then let it settle without rubbing.',
     notes: {
       top: ['Aqueous', 'Green', 'Pear', 'Bergamot'],
       heart: ['Jasmine', 'Muguet', 'Magnolia', 'Rose'],
@@ -706,7 +760,7 @@ export const products: Product[] = [
     hoverImage: img('p-spirit-ii-pack.webp'),
     gallery: [img('p-spirit-ii-life.webp'), img('p-spirit-ii-pack.webp'), img('p-spirit-ii-box.webp')],
     included: img('p-spirit-ii-included.webp'),
-    includedItems: STANDARD_INCLUDES,
+    includedItems: includedWith('Spirit II', 'Three 15ml eau de parfums, Passion, Dream and Life'),
     radar: img('p-spirit-ii-radar.webp'),
     variants: SPIRIT_TWO_TRIO,
     accent: 'jade',
@@ -718,7 +772,11 @@ export const products: Product[] = [
     story:
       'Passion ignites, Dream takes flight, Life begins. A bold and uplifting set of three fragrances that carries ambition, tenderness and a fresh start.',
     description:
-      'Passion opens on red berries and blackcurrant. Dream floats through lotus, freesia and white lily. Life warms into rose, peony and incense.',
+      'An empowering extension of the Spirit collection, Spirit II celebrates the vibrant rhythm and attitude of life. Guided by three chapters, Passion Ignites, Dreams Take Flight and Life Begins, each scent unfolds its own experience. Passion: a joyful explosion of tangy red berries and juicy blackcurrant, blooming into a luminous floral heart of rose, muguet and ylang ylang, wrapped in warm vanilla and musk. Dream: an ethereal composition of aquatic lotus and delicate freesia, leading to a romantic heart of white lily and peony, grounded by cedarwood and amber. Life: a lively, sophisticated blend of zesty bergamot, exotic lychee and warm nutmeg, turning into velvety rose and peony over a deep base of incense and vetiver.',
+    goodToKnow:
+      'Shimmering, radiant and long lasting, four to seven hours. A glowing eau de parfum crafted for an effortless, lingering shine.',
+    care:
+      'Store flat so the delicate shimmer particles do not settle at the spray tube, and away from direct sunlight and heat. Shake well before use. Spray onto pulse points at the wrists, neck and behind the ears, then let it settle without rubbing.',
     notes: {
       top: ['Red Berries', 'Blackcurrant'],
       heart: ['Rose', 'Muguet', 'Ylang Ylang'],
@@ -753,7 +811,7 @@ export const products: Product[] = [
       img('p-spirit-travel-kit-box.webp'),
     ],
     included: img('p-spirit-travel-kit-included.webp'),
-    includedItems: STANDARD_INCLUDES,
+    includedItems: includedWith('Spirit I Travel Kit', 'Three 3ml eau de parfums, Love, Confidence and Hope'),
     radar: img('p-spirit-travel-kit-hope-radar.webp'),
     variants: spiritOneTrio('spirit-travel-kit'),
     accent: 'teal',
@@ -764,7 +822,11 @@ export const products: Product[] = [
     story:
       'The whole of Spirit I, packed for the road. Hope, Love and Confidence in cabin friendly sprays that slip into a handbag or a carry on.',
     description:
-      'Three travel sprays of the Spirit I trio, ready for the weekend away or the desk drawer. The same composition, in a smaller pour.',
+      'The whole of Spirit I, sized for the bag. Love: a soft, romantic embrace of fresh rose and lemon, turning into cosy linen, powdery ambrette and cedarwood. Confidence: an empowering burst of sparkling bergamot, juicy pear and vibrant leafy florals, anchored by rich sandalwood. Hope: a luminous, airy harmony of crisp aqueous pear, blooming jasmine and magnolia, grounded in warm woods.',
+    goodToKnow:
+      'Shimmering, radiant and long lasting, four to seven hours. A glowing eau de parfum crafted for an effortless, lingering shine.',
+    care:
+      'Store flat so the delicate shimmer particles do not settle at the spray tube, and away from direct sunlight and heat. Shake well before use. Spray onto pulse points at the wrists, neck and behind the ears, then let it settle without rubbing.',
     notes: {
       top: ['Aqueous', 'Green', 'Pear', 'Bergamot'],
       heart: ['Jasmine', 'Muguet', 'Magnolia', 'Rose'],

@@ -4,9 +4,16 @@ import ProductCard from '../components/ProductCard'
 import Reveal from '../components/ui/Reveal'
 import { Kicker } from '../components/ui/SplitText'
 import { ArrowRight } from '../components/ui/icons'
+import { isBestseller, isListed, useStock } from '../store/stock'
 
 export default function Bestsellers() {
-  const best = products.filter((p) => p.bestseller).slice(0, 4)
+  // The dashboard can promote or demote a fragrance, so the edit is read
+  // live rather than from the flag the bundle was built with.
+  const changes = useStock((s) => s.changes)
+  const hidden = useStock((s) => s.hidden)
+  const best = products
+    .filter((p) => isListed(p, hidden) && isBestseller(p, changes))
+    .slice(0, 4)
   return (
     <section className="bg-ivory py-24 md:py-32">
       <div className="u-container">

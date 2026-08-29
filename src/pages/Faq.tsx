@@ -4,12 +4,34 @@ import PageHeader from '../components/ui/PageHeader'
 import Accordion from '../components/ui/Accordion'
 import { Kicker } from '../components/ui/SplitText'
 import { ArrowRight, WhatsApp } from '../components/ui/icons'
-import { houseFaq, faqIntro } from '../data/faq'
+import { faqSections, faqIntro } from '../data/faq'
 import { waLink, WHATSAPP_DISPLAY } from '../lib/concierge'
+import Seo from '../components/Seo'
 
 export default function Faq() {
   return (
     <>
+      <Seo
+        title="Frequently asked questions"
+        description={faqIntro}
+        image="/assets/client/banner-contact.webp"
+        crumbs={[{ name: 'Home', path: '/' }, { name: 'FAQ', path: '/faq' }]}
+        jsonLd={[
+          {
+            '@type': 'FAQPage',
+            mainEntity: faqSections.flatMap((s) =>
+              s.items.map((f) => ({
+                '@type': 'Question',
+                name: f.q,
+                acceptedAnswer: {
+                  '@type': 'Answer',
+                  text: f.list ? `${f.a} ${f.list.join('. ')}` : f.a,
+                },
+              })),
+            ),
+          },
+        ]}
+      />
       <PageHeader
         eyebrow="Customer Care"
         title="Frequently asked questions"
@@ -18,28 +40,40 @@ export default function Faq() {
         image={asset('/assets/client/banner-contact.webp')}
       />
 
+      {/* Revision 5: the client's sheet runs to roughly fifty questions,
+          already sorted into groups. One accordion of fifty rows is a wall, so
+          the page keeps their grouping and gives each section its own heading. */}
       <section className="bg-ivory py-16 md:py-24">
-        <div className="u-narrow">
-          <Accordion
-            items={houseFaq.map((f) => ({
-              title: f.q,
-              body: (
-                <>
-                  <p className="leading-[1.85] text-ink-soft">{f.a}</p>
-                  {f.list && (
-                    <ul className="mt-4 space-y-2.5">
-                      {f.list.map((item) => (
-                        <li key={item} className="relative pl-6 leading-[1.8] text-ink-soft">
-                          <span className="absolute left-0 top-[0.72em] h-1.5 w-1.5 rotate-45 bg-gold/70" />
-                          {item}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </>
-              ),
-            }))}
-          />
+        <div className="u-narrow space-y-14">
+          {faqSections.map((section) => (
+            <div key={section.title}>
+              <h2 className="font-display text-[clamp(1.5rem,2.8vw,2rem)] leading-tight">
+                {section.title}
+              </h2>
+              <div className="mt-5">
+                <Accordion
+                  items={section.items.map((f) => ({
+                    title: f.q,
+                    body: (
+                      <>
+                        <p className="leading-[1.85] text-ink-soft">{f.a}</p>
+                        {f.list && (
+                          <ul className="mt-4 space-y-2.5">
+                            {f.list.map((item) => (
+                              <li key={item} className="relative pl-6 leading-[1.8] text-ink-soft">
+                                <span className="absolute left-0 top-[0.72em] h-1.5 w-1.5 rotate-45 bg-gold/70" />
+                                {item}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </>
+                    ),
+                  }))}
+                />
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 

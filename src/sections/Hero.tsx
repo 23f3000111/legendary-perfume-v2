@@ -58,8 +58,8 @@ export default function Hero() {
               className="mt-7 max-w-xl text-lg text-ivory/75"
               initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1, duration: 1 }}
             >
-              A Malaysian perfume house bottling the landscapes, culture and soul of the country,
-              from the wild orchid of the rainforest to the tiles of a Peranakan home.
+              An artisanal perfume house capturing the rich soul and heritage of Malaysia, from
+              wild rainforest flora to comforting cultural delights.
             </motion.p>
 
             <motion.div

@@ -99,26 +99,39 @@
   .text-gilt-anim { animation: shimmer 7s linear infinite; }
 
   /* Partner and stockist logos.
-     Client amendment (revision 4): a logo should come up in its own colour
-     when it is hovered. The whole cell is the target, not just the artwork,
-     so a logo with plenty of white space around it still lights up. Pointers
-     that cannot hover, phones and tablets among them, get the coloured state
-     outright, which is the fallback the client asked for. */
+     Client amendment (revision 5): the wall sits in black and white and each
+     mark comes up in its own real colour when hovered.
+
+     Two files per brand rather than a CSS filter. `grayscale(1)` desaturates
+     but cannot darken, and half the supplied artwork is gold or white lockups
+     drawn for a dark ground, so filtering them left pale ghosts on the ivory
+     band and lost Parkson altogether. scripts/prepare-assets.py now renders a
+     true black and white companion for every logo, and the pair is crossfaded
+     here. The whole cell is the hover target, not just the artwork, so a mark
+     with plenty of white space around it still lights up. Pointers that cannot
+     hover, phones and tablets among them, are given the colour state outright. */
   .brand-cell {
-    @apply flex items-center justify-center;
+    @apply relative flex items-center justify-center;
   }
   .brand-logo {
     @apply w-auto max-w-full object-contain;
-    filter: grayscale(1);
-    opacity: 0.62;
-    transition: filter 0.5s var(--ease-luxe), opacity 0.5s var(--ease-luxe);
+    transition: opacity 0.5s var(--ease-luxe);
   }
-  .brand-cell:hover .brand-logo {
-    filter: grayscale(0);
-    opacity: 1;
+  /* The colour print is stacked over the mono one and lifted on hover. It is
+     positioned against the cell rather than the mono image so the two always
+     register, whatever aspect ratio the artwork trims to. */
+  .brand-logo-colour {
+    @apply pointer-events-none absolute inset-0 m-auto;
+    opacity: 0;
   }
+  .brand-cell:hover .brand-logo-mono { opacity: 0; }
+  .brand-cell:hover .brand-logo-colour { opacity: 1; }
   @media (hover: none) {
-    .brand-logo { filter: grayscale(0); opacity: 1; }
+    .brand-logo-mono { opacity: 0; }
+    .brand-logo-colour { opacity: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .brand-logo { transition: none; }
   }
 
   /* Hairline divider */

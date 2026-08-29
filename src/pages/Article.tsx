@@ -6,6 +6,8 @@ import ReadingProgress from '../components/ui/ReadingProgress'
 import ShareRow from '../components/ui/ShareRow'
 import { getArticle, articleNeighbours, type Article as Entry } from '../data/articles'
 import { ChevronRight } from '../components/ui/icons'
+import Seo from '../components/Seo'
+import { absolute, SITE } from '../lib/seo'
 
 /**
  * One template for every journal article. Copy lives in src/data/articles.ts as
@@ -31,6 +33,34 @@ export default function Article() {
 
   return (
     <>
+      <Seo
+        title={article.title}
+        description={article.excerpt}
+        image={article.hero}
+        type="article"
+        canonicalPath={`/journal/${article.slug}`}
+        crumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Journal', path: '/journal' },
+          { name: article.cardTitle ?? article.title, path: `/journal/${article.slug}` },
+        ]}
+        jsonLd={[
+          {
+            '@type': 'Article',
+            '@id': absolute(`/journal/${article.slug}#article`),
+            headline: article.title,
+            description: article.excerpt,
+            image: absolute(article.hero),
+            datePublished: article.published,
+            dateModified: article.published,
+            articleSection: article.category,
+            inLanguage: 'en-MY',
+            author: { '@id': `${SITE.url}/#organisation` },
+            publisher: { '@id': `${SITE.url}/#organisation` },
+            mainEntityOfPage: absolute(`/journal/${article.slug}`),
+          },
+        ]}
+      />
       <ReadingProgress target={body} />
 
       <PageHeader

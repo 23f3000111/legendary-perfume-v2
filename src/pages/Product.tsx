@@ -6,6 +6,7 @@ import { productFaq } from '../data/faq'
 import { accent } from '../lib/accents'
 import { formatRM, discountPct } from '../lib/format'
 import { useShop } from '../store/shop'
+import { live, useStock } from '../store/stock'
 import { useUI } from '../store/ui'
 import ScentPyramid from '../components/ScentPyramid'
 import ProductCard from '../components/ProductCard'
@@ -14,12 +15,28 @@ import { Kicker } from '../components/ui/SplitText'
 import {
   Plus, Minus, ShieldCheck, Truck, Vial, Check, ArrowRight, ChevronDown,
 } from '../components/ui/icons'
+import Seo from '../components/Seo'
+import { absolute, SITE } from '../lib/seo'
 
-const tabs = [
-  { key: 'know', label: 'Good to know', body: 'Refreshing, lasts 4 to 7 hours and easy to carry. An eau de parfum made for everyday wear in a tropical climate.' },
-  { key: 'care', label: 'Care', body: 'Store away from direct sunlight and heat. Spray onto pulse points at the wrists, neck and behind the ears, then let it settle without rubbing.' },
-  { key: 'returns', label: 'Returns', body: 'Unopened items may be returned within 14 days. Exchanges are complimentary at any Legendary boutique across Malaysia.' },
-]
+/**
+ * The house defaults for the two notes the client's copy sheet writes per
+ * fragrance. A product that carries its own `goodToKnow` or `care` overrides
+ * the line here; everything else reads the same as it always did.
+ */
+const DEFAULT_GOOD_TO_KNOW =
+  'Refreshing, lasts four to seven hours and easy to carry. An eau de parfum made for everyday wear in a tropical climate.'
+const DEFAULT_CARE =
+  'Store away from direct sunlight and heat. Spray onto pulse points at the wrists, neck and behind the ears, then let it settle without rubbing.'
+const RETURNS =
+  'Unopened items may be returned within 14 days. Exchanges are complimentary at any Legendary boutique across Malaysia.'
+
+function productTabs(product: { goodToKnow?: string; care?: string }) {
+  return [
+    { key: 'know', label: 'Good to know', body: product.goodToKnow ?? DEFAULT_GOOD_TO_KNOW },
+    { key: 'care', label: 'Care', body: product.care ?? DEFAULT_CARE },
+    { key: 'returns', label: 'Returns', body: RETURNS },
+  ]
+}
 
 export default function Product() {
   const { id } = useParams()
@@ -31,6 +48,7 @@ export default function Product() {
   const [added, setAdded] = useState(false)
 
   const add = useShop((s) => s.add)
+  const changes = useStock((s) => s.changes)
   const { pulse, openCart } = useUI()
 
   if (!product) {
@@ -45,7 +63,9 @@ export default function Product() {
   }
 
   const tone = accent(product.accent)
-  const off = discountPct(product.price, product.compareAt)
+  // Price and availability come from the dashboard where it has set them.
+  const now = live(product, changes)
+  const off = discountPct(now.price, now.compareAt)
   const related = relatedProducts(product, 4)
 
   // A set breaks into one composition band per fragrance; anything else keeps
@@ -71,6 +91,7 @@ export default function Product() {
       }]
 
   const onAdd = () => {
+    if (!now.inStock) return
     add(product.id, qty)
     pulse()
     setAdded(true)
@@ -78,8 +99,55 @@ export default function Product() {
     setTimeout(() => setAdded(false), 1500)
   }
 
+  /* A Product node with an Offer is what puts a price, a currency and a stock
+     state into a search result and into an assistant's answer. AggregateRating
+     is deliberately absent: the house has real reviews, but none of them are
+     tied to a single SKU, and inventing one would be a fabricated rating. */
+  const productLd = {
+    '@type': 'Product',
+    '@id': absolute(`/product/${product.id}#product`),
+    name: product.name,
+    description: product.description,
+    sku: product.id,
+    brand: { '@type': 'Brand', name: SITE.name },
+    category: `${product.collection} Collection`,
+    image: product.gallery.map((g) => absolute(g)),
+    audience: { '@type': 'PeopleAudience', suggestedGender: product.audience },
+    offers: {
+      '@type': 'Offer',
+      url: absolute(`/product/${product.id}`),
+      price: now.price,
+      priceCurrency: SITE.currency,
+      // Stock is stated honestly: a search result promising something that is
+      // sold out is worse than no result at all.
+      availability: now.inStock
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+      itemCondition: 'https://schema.org/NewCondition',
+      seller: { '@id': `${SITE.url}/#organisation` },
+      shippingDetails: {
+        '@type': 'OfferShippingDetails',
+        shippingRate: { '@type': 'MonetaryAmount', value: 0, currency: SITE.currency },
+        shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'MY' },
+      },
+    },
+  }
+
   return (
     <div className="bg-ivory pt-[62px] md:pt-[130px]">
+      <Seo
+        title={product.name}
+        description={product.description}
+        image={product.image}
+        type="product"
+        canonicalPath={`/product/${product.id}`}
+        crumbs={[
+          { name: 'Home', path: '/' },
+          { name: 'Fragrances', path: '/shop' },
+          { name: product.name, path: `/product/${product.id}` },
+        ]}
+        jsonLd={[productLd]}
+      />
       {/* Main — left gallery pins while the right column scrolls past it */}
       {/* Client note: image column narrowed and capped so the shot sits in
           proportion to the copy, with the thumbnails visible alongside it.
@@ -138,8 +206,8 @@ export default function Product() {
           <p className="mt-2 font-display text-lg italic text-smoke">{product.subtitle}</p>
 
           <div className="mt-5 flex items-baseline gap-3">
-            <span className="text-2xl text-ink">{formatRM(product.price)}</span>
-            {product.compareAt && <span className="text-lg text-smoke line-through">{formatRM(product.compareAt)}</span>}
+            <span className="text-2xl text-ink">{formatRM(now.price)}</span>
+            {now.compareAt && <span className="text-lg text-smoke line-through">{formatRM(now.compareAt)}</span>}
             <span className="text-xs text-smoke">Tax included</span>
           </div>
 
@@ -153,9 +221,15 @@ export default function Product() {
             </div>
           )}
 
-          <p className="mt-6 flex items-center gap-2 text-sm text-jade">
-            <span className="h-2 w-2 rounded-full bg-jade" /> In stock · {product.size}
-          </p>
+          {now.inStock ? (
+            <p className="mt-6 flex items-center gap-2 text-sm text-jade">
+              <span className="h-2 w-2 rounded-full bg-jade" /> In stock · {product.size}
+            </p>
+          ) : (
+            <p className="mt-6 flex items-center gap-2 text-sm text-smoke">
+              <span className="h-2 w-2 rounded-full bg-smoke" /> Sold out · {product.size}
+            </p>
+          )}
 
           {/* Qty + add */}
           <div className="mt-6 flex flex-wrap items-center gap-4">
@@ -164,11 +238,24 @@ export default function Product() {
               <span className="w-10 text-center">{qty}</span>
               <button onClick={() => setQty((q) => q + 1)} className="grid h-12 w-12 place-items-center transition hover:bg-sand" aria-label="Increase"><Plus width={15} /></button>
             </div>
-            <button onClick={onAdd} className="btn-solid flex-1 justify-center gap-2 min-w-[12rem]">
-              {added ? <><Check width={16} /> Added to bag</> : <>Add to Bag · {formatRM(product.price * qty)}</>}
+            <button
+              onClick={onAdd}
+              disabled={!now.inStock}
+              className="btn-solid min-w-[12rem] flex-1 justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {!now.inStock ? 'Sold out'
+                : added ? <><Check width={16} /> Added to bag</>
+                : <>Add to Bag · {formatRM(now.price * qty)}</>}
             </button>
           </div>
-          <Link to="/checkout" onClick={onAdd} className="btn-gold mt-3 w-full justify-center">Buy it now</Link>
+          {now.inStock ? (
+            <Link to="/checkout" onClick={onAdd} className="btn-gold mt-3 w-full justify-center">Buy it now</Link>
+          ) : (
+            <p className="mt-4 text-sm text-ink-soft">
+              This one has sold out. Message us on WhatsApp and we will tell you the moment it is
+              back, or browse the rest of the collection below.
+            </p>
+          )}
 
           {/* Assurances */}
           <div className="mt-8 grid grid-cols-3 gap-4 border-t border-line pt-6 text-center">
@@ -215,7 +302,7 @@ export default function Product() {
 
           {/* Accordions */}
           <div className="mt-8 border-t border-line">
-            {tabs.map((t) => (
+            {productTabs(product).map((t) => (
               <div key={t.key} className="border-b border-line">
                 <button onClick={() => setOpenTab(openTab === t.key ? null : t.key)} className="flex w-full items-center justify-between py-4 text-left">
                   <span className="font-display text-lg">{t.label}</span>

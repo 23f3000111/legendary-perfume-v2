@@ -6,6 +6,7 @@ import { accent } from '../lib/accents'
 import { formatRM, discountPct } from '../lib/format'
 import { useShop } from '../store/shop'
 import { useUI } from '../store/ui'
+import { live, useStock } from '../store/stock'
 import { Plus, Check } from './ui/icons'
 
 export default function ProductCard({ product, index = 0 }: { product: Product; index?: number }) {
@@ -14,10 +15,14 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
   const pulse = useUI((s) => s.pulse)
   const openCart = useUI((s) => s.openCart)
   const [added, setAdded] = useState(false)
-  const off = discountPct(product.price, product.compareAt)
+  // Price and stock come from the dashboard when it has something to say
+  // about this product, and from the built catalogue otherwise.
+  const now = live(product, useStock((s) => s.changes))
+  const off = discountPct(now.price, now.compareAt)
 
   const onAdd = (e: React.MouseEvent) => {
     e.preventDefault()
+    if (!now.inStock) return
     add(product.id)
     pulse()
     setAdded(true)
@@ -71,13 +76,22 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
             />
           </div>
 
+          {/* Sold out sits over the tile rather than replacing the quick add,
+              so the fragrance still reads as part of the house. */}
+          {!now.inStock && (
+            <span className="absolute left-3 top-3 z-10 bg-ink/85 px-2.5 py-1 text-[0.62rem] uppercase tracking-[0.14em] text-ivory backdrop-blur">
+              Sold out
+            </span>
+          )}
+
           {/* Quick add */}
           <div className="absolute inset-x-3 bottom-3 translate-y-3 opacity-0 transition-all duration-500 ease-luxe group-hover:translate-y-0 group-hover:opacity-100">
             <button
               onClick={onAdd}
-              className="flex w-full items-center justify-center gap-2 bg-ink/90 py-3 text-[0.7rem] font-medium uppercase tracking-[0.18em] text-ivory backdrop-blur transition hover:bg-ink"
+              disabled={!now.inStock}
+              className="flex w-full items-center justify-center gap-2 bg-ink/90 py-3 text-[0.7rem] font-medium uppercase tracking-[0.18em] text-ivory backdrop-blur transition hover:bg-ink disabled:cursor-not-allowed disabled:bg-smoke/70 disabled:hover:bg-smoke/70"
             >
-              {added ? <><Check width={15} /> Added</> : <><Plus width={15} /> Add to bag</>}
+              {!now.inStock ? 'Sold out' : added ? <><Check width={15} /> Added</> : <><Plus width={15} /> Add to bag</>}
             </button>
           </div>
         </div>
@@ -90,9 +104,9 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
           <h3 className="mt-1.5 font-display text-[1.35rem] leading-none text-ink">{product.name}</h3>
           <p className="mt-1 text-[0.82rem] text-smoke">{product.family}</p>
           <div className="mt-2 flex items-baseline gap-2.5">
-            <span className="text-[0.95rem] text-ink">{formatRM(product.price)}</span>
-            {product.compareAt && (
-              <span className="text-[0.8rem] text-smoke line-through">{formatRM(product.compareAt)}</span>
+            <span className="text-[0.95rem] text-ink">{formatRM(now.price)}</span>
+            {now.compareAt && (
+              <span className="text-[0.8rem] text-smoke line-through">{formatRM(now.compareAt)}</span>
             )}
           </div>
         </div>

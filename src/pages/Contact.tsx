@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { asset } from '../lib/asset'
 import PageHeader from '../components/ui/PageHeader'
@@ -8,6 +8,8 @@ import { Phone, Instagram, Facebook, Pin, Check, ArrowRight } from '../component
 import { waLink, WHATSAPP_DISPLAY } from '../lib/concierge'
 import { directionsUrl, HEAD_OFFICE } from '../data/stores'
 import { productFaq } from '../data/faq'
+import Seo from '../components/Seo'
+import { ApiError, sendContactMessage } from '../lib/api'
 
 /*
  * Client amendments for revision 2:
@@ -20,7 +22,37 @@ import { productFaq } from '../data/faq'
  */
 export default function Contact() {
   const [sent, setSent] = useState(false)
+  const [sending, setSending] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState({ name: '', email: '', message: '' })
+  /* Honeypot, and the moment the form was first rendered. Both are checked on
+     the server: a bot fills the hidden field, and nobody reads this page and
+     writes a message in under three seconds. */
+  const [company, setCompany] = useState('')
+  const openedAt = useRef(Date.now())
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setSending(true)
+    setError(null)
+    try {
+      await sendContactMessage({
+        ...form,
+        company,
+        elapsedMs: Date.now() - openedAt.current,
+      })
+      setSent(true)
+      setForm({ name: '', email: '', message: '' })
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : 'We could not send that just now. Please try again, or reach us on WhatsApp.',
+      )
+    } finally {
+      setSending(false)
+    }
+  }
 
   const channels = [
     {
@@ -53,10 +85,16 @@ export default function Contact() {
 
   return (
     <>
+      <Seo
+        title="Contact"
+        description="Talk to the house about a scent, an order, corporate gifting or a partnership. Message us on WhatsApp, or send a note and we will reply within one business day."
+        image="/assets/client/banner-contact.webp"
+        crumbs={[{ name: 'Home', path: '/' }, { name: 'Contact', path: '/contact' }]}
+      />
       <PageHeader
-        eyebrow="Say Hello"
-        title="Collaborate With Us"
-        intro="Questions about a scent, an order or a gift? Our Malaysian concierge team replies quickly. Choose whichever way suits you."
+        eyebrow="Partnerships and Inquiries"
+        title="Collaborate and Inquire"
+        intro="Whether you are exploring creative partnerships, corporate gifting or need assistance with your personal fragrance journey, our team is at your service."
         crumbs={[{ label: 'Home', to: '/' }, { label: 'Contact' }]}
         image={asset('/assets/client/banner-contact.webp')}
       />
@@ -67,10 +105,10 @@ export default function Contact() {
           <div className="mx-auto max-w-2xl text-center">
             <Kicker className="justify-center">Send a message</Kicker>
             <h2 className="mt-4 font-display text-[clamp(2rem,4.5vw,3.2rem)] leading-[1.05]">
-              Do you have any questions?
+              How can we assist you?
             </h2>
             <p className="mt-4 text-ink-soft">
-              Fill in the form below, or reach us straight away on{' '}
+              Fill in the form below, or reach us directly on{' '}
               <a href={waLink('Hi Legendary! I have a question.')} target="_blank" rel="noreferrer" className="link-gold text-gold-deep">
                 WhatsApp
               </a>
@@ -79,13 +117,23 @@ export default function Contact() {
           </div>
 
           <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              setSent(true)
-              setForm({ name: '', email: '', message: '' })
-            }}
+            onSubmit={submit}
             className="mx-auto mt-10 max-w-2xl rounded-sm border border-line bg-porcelain p-7 sm:p-9"
           >
+            {/* Honeypot. Hidden from people and from screen readers, so
+                anything that fills it is a bot and the message is dropped
+                server side without a word. */}
+            <div aria-hidden className="absolute left-[-9999px] h-0 w-0 overflow-hidden">
+              <label htmlFor="company">Company</label>
+              <input
+                id="company"
+                name="company"
+                tabIndex={-1}
+                autoComplete="off"
+                value={company}
+                onChange={(e) => setCompany(e.target.value)}
+              />
+            </div>
             <div className="grid gap-6 sm:grid-cols-2">
               {fields.map((f) => (
                 <div key={f.k}>
@@ -116,9 +164,15 @@ export default function Contact() {
               />
             </div>
 
-            <button className="btn-solid group mt-8 w-full justify-center gap-2">
+            <button
+              type="submit"
+              disabled={sending || sent}
+              className="btn-solid group mt-8 w-full justify-center gap-2 disabled:opacity-60"
+            >
               {sent ? (
                 <><Check width={16} /> Message sent</>
+              ) : sending ? (
+                'Sending'
               ) : (
                 <>Submit <ArrowRight width={16} className="transition-transform group-hover:translate-x-1" /></>
               )}
@@ -126,6 +180,11 @@ export default function Contact() {
             {sent && (
               <p className="mt-4 text-center text-sm text-gold-deep">
                 Thank you. We will be in touch within one business day.
+              </p>
+            )}
+            {error && (
+              <p role="alert" className="mt-4 text-center text-sm text-[#A4352C]">
+                {error}
               </p>
             )}
           </form>

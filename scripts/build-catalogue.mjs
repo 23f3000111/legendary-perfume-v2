@@ -1,0 +1,77 @@
+/**
+ * Emit api/_catalogue.json from src/data/products.ts.
+ *
+ * The checkout must never take a price from the browser, so the serverless
+ * functions need their own copy of the catalogue. Rather than keep a second
+ * hand written list that would drift from the shop, the real product data is
+ * bundled here and the fields the server actually needs are written out.
+ *
+ * `src/data/products.ts` reaches for `import.meta.env` through lib/asset, which
+ * does not exist in Node, so that module is swapped for a stub during the
+ * bundle. Nothing else in the file touches the browser.
+ *
+ * Run: node scripts/build-catalogue.mjs   (npm run build does this first)
+ */
+import { build } from 'esbuild'
+import { mkdirSync, writeFileSync } from 'node:fs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const OUT = resolve(ROOT, 'api/_catalogue.json')
+
+/** Replace lib/asset with an identity stub so the bundle runs under Node. */
+const stubAsset = {
+  name: 'stub-asset',
+  setup(b) {
+    b.onResolve({ filter: /(^|\/)lib\/asset$/ }, (a) => ({
+      path: a.path,
+      namespace: 'stub-asset',
+    }))
+    b.onLoad({ filter: /.*/, namespace: 'stub-asset' }, () => ({
+      contents: 'export function asset(p) { return p }',
+      loader: 'js',
+    }))
+  },
+}
+
+const result = await build({
+  entryPoints: [resolve(ROOT, 'src/data/products.ts')],
+  bundle: true,
+  write: false,
+  format: 'esm',
+  platform: 'neutral',
+  target: 'node18',
+  plugins: [stubAsset],
+})
+
+const code = result.outputFiles[0].text
+const mod = await import(
+  'data:text/javascript;base64,' + Buffer.from(code).toString('base64')
+)
+
+const catalogue = {}
+for (const p of mod.products) {
+  if (catalogue[p.id]) throw new Error(`duplicate product id: ${p.id}`)
+  if (!Number.isInteger(p.price) || p.price <= 0) {
+    throw new Error(`product ${p.id} has a price the server cannot charge: ${p.price}`)
+  }
+  catalogue[p.id] = {
+    id: p.id,
+    name: p.name,
+    size: p.size,
+    price: p.price,
+    collection: p.collection,
+  }
+}
+
+const count = Object.keys(catalogue).length
+if (count < 10) throw new Error(`only ${count} products bundled, that cannot be right`)
+
+mkdirSync(dirname(OUT), { recursive: true })
+writeFileSync(
+  OUT,
+  JSON.stringify({ currency: 'MYR', products: catalogue }, null, 2) + '\n',
+  'utf8',
+)
+console.log(`catalogue: ${count} products -> api/_catalogue.json`)

@@ -4,6 +4,7 @@ import { articles } from '../data/articles'
 import PageHeader from '../components/ui/PageHeader'
 import { RevealGroup, RevealItem } from '../components/ui/Reveal'
 import { ArrowUpRight } from '../components/ui/icons'
+import Seo from '../components/Seo'
 
 /**
  * The Journal index. The newest article leads at half width, the rest follow in
@@ -15,6 +16,12 @@ export default function Journal() {
 
   return (
     <>
+      <Seo
+        title="The Journal"
+        description="Stories from the house on scent, craft and the Malaysian culture that shapes every Legendary fragrance."
+        image="/assets/client/banner-journal.webp"
+        crumbs={[{ name: 'Home', path: '/' }, { name: 'Journal', path: '/journal' }]}
+      />
       <PageHeader
         eyebrow="The Journal"
         title="Notes, rituals & heritage"
