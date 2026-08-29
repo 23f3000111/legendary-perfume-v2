@@ -181,18 +181,29 @@ that changes will not survive a deploy.
 Order notifications and contact form messages both go to `ORDER_NOTIFY_EMAIL`,
 carrying the invoice. `ORDER_NOTIFY_CC` adds anyone else who should get a copy.
 
-**`ORDER_NOTIFY_CC` is deliberately empty right now.** Before a domain is
-verified Resend will only deliver to the account's own address, and naming a
-second recipient makes it refuse the whole message rather than just that copy.
-So the Gmail copy is off until `legendary.com.my` verifies, at which point put
-it back. An empty value means nobody; removing the line entirely brings the
-default back.
+`ORDER_NOTIFY_CC` may be left empty to mean nobody; removing the line entirely
+brings the default back. Copies are sent as their own messages, so one that
+cannot be delivered is logged and never costs the house the notification itself.
 
 **Until the domain verifies, customers get no email at all.** Resend's shared
-sender will only deliver to the account's own address, so the house's own
-notification arrives and the customer's confirmation is refused. Everything else
-works: the order is taken, recorded and shown. This is the single most important
-reason not to launch before the DNS is in.
+sender only delivers to the account's own address, so the house's notification
+arrives and the customer's confirmation is refused. Everything else works: the
+order is taken, recorded and shown, which is what makes this so easy to miss.
+The functions log a warning whenever they are sending as `resend.dev` for
+exactly that reason.
+
+**Once the domain shows Verified**, two environment variables have to change or
+nothing improves. Verifying the domain does not by itself change who the mail is
+sent as:
+
+```
+ORDER_FROM_EMAIL=Legendary <noreply@legendary.com.my>
+ORDER_NOTIFY_CC=legendaryteammy@gmail.com
+```
+
+Then **redeploy**. Vercel injects environment variables at deploy time, so an
+existing deployment keeps the values it was built with no matter what the
+dashboard says.
 
 The two kinds of email fail differently, on purpose:
 

@@ -198,6 +198,19 @@ async function send(
     return { ok: false, reason }
   }
   const from = optionalEnv('ORDER_FROM_EMAIL') ?? 'Legendary <noreply@legendary.com.my>'
+  /*
+   * Resend's shared sender only delivers to the account's own address, so a
+   * deployment left on it takes orders and silently tells no customer about
+   * them. That is invisible from the outside: the shop looks fine and the
+   * house still gets its notification. Worth saying out loud in the log.
+   */
+  if (from.includes('resend.dev')) {
+    console.warn(
+      `[email] sending as ${from}. Customers will NOT receive anything: the shared ` +
+      'sender only reaches the Resend account address. Set ORDER_FROM_EMAIL to an ' +
+      'address on a verified domain.',
+    )
+  }
   const { error } = await api.emails.send({ from, to, subject, html, replyTo })
   if (error) {
     console.error(`[email] send failed for ${subject}:`, error)
