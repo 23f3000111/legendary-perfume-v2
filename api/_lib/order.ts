@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto'
-import { HttpError } from './http'
-import type { OrderLine } from './catalogue'
+import { HttpError } from './http.js'
+import type { OrderLine } from './catalogue.js'
 
 /**
  * `abandoned` is a checkout that was opened and never paid: the customer

@@ -1,6 +1,6 @@
 import type { Pool, PoolConfig } from 'pg'
-import { optionalEnv } from './http'
-import { SUPABASE_CA } from './supabase-ca'
+import { optionalEnv } from './http.js'
+import { SUPABASE_CA } from './supabase-ca.js'
 
 /**
  * The one Postgres connection this shop makes.

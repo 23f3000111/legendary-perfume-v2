@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import type Stripe from 'stripe'
-import { optionalEnv } from './_lib/http'
-import { sendMerchantNotification, sendOrderConfirmation } from './_lib/email'
-import { orderStore } from './_lib/store'
-import { stripe } from './_lib/stripe'
+import { optionalEnv } from './_lib/http.js'
+import { sendMerchantNotification, sendOrderConfirmation } from './_lib/email.js'
+import { orderStore } from './_lib/store.js'
+import { stripe } from './_lib/stripe.js'
 
 /**
  * Stripe's own account of what happened to a payment.

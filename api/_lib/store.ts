@@ -1,8 +1,8 @@
-import { db } from './db'
-import { optionalEnv } from './http'
-import type { Order, OrderStatus } from './order'
-import { stripe } from './stripe'
-import { fromMinorUnits, getProduct } from './catalogue'
+import { db } from './db.js'
+import { optionalEnv } from './http.js'
+import type { Order, OrderStatus } from './order.js'
+import { stripe } from './stripe.js'
+import { fromMinorUnits, getProduct } from './catalogue.js'
 
 /**
  * Where orders live.

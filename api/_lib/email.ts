@@ -1,6 +1,6 @@
 import { Resend } from 'resend'
-import { optionalEnv } from './http'
-import type { Order } from './order'
+import { optionalEnv } from './http.js'
+import type { Order } from './order.js'
 
 /**
  * Transactional email.

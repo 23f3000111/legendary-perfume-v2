@@ -26,3 +26,4 @@ client-assets/
 # stays local like the rest of the delivery.
 Website.xlsx
 ~$*.xlsx
+.tmp-functions/

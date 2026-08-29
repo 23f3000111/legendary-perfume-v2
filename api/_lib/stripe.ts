@@ -1,5 +1,5 @@
 import Stripe from 'stripe'
-import { env } from './http'
+import { env } from './http.js'
 
 let client: Stripe | undefined
 

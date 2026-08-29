@@ -1,11 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { CURRENCY, priceOrder, toMinorUnits } from './_lib/catalogue'
-import { handler, HttpError, json, requireMethod } from './_lib/http'
+import { CURRENCY, priceOrder, toMinorUnits } from './_lib/catalogue.js'
+import { handler, HttpError, json, requireMethod } from './_lib/http.js'
 import {
   newReference, parseAddress, parseCustomer, parseNote, type Order,
-} from './_lib/order'
-import { orderStore, packLines } from './_lib/store'
-import { stripe } from './_lib/stripe'
+} from './_lib/order.js'
+import { orderStore, packLines } from './_lib/store.js'
+import { stripe } from './_lib/stripe.js'
 
 /**
  * Open a checkout.

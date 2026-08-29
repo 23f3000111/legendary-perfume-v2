@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { catalogueList } from './_lib/catalogue'
-import { handler, json, requireMethod } from './_lib/http'
-import { isBuyable, overrideStore } from './_lib/overrides'
+import { catalogueList } from './_lib/catalogue.js'
+import { handler, json, requireMethod } from './_lib/http.js'
+import { isBuyable, overrideStore } from './_lib/overrides.js'
 
 /**
  * What the shop needs to know that the build could not.

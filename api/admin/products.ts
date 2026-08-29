@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { requireAdmin } from '../_lib/auth'
-import { handler, HttpError, json } from '../_lib/http'
-import { catalogueList } from '../_lib/catalogue'
-import { isBuyable, overrideStore, type ProductOverride } from '../_lib/overrides'
+import { requireAdmin } from '../_lib/auth.js'
+import { handler, HttpError, json } from '../_lib/http.js'
+import { catalogueList } from '../_lib/catalogue.js'
+import { isBuyable, overrideStore, type ProductOverride } from '../_lib/overrides.js'
 
 /**
  * The product list the dashboard edits.

@@ -1,5 +1,5 @@
 import type { VercelRequest } from '@vercel/node'
-import { HttpError } from './http'
+import { HttpError } from './http.js'
 
 /**
  * A rate limit for the endpoints where guessing is the attack.

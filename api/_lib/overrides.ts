@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
-import { db } from './db'
-import { optionalEnv } from './http'
+import { db } from './db.js'
+import { optionalEnv } from './http.js'
 
 /**
  * What the dashboard is allowed to change about a product.

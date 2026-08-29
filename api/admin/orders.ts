@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { requireAdmin } from '../_lib/auth'
-import { handler, json, requireMethod, siteUrl } from '../_lib/http'
-import { orderStore } from '../_lib/store'
-import { reconcileAll } from '../_lib/reconcile'
+import { requireAdmin } from '../_lib/auth.js'
+import { handler, json, requireMethod, siteUrl } from '../_lib/http.js'
+import { orderStore } from '../_lib/store.js'
+import { reconcileAll } from '../_lib/reconcile.js'
 
 /**
  * Recent orders, and the figures drawn from them.

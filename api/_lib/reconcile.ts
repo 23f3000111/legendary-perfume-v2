@@ -1,7 +1,7 @@
-import { sendMerchantNotification, sendOrderConfirmation } from './email'
-import type { Order } from './order'
-import { orderStore } from './store'
-import { stripe } from './stripe'
+import { sendMerchantNotification, sendOrderConfirmation } from './email.js'
+import type { Order } from './order.js'
+import { orderStore } from './store.js'
+import { stripe } from './stripe.js'
 
 /**
  * Bring a pending order back in line with what Stripe actually knows.

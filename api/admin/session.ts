@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { checkPassword, clearSession, isSignedIn, issueSession } from '../_lib/auth'
-import { handler, json, optionalEnv } from '../_lib/http'
-import { overrideStore } from '../_lib/overrides'
-import { callerKey, clearRateLimit, rateLimit } from '../_lib/ratelimit'
+import { checkPassword, clearSession, isSignedIn, issueSession } from '../_lib/auth.js'
+import { handler, json, optionalEnv } from '../_lib/http.js'
+import { overrideStore } from '../_lib/overrides.js'
+import { callerKey, clearRateLimit, rateLimit } from '../_lib/ratelimit.js'
 
 /**
  * The dashboard's session: who am I, sign in, sign out.

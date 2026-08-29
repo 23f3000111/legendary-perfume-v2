@@ -1,5 +1,5 @@
-import { HttpError } from './http'
-import { CURRENCY as GENERATED_CURRENCY, PRODUCTS } from '../_catalogue'
+import { HttpError } from './http.js'
+import { CURRENCY as GENERATED_CURRENCY, PRODUCTS } from '../_catalogue.js'
 
 export interface CatalogueItem {
   id: string
@@ -49,7 +49,7 @@ const MAX_LINES = 30
 export async function priceOrder(
   raw: unknown,
 ): Promise<{ lines: OrderLine[]; subtotal: number; total: number }> {
-  const { overrideStore, isBuyable } = await import('./overrides')
+  const { overrideStore, isBuyable } = await import('./overrides.js')
   const overrides = await overrideStore().all()
   return priceOrderWith(raw, (id) => {
     const o = overrides[id]

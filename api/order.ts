@@ -1,9 +1,9 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { handler, HttpError, json, requireMethod, siteUrl } from './_lib/http'
-import { normaliseReference, publicOrder } from './_lib/order'
-import { orderStore } from './_lib/store'
-import { reconcile } from './_lib/reconcile'
-import { callerKey, rateLimit } from './_lib/ratelimit'
+import { handler, HttpError, json, requireMethod, siteUrl } from './_lib/http.js'
+import { normaliseReference, publicOrder } from './_lib/order.js'
+import { orderStore } from './_lib/store.js'
+import { reconcile } from './_lib/reconcile.js'
+import { callerKey, rateLimit } from './_lib/ratelimit.js'
 
 /**
  * Look an order up by its reference.

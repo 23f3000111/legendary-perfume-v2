@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { handler, HttpError, json, requireMethod } from './_lib/http'
-import { sendContactMessage } from './_lib/email'
+import { handler, HttpError, json, requireMethod } from './_lib/http.js'
+import { sendContactMessage } from './_lib/email.js'
 
 /**
  * The contact form.
