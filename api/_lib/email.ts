@@ -30,13 +30,11 @@ import type { Order } from './order.js'
 export const PRIMARY_INBOX = optionalEnv('ORDER_NOTIFY_EMAIL') ?? 'noreply@legendary.com.my'
 
 const ccRaw = process.env.ORDER_NOTIFY_CC
-const HOUSE_INBOXES = [
-  PRIMARY_INBOX,
-  ...(ccRaw === undefined ? 'legendaryteammy@gmail.com' : ccRaw)
-    .split(',')
-    .map((a) => a.trim())
-    .filter(Boolean),
-].filter((a, i, all) => all.indexOf(a) === i)
+const HOUSE_CC = (ccRaw === undefined ? 'legendaryteammy@gmail.com' : ccRaw)
+  .split(',')
+  .map((a) => a.trim())
+  .filter((a) => a && a !== PRIMARY_INBOX)
+  .filter((a, i, all) => all.indexOf(a) === i)
 
 let client: Resend | undefined
 
@@ -165,6 +163,28 @@ function shell(title: string, intro: string, order: Order, siteUrl: string, extr
  * opposite things from a failure and only one of them is entitled to be
  * relaxed about it. See the note on sendContactMessage.
  */
+/**
+ * Send to the house: the primary inbox first, copies after.
+ *
+ * Deliberately not one message with several recipients. A provider refuses the
+ * whole send when any single address is not allowed, so one unreachable copy
+ * would cost the house the notification itself, which is the part that matters.
+ * Sending the copies separately means the worst a bad address can do is fail to
+ * be a copy.
+ */
+async function sendToHouse(
+  subject: string,
+  html: string,
+  replyTo?: string,
+): Promise<{ ok: boolean; reason?: string }> {
+  const primary = await send(PRIMARY_INBOX, subject, html, replyTo)
+  for (const cc of HOUSE_CC) {
+    const copy = await send(cc, subject, html, replyTo)
+    if (!copy.ok) console.error(`[email] copy to ${cc} not delivered: ${copy.reason}`)
+  }
+  return primary
+}
+
 async function send(
   to: string | string[],
   subject: string,
@@ -210,8 +230,7 @@ export async function sendMerchantNotification(order: Order, siteUrl: string) {
         Paid in full &middot; ${escape(order.paymentIntentId)}<br />Placed ${escape(placed)} (MYT)
       </p>
     </td></tr>`
-  await send(
-    HOUSE_INBOXES,
+  await sendToHouse(
     `New order ${order.reference} · ${money(order.currency, order.total)}`,
     shell(
       'A new order has come in',
@@ -266,6 +285,6 @@ export async function sendContactMessage(msg: { name: string; email: string; mes
    * they walk away believing the house has heard from them. Better to say so
    * and point them at WhatsApp.
    */
-  const { ok, reason } = await send(HOUSE_INBOXES, `Contact form: ${msg.name}`, html, msg.email)
+  const { ok, reason } = await sendToHouse(`Contact form: ${msg.name}`, html, msg.email)
   if (!ok) throw new Error(reason ?? 'the message could not be sent')
 }
