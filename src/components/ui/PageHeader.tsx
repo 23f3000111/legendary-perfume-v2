@@ -67,7 +67,17 @@ export default function PageHeader({
     >
       {image ? (
         <>
-          <img src={image} alt="" aria-hidden className="absolute inset-0 h-full w-full object-cover" />
+          {/* Two crops, because one shape cannot serve both.
+              A title bar is about 3.5:1 on a desktop and about 1:1 on a phone,
+              and filling the second with the first magnifies it four times over:
+              a narrow slice of an enormous bottle. So a phone is served a frame
+              cropped for it, generated beside the wide one in
+              prepare-assets.py. A banner with no phone crop simply falls back
+              to the wide one. */}
+          <picture className="absolute inset-0 h-full w-full">
+            <source media="(max-width: 640px)" srcSet={image.replace(/\.webp$/, '-sm.webp')} />
+            <img src={image} alt="" aria-hidden className="h-full w-full object-cover" />
+          </picture>
           {/* Black transparency so the title always reads. */}
           <div className={`absolute inset-0 ${scrim === 'strong' ? 'bg-ink/55' : 'bg-ink/35'}`} />
           <div

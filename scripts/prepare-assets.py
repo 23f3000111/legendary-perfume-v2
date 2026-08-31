@@ -152,6 +152,48 @@ def subject_band(im: Image.Image, centre: float = 0.42, keep: float = 0.22) -> t
     return float(hits.min()) / h, float(hits.max()) / h
 
 
+def save_banner_mobile(
+    src: str,
+    dest: str,
+    width: int = 1200,
+    ratio: float = 1.2,
+    quality: int = 80,
+) -> None:
+    """The same banner, cropped for a phone.
+
+    A title bar on a phone is roughly square: about 390 by 400. A 4.5:1
+    photograph can only fill that by magnifying itself four times over, which
+    leaves a narrow vertical slice of an enormous bottle with its cap grazing
+    the top edge. No amount of re-framing a wide image fixes that, because the
+    problem is the shape rather than the placement.
+
+    So a phone gets its own crop, taken from the original near 2:1 delivery
+    rather than from the wide one, and framed at 1.2:1 with the subject centred
+    and given room. `PageHeader` picks it up through a <picture> element.
+    """
+    im = Image.open(src)
+    if im.mode in ("RGBA", "LA", "P"):
+        im = im.convert("RGBA")
+        flat = Image.new("RGB", im.size, (255, 255, 255))
+        flat.paste(im, mask=im.split()[-1])
+        im = flat
+    im = im.convert("RGB")
+
+    height = round(width / ratio)
+    top, bottom = subject_band(im)
+    mid_y = (top + bottom) / 2
+
+    # Fill the frame, then take the crop around the subject rather than the
+    # middle of the photograph, which is rarely the same place.
+    cover = max(width / im.width, height / im.height)
+    big = im.resize((max(width, round(im.width * cover)), max(height, round(im.height * cover))), Image.LANCZOS)
+
+    left = max(0, min(round((big.width - width) / 2), big.width - width))
+    want_top = round(mid_y * big.height - height / 2)
+    top_px = max(0, min(want_top, big.height - height))
+    write(big.crop((left, top_px, left + width, top_px + height)), dest, quality=quality)
+
+
 def save_banner(
     src: str,
     dest: str,
@@ -885,11 +927,26 @@ def main() -> int:
     print("Page banners")
     for key, (folder, needle) in BANNERS.items():
         save_banner(find(folder, needle), f"banner-{key}.webp")
+        save_banner_mobile(find(folder, needle), f"banner-{key}-sm.webp")
     for key, (folder, needle) in BANNERS_4.items():
         save_banner(find4(folder, needle), f"banner-{key}.webp")
+        # The phone crop comes from the original near 2:1 frame, which still has
+        # the whole scene in it, rather than from the client's wide crop.
+        save_banner_mobile(find4(folder, needle), f"banner-{key}-sm.webp")
     # Last, so a client-cropped banner wins over anything generated above.
     for key, needle in BANNERS_6.items():
         save_webp(find("", needle, root=AMD6), f"banner-{key}.webp", 2400, quality=82)
+
+    # 2026 has no photograph in the delivery, so its card carries the client's
+    # own Bangunan Sultan Abdul Samad mark, which is what the milestone is
+    # about, over a gold ground. Alpha is kept so it sits on that ground.
+    save_webp(
+        find(f"{HOME}/Partnered with/BSAS", "bsas"),
+        "journey-2026-mark.webp",
+        900,
+        quality=88,
+        keep_alpha=True,
+    )
 
     print("Our Story journey")
     for year in JOURNEY_YEARS:

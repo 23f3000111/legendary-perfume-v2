@@ -50,22 +50,6 @@ export default function JourneyCarousel({ milestones }: { milestones: Milestone[
     return { copyWidth, start: copyWidth }
   }, [])
 
-  /** Keep the position inside the middle copy, so neither end is reachable. */
-  const wrap = useCallback(() => {
-    const el = rail.current
-    const m = metrics()
-    if (!el || !m || m.copyWidth <= 0) return
-    if (el.scrollLeft < m.copyWidth * 0.5) el.scrollLeft += m.copyWidth
-    else if (el.scrollLeft > m.copyWidth * 1.5) el.scrollLeft -= m.copyWidth
-  }, [metrics])
-
-  // Start in the middle copy once the cards have a width.
-  useEffect(() => {
-    const el = rail.current
-    const m = metrics()
-    if (el && m) el.scrollLeft = m.start
-  }, [metrics, milestones.length])
-
   /*
    * The drift. Moving scrollLeft rather than transforming a track means the
    * arrows, a swipe and the drift are all the same motion, so they cannot
@@ -80,33 +64,77 @@ export default function JourneyCarousel({ milestones }: { milestones: Milestone[
     return () => q.removeEventListener('change', apply)
   }, [])
 
+  /*
+   * One loop owns the scroll position.
+   *
+   * The previous version let the browser's own smooth scrolling run the arrows
+   * while a separate loop ran the drift, both writing `scrollLeft`. They fought:
+   * a wrap during a smooth scroll left the browser animating toward a position
+   * that no longer meant anything, and the rail stuttered or stalled. So the
+   * arrows no longer ask the browser to scroll. They add to a target, and this
+   * loop eases toward it, applies the drift, and wraps, in that order, once per
+   * frame. Nothing else touches the property.
+   */
+  const target = useRef(0)
+  const started = useRef(false)
+  // What this loop last wrote. Anything else means a finger or a trackpad
+  // moved the rail, and a visitor's own scrolling has to win: without this the
+  // loop would drag the rail back on the next frame and a swipe would feel
+  // like it was being fought, because it would be.
+  const written = useRef(0)
+
   useEffect(() => {
-    if (paused || stillFrame) return
     let frame = 0
     let last = performance.now()
+
     const tick = (now: number) => {
       const el = rail.current
-      if (el) {
-        el.scrollLeft += (DRIFT_PX_PER_SECOND * (now - last)) / 1000
-        wrap()
+      const m = metrics()
+      if (el && m && m.copyWidth > 0) {
+        if (!started.current) {
+          el.scrollLeft = m.start
+          target.current = m.start
+          written.current = m.start
+          started.current = true
+        }
+
+        if (Math.abs(el.scrollLeft - written.current) > 1) target.current = el.scrollLeft
+
+        const dt = Math.min((now - last) / 1000, 0.05)
+        if (!paused && !stillFrame) target.current += DRIFT_PX_PER_SECOND * dt
+
+        // Ease toward the target, so an arrow press glides rather than jumps.
+        const delta = target.current - el.scrollLeft
+        el.scrollLeft += Math.abs(delta) < 0.5 ? delta : delta * Math.min(1, dt * 8)
+        written.current = el.scrollLeft
+
+        // Wrap both the position and the target together, so the ease is not
+        // left chasing a place that has just moved a copy's width away.
+        if (el.scrollLeft < m.copyWidth * 0.5) {
+          el.scrollLeft += m.copyWidth
+          target.current += m.copyWidth
+          written.current = el.scrollLeft
+        } else if (el.scrollLeft > m.copyWidth * 1.5) {
+          el.scrollLeft -= m.copyWidth
+          target.current -= m.copyWidth
+          written.current = el.scrollLeft
+        }
       }
       last = now
       frame = requestAnimationFrame(tick)
     }
+
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
-  }, [paused, stillFrame, wrap])
+  }, [paused, stillFrame, metrics])
 
   const nudge = useCallback((direction: 1 | -1) => {
     const el = rail.current
     if (!el) return
-    const card = el.querySelector('button')
-    const step = ((card as HTMLElement | null)?.offsetWidth ?? 240) + 12
-    el.scrollBy({ left: direction * step * CARDS_PER_PRESS, behavior: 'smooth' })
-    // Smooth scrolling lands after this returns, so the wrap waits for it.
-    // Wrapping mid animation would jump the rail under the reader's eye.
-    window.setTimeout(wrap, 600)
-  }, [wrap])
+    const card = el.querySelector('button') as HTMLElement | null
+    const step = ((card?.offsetWidth ?? 240) + 12) * CARDS_PER_PRESS
+    target.current += direction * step
+  }, [])
 
   return (
     <div
@@ -117,7 +145,6 @@ export default function JourneyCarousel({ milestones }: { milestones: Milestone[
     >
       <div
         ref={rail}
-        onScroll={wrap}
         className="
           flex gap-3 overflow-x-auto pb-4
           [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
@@ -140,17 +167,24 @@ export default function JourneyCarousel({ milestones }: { milestones: Milestone[
               `}
             >
               {m.art === false ? (
-                /* No photograph for this year yet, so the card carries the
-                   house's own motif over a warm gold ground rather than
-                   reading as a hole in the row. */
-                <div className="relative h-full w-full overflow-hidden bg-gradient-to-br from-gold-deep via-[#6b4f1d] to-ink">
-                  <div
-                    className="peranakan absolute inset-0 opacity-25"
-                    style={{ color: '#E8C97A' }}
+                /* There is no photograph of the building in the delivery, and
+                   inventing one would be putting a picture of somewhere else
+                   under the house's name. So the card carries the client's own
+                   Bangunan Sultan Abdul Samad mark, which is what this year is
+                   about, over a gold ground with the house motif behind it. */
+                <div className="relative h-full w-full overflow-hidden bg-gradient-to-br from-[#8a6520] via-gold-deep to-ink">
+                  <div className="peranakan absolute inset-0 opacity-20" style={{ color: '#E8C97A' }} />
+                  <div className="absolute left-1/2 top-[38%] h-44 w-44 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold/30 blur-3xl" />
+                  <img
+                    src={asset('/assets/client/journey-2026-mark.webp')}
+                    alt=""
+                    loading="lazy"
+                    className={`absolute left-1/2 top-[36%] w-[62%] -translate-x-1/2 -translate-y-1/2 transition-all duration-700 ease-luxe ${
+                      isActive ? 'scale-105 opacity-95' : 'scale-100 opacity-80'
+                    }`}
+                    style={{ filter: 'brightness(0) invert(1)' }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-ink/25" />
-                  {/* A soft bloom, so the panel has some depth to it. */}
-                  <div className="absolute left-1/2 top-1/3 h-40 w-40 -translate-x-1/2 rounded-full bg-gold/25 blur-3xl" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-transparent to-ink/20" />
                 </div>
               ) : (
                 <img
