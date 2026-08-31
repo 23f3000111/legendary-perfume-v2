@@ -313,18 +313,3 @@
     scroll-behavior: auto !important;
   }
 }
-
-/* The Journey rail's endless drift.
-   The track holds the milestone list twice, so travelling exactly half its
-   width lands on an identical frame and the reset is invisible. Runs on the
-   compositor, so it stays smooth while React is busy elsewhere, and the
-   component pauses it by toggling animation-play-state rather than by
-   re-rendering anything. */
-@keyframes journey-drift {
-  from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(-50%, 0, 0); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  [style*="journey-drift"] { animation: none !important; }
-}

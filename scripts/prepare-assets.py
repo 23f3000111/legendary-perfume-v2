@@ -32,6 +32,9 @@ SRC = os.path.join(ROOT, "client-assets", "Legendary digital")
 # Revision 4 arrived as its own drop rather than a replacement delivery, so
 # its files are read from here and everything else still comes from SRC.
 AMD4 = os.path.join(ROOT, "client-assets", "amendment-4")
+# Revision 6: For Her and For Him supplied again, this time already cropped to
+# roughly 5:1 with the bottle close to full height. Nothing to re-frame.
+AMD6 = os.path.join(ROOT, "client-assets", "amendment-6")
 OUT = os.path.join(ROOT, "public", "assets", "client")
 
 INVISIBLE = dict.fromkeys(map(ord, "⁠​‎‏﻿"), None)
@@ -558,9 +561,19 @@ def silhouette(src: str, dest: str, max_side: int) -> None:
 
 
 def transcode(
-    src: str, dest: str, width: int = 1920, crf: int = 27, duration: float | None = None
+    src: str, dest: str, width: int = 1280, crf: int = 26, duration: float | None = None
 ) -> None:
-    """Transcode for web. `duration` trims the tail (used to drop the end card)."""
+    """Transcode for web. `duration` trims the tail (used to drop the end card).
+
+    Encoded conservatively so an iPhone will actually play it. The first pass
+    produced High profile at level 5.0 and 1080p, which iOS is entitled to
+    refuse; Main profile at level 4.0 is the widely supported floor and no
+    phone will decline it. `yuv420p` is required rather than preferred: Safari
+    plays nothing in 4:2:2 or 4:4:4.
+
+    720p is plenty for a background clip behind a scrim, and halves what a
+    visitor on mobile data has to fetch before anything moves.
+    """
     path = os.path.join(OUT, dest)
     os.makedirs(os.path.dirname(path), exist_ok=True)
     cmd = ["ffmpeg", "-y", "-loglevel", "error", "-i", src]
@@ -570,7 +583,11 @@ def transcode(
         "-an",
         "-vf", f"scale={width}:-2",
         "-c:v", "libx264", "-crf", str(crf), "-preset", "slow",
-        "-pix_fmt", "yuv420p", "-movflags", "+faststart",
+        "-profile:v", "main", "-level:v", "4.0",
+        "-pix_fmt", "yuv420p",
+        # The index has to precede the media or a phone will not begin until
+        # the whole file has arrived.
+        "-movflags", "+faststart",
         path,
     ]
     subprocess.run(cmd, check=True)
@@ -721,6 +738,15 @@ BANNERS_4 = {
     "for-him": ("", "banner photo_for him"),
 }
 
+# Banners the client cropped themselves. These are wider than any title bar the
+# site produces, so `object-fit: cover` scales them by height and takes the crop
+# out of the width, and the bottle is never cut top or bottom. That is a better
+# answer than anything re-framing can do, so these pass straight through.
+BANNERS_6 = {
+    "for-her": "banner-for-her",
+    "for-him": "banner-for-him",
+}
+
 MOODS = {
     "serene":   (f"{HOME}/What mood are you wearing today_/1.Serene",   "serene"),
     "bold":     (f"{HOME}/What mood are you wearing today_/2.Bold",     "bold"),
@@ -861,6 +887,9 @@ def main() -> int:
         save_banner(find(folder, needle), f"banner-{key}.webp")
     for key, (folder, needle) in BANNERS_4.items():
         save_banner(find4(folder, needle), f"banner-{key}.webp")
+    # Last, so a client-cropped banner wins over anything generated above.
+    for key, needle in BANNERS_6.items():
+        save_webp(find("", needle, root=AMD6), f"banner-{key}.webp", 2400, quality=82)
 
     print("Our Story journey")
     for year in JOURNEY_YEARS:

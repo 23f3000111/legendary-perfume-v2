@@ -1,5 +1,5 @@
 import { asset } from '../lib/asset'
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import SplitText from '../components/ui/SplitText'
@@ -7,6 +7,28 @@ import { ArrowRight, ChevronDown } from '../components/ui/icons'
 
 export default function Hero() {
   const ref = useRef<HTMLDivElement>(null)
+  const video = useRef<HTMLVideoElement>(null)
+
+  /*
+   * Persuade iOS to play the background clip.
+   *
+   * Safari only autoplays a video that is muted and inline, and React sets
+   * `muted` as a property rather than an attribute, which iOS has historically
+   * not honoured on an element it has yet to see play. Setting both, then
+   * asking for playback explicitly, is what makes it start.
+   *
+   * The play attempt is allowed to fail: Low Power Mode and Reduce Motion both
+   * refuse autoplay outright, and the poster stands in perfectly well. There is
+   * nothing to report to anyone, so the rejection is simply swallowed.
+   */
+  useEffect(() => {
+    const el = video.current
+    if (!el) return
+    el.muted = true
+    el.setAttribute('muted', '')
+    el.playsInline = true
+    void el.play().catch(() => {})
+  }, [])
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] })
   const y = useTransform(scrollYProgress, [0, 1], ['0%', '22%'])
   const textY = useTransform(scrollYProgress, [0, 1], ['0%', '-30%'])
@@ -17,8 +39,17 @@ export default function Hero() {
       {/* Media */}
       <motion.div style={{ y }} className="absolute inset-0 h-[120%]">
         <video
+          ref={video}
           className="h-full w-full object-cover"
-          autoPlay muted loop playsInline
+          autoPlay
+          muted
+          loop
+          playsInline
+          // Safari wants this spelling as well as the camel-cased prop.
+          // eslint-disable-next-line react/no-unknown-property
+          webkit-playsinline="true"
+          preload="metadata"
+          aria-hidden
           poster={asset('/assets/client/signature-orchid.webp')}
         >
           <source src={asset('/assets/client/home-hero.mp4')} type="video/mp4" />

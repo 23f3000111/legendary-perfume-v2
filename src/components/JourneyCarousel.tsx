@@ -11,31 +11,66 @@ export interface Milestone {
 }
 
 /**
- * The house's years, as a moving rail.
+ * The house's years, as an endless rail.
  *
- * Client change: the panels used to share the width of the section, so eleven
- * of them squeezed each into a sliver and the photographs were unreadable. Each
- * card now keeps its own size and the row scrolls instead, looping so there is
- * no end to arrive at.
+ * The first attempt at this looped by animating a CSS transform over two copies
+ * of the list. That drifted convincingly but was not actually endless: the
+ * arrows scrolled the container underneath the animation, so pressing one
+ * eventually arrived at the last card with empty space beyond it, which is
+ * exactly what the client saw.
  *
- * The loop is a plain CSS translation over two copies of the list, which is
- * cheaper and far smoother than moving it from JavaScript on every frame: the
- * compositor owns it, so it does not stutter while React is busy elsewhere.
- * Resting a pointer on the rail pauses it and brings out an arrow at each end;
- * moving away hides them and the drift resumes. Touch has no hover, so there
- * the arrows are always available and the rail can simply be swiped.
- *
- * A visitor who prefers reduced motion gets no drift at all, just the arrows.
+ * So the drift and the arrows now share one mechanism. The rail is a scroller
+ * holding three copies of the list, parked in the middle one. Everything that
+ * moves it moves `scrollLeft`, and after every move the position is wrapped
+ * back into the middle copy. Since each copy is identical, the wrap is
+ * invisible, and there is no end to reach in either direction, by arrow, by
+ * swipe or by drift.
  */
+
+/** How fast the rail drifts when left alone, in pixels per second. */
+const DRIFT_PX_PER_SECOND = 26
+
+/** Cards an arrow travels. The client asked for two or three rather than one. */
+const CARDS_PER_PRESS = 2.5
+
 export default function JourneyCarousel({ milestones }: { milestones: Milestone[] }) {
-  const railRef = useRef<HTMLDivElement>(null)
+  const rail = useRef<HTMLDivElement>(null)
   const [paused, setPaused] = useState(false)
   const [active, setActive] = useState<string | null>(null)
 
-  // The rail holds the list twice, so the animation can travel exactly one
-  // copy's width and snap back to the start without anything appearing to move.
-  const loop = [...milestones, ...milestones]
+  // Three copies: one to show, one either side to wrap into.
+  const loop = [...milestones, ...milestones, ...milestones]
+  const copies = 3
 
+  /** One copy's width, and the scroll position that sits at its start. */
+  const metrics = useCallback(() => {
+    const el = rail.current
+    if (!el) return null
+    const copyWidth = el.scrollWidth / copies
+    return { copyWidth, start: copyWidth }
+  }, [])
+
+  /** Keep the position inside the middle copy, so neither end is reachable. */
+  const wrap = useCallback(() => {
+    const el = rail.current
+    const m = metrics()
+    if (!el || !m || m.copyWidth <= 0) return
+    if (el.scrollLeft < m.copyWidth * 0.5) el.scrollLeft += m.copyWidth
+    else if (el.scrollLeft > m.copyWidth * 1.5) el.scrollLeft -= m.copyWidth
+  }, [metrics])
+
+  // Start in the middle copy once the cards have a width.
+  useEffect(() => {
+    const el = rail.current
+    const m = metrics()
+    if (el && m) el.scrollLeft = m.start
+  }, [metrics, milestones.length])
+
+  /*
+   * The drift. Moving scrollLeft rather than transforming a track means the
+   * arrows, a swipe and the drift are all the same motion, so they cannot
+   * fight each other or arrive at different places.
+   */
   const [stillFrame, setStillFrame] = useState(false)
   useEffect(() => {
     const q = window.matchMedia('(prefers-reduced-motion: reduce)')
@@ -45,104 +80,115 @@ export default function JourneyCarousel({ milestones }: { milestones: Milestone[
     return () => q.removeEventListener('change', apply)
   }, [])
 
-  const nudge = useCallback((direction: 1 | -1) => {
-    const rail = railRef.current
-    if (!rail) return
-    // A card plus its gap, so an arrow moves the rail by exactly one panel.
-    const step = (rail.firstElementChild as HTMLElement | null)?.offsetWidth ?? 260
-    rail.scrollBy({ left: direction * (step + 12), behavior: 'smooth' })
-  }, [])
+  useEffect(() => {
+    if (paused || stillFrame) return
+    let frame = 0
+    let last = performance.now()
+    const tick = (now: number) => {
+      const el = rail.current
+      if (el) {
+        el.scrollLeft += (DRIFT_PX_PER_SECOND * (now - last)) / 1000
+        wrap()
+      }
+      last = now
+      frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [paused, stillFrame, wrap])
 
-  const drifting = !paused && !stillFrame
+  const nudge = useCallback((direction: 1 | -1) => {
+    const el = rail.current
+    if (!el) return
+    const card = el.querySelector('button')
+    const step = ((card as HTMLElement | null)?.offsetWidth ?? 240) + 12
+    el.scrollBy({ left: direction * step * CARDS_PER_PRESS, behavior: 'smooth' })
+    // Smooth scrolling lands after this returns, so the wrap waits for it.
+    // Wrapping mid animation would jump the rail under the reader's eye.
+    window.setTimeout(wrap, 600)
+  }, [wrap])
 
   return (
     <div
       className="group/rail relative mt-12"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => { setPaused(false); setActive(null) }}
+      onTouchStart={() => setPaused(true)}
     >
-      {/* The rail is a real scroller, so a swipe works on touch and the arrows
-          have something to scroll. The drift is a transform on the track
-          inside it, which leaves the scroll position alone. */}
       <div
-        ref={railRef}
+        ref={rail}
+        onScroll={wrap}
         className="
           flex gap-3 overflow-x-auto pb-4
           [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
         "
       >
-        <div
-          className="flex shrink-0 gap-3"
-          style={{
-            animation: 'journey-drift 60s linear infinite',
-            animationPlayState: drifting ? 'running' : 'paused',
-          }}
-        >
-          {loop.map((m, i) => {
-            const key = `${m.year}-${i}`
-            const isActive = active === key
-            return (
-              <button
-                key={key}
-                onMouseEnter={() => setActive(key)}
-                onFocus={() => { setPaused(true); setActive(key) }}
-                onBlur={() => setActive(null)}
-                aria-label={`${m.year}: ${m.title}`}
-                className={`
-                  group relative h-[20rem] w-[13rem] shrink-0 overflow-hidden rounded-sm text-left
-                  transition-[width,transform] duration-700 ease-luxe
-                  sm:h-[24rem] sm:w-[15rem] ${isActive ? 'sm:w-[19rem]' : ''}
-                `}
-              >
-                {m.art === false ? (
-                  /* 2026 has no photograph yet, so it carries the house's own
-                     Peranakan pattern rather than a gap in the row. */
-                  <div className="h-full w-full bg-gold-deep/25">
-                    <div
-                      className={`peranakan h-full w-full transition-opacity duration-700 ${
-                        isActive ? 'opacity-30' : 'opacity-15'
-                      }`}
-                      style={{ color: '#CBAA5D' }}
-                    />
-                  </div>
-                ) : (
-                  <img
-                    src={asset(`/assets/client/journey-${m.year}.webp`)}
-                    alt=""
-                    loading="lazy"
-                    className={`h-full w-full object-cover transition-all duration-700 ease-luxe ${
-                      isActive ? 'scale-100 grayscale-0' : 'scale-105 grayscale'
-                    }`}
+        {loop.map((m, i) => {
+          const key = `${m.year}-${i}`
+          const isActive = active === key
+          return (
+            <button
+              key={key}
+              onMouseEnter={() => setActive(key)}
+              onFocus={() => { setPaused(true); setActive(key) }}
+              onBlur={() => setActive(null)}
+              aria-label={`${m.year}: ${m.title}`}
+              className={`
+                group relative h-[20rem] w-[13rem] shrink-0 overflow-hidden rounded-sm text-left
+                transition-[width] duration-700 ease-luxe
+                sm:h-[24rem] sm:w-[15rem] ${isActive ? 'sm:w-[19rem]' : ''}
+              `}
+            >
+              {m.art === false ? (
+                /* No photograph for this year yet, so the card carries the
+                   house's own motif over a warm gold ground rather than
+                   reading as a hole in the row. */
+                <div className="relative h-full w-full overflow-hidden bg-gradient-to-br from-gold-deep via-[#6b4f1d] to-ink">
+                  <div
+                    className="peranakan absolute inset-0 opacity-25"
+                    style={{ color: '#E8C97A' }}
                   />
-                )}
-                <div
-                  className={`absolute inset-0 transition-opacity duration-700 ${
-                    isActive
-                      ? 'bg-gradient-to-t from-gold-deep/90 via-gold-deep/25 to-transparent'
-                      : 'bg-gradient-to-t from-ink/90 via-ink/40 to-ink/10'
+                  <div className="absolute inset-0 bg-gradient-to-t from-ink/70 via-transparent to-ink/25" />
+                  {/* A soft bloom, so the panel has some depth to it. */}
+                  <div className="absolute left-1/2 top-1/3 h-40 w-40 -translate-x-1/2 rounded-full bg-gold/25 blur-3xl" />
+                </div>
+              ) : (
+                <img
+                  src={asset(`/assets/client/journey-${m.year}.webp`)}
+                  alt=""
+                  loading="lazy"
+                  className={`h-full w-full object-cover transition-all duration-700 ease-luxe ${
+                    isActive ? 'scale-100 grayscale-0' : 'scale-105 grayscale'
                   }`}
                 />
+              )}
+              <div
+                className={`absolute inset-0 transition-opacity duration-700 ${
+                  isActive
+                    ? 'bg-gradient-to-t from-gold-deep/90 via-gold-deep/25 to-transparent'
+                    : 'bg-gradient-to-t from-ink/90 via-ink/40 to-ink/10'
+                }`}
+              />
 
-                <span className="absolute left-5 top-4 font-minion text-2xl font-normal text-ivory/85">
-                  {m.year}
-                </span>
+              <span className="absolute left-5 top-4 font-minion text-2xl font-normal text-ivory/85">
+                {m.year}
+              </span>
 
-                <div className="absolute inset-x-0 bottom-0 p-5">
-                  <h3 className="font-display text-lg italic leading-tight text-ivory">{m.title}</h3>
-                  {/* Reserved rather than animated open, so nothing below the
-                      card shifts as the copy appears. */}
-                  <div
-                    className={`h-[5.5rem] overflow-hidden pt-2 transition-opacity duration-500 ${
-                      isActive ? 'opacity-100' : 'opacity-0'
-                    }`}
-                  >
-                    <p className="text-[0.78rem] leading-snug text-ivory/85">{m.body}</p>
-                  </div>
+              <div className="absolute inset-x-0 bottom-0 p-5">
+                <h3 className="font-display text-lg italic leading-tight text-ivory">{m.title}</h3>
+                {/* Reserved rather than animated open, so nothing below the
+                    card shifts as the copy appears. */}
+                <div
+                  className={`h-[5.5rem] overflow-hidden pt-2 transition-opacity duration-500 ${
+                    isActive ? 'opacity-100' : 'opacity-0'
+                  }`}
+                >
+                  <p className="text-[0.78rem] leading-snug text-ivory/85">{m.body}</p>
                 </div>
-              </button>
-            )
-          })}
-        </div>
+              </div>
+            </button>
+          )
+        })}
       </div>
 
       {/* Out on hover, and always there on touch, which has no hover to give. */}
