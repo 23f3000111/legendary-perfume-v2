@@ -140,8 +140,13 @@ export default function Footer() {
       </div>
 
       {/* The studio's credit. Asked for explicitly, and set brighter than the
-          rest of this bar so it is legible rather than technically present. */}
-      <div className="u-container relative border-t border-ivory/10 py-5 text-center">
+          rest of this bar so it is legible rather than technically present.
+
+          The concierge launcher floats at the bottom right of the viewport, and
+          this is the last line on the page, so on a phone the button sat over
+          the end of the link. The extra room below keeps the credit clear of
+          it, which is the whole point of the line. */}
+      <div className="u-container relative border-t border-ivory/10 pb-24 pt-5 text-center sm:pb-5">
         <p className="text-[0.68rem] uppercase tracking-[0.18em] text-ivory/60">
           Designed and developed by{' '}
           <a
