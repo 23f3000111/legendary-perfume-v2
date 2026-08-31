@@ -1,153 +1,168 @@
-import { useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { asset } from '../lib/asset'
+import { ChevronLeft, ChevronRight } from './ui/icons'
 
 export interface Milestone {
   year: string
   title: string
   body: string
-  /**
-   * False where the delivery carries no photograph for that year. The panel
-   * falls back to the house pattern rather than a broken image, and picks the
-   * shot up the moment `journey-<year>.webp` exists.
-   */
+  /** False where the house has no photograph for that year yet. */
   art?: boolean
 }
 
 /**
- * "The Journey" — a carousel whose panel enlarges when hovered. On desktop the
- * active panel takes a wider flex basis; on touch the row becomes a horizontal
- * snap scroller.
+ * The house's years, as a moving rail.
  *
- * Revision 5: the client asked for the animation to change, because "the words
- * popping from middle and drop down" did not look smooth. Both halves of that
- * were layout animations fighting the panel's own width transition:
+ * Client change: the panels used to share the width of the section, so eleven
+ * of them squeezed each into a sliver and the photographs were unreadable. Each
+ * card now keeps its own size and the row scrolls instead, looping so there is
+ * no end to arrive at.
  *
- *  - The year above the row carried a React `key`, so every hover unmounted it
- *    and mounted a new one. There was no transition at all, only a hard swap.
- *    It now cross dissolves in place, stacked, so the row beneath never shifts.
- *  - The body opened by animating its height from zero while the panel was
- *    still widening, so the copy rewrapped on every frame and the title scaled
- *    underneath it. Nothing animates layout any more. The body's space is
- *    reserved on every panel and pinned to the open width, so its line breaks
- *    are settled before it is ever seen, and the reveal is opacity and a small
- *    translate only. Titles now share one baseline across the row as well.
+ * The loop is a plain CSS translation over two copies of the list, which is
+ * cheaper and far smoother than moving it from JavaScript on every frame: the
+ * compositor owns it, so it does not stutter while React is busy elsewhere.
+ * Resting a pointer on the rail pauses it and brings out an arrow at each end;
+ * moving away hides them and the drift resumes. Touch has no hover, so there
+ * the arrows are always available and the rail can simply be swiped.
+ *
+ * A visitor who prefers reduced motion gets no drift at all, just the arrows.
  */
-
-const EASE = [0.22, 1, 0.36, 1] as const
-
-/**
- * The copy is pinned to one width so its line breaks are identical whatever
- * the panel is currently doing. It has to fit inside the narrowest panel the
- * row ever draws, which is the 15rem closed panel less its 5 padding either
- * side, so 12.5rem rather than the open panel's full measure.
- */
-const COPY_WIDTH = '12.5rem'
-
 export default function JourneyCarousel({ milestones }: { milestones: Milestone[] }) {
-  const [active, setActive] = useState(3)
+  const railRef = useRef<HTMLDivElement>(null)
+  const [paused, setPaused] = useState(false)
+  const [active, setActive] = useState<string | null>(null)
+
+  // The rail holds the list twice, so the animation can travel exactly one
+  // copy's width and snap back to the start without anything appearing to move.
+  const loop = [...milestones, ...milestones]
+
+  const [stillFrame, setStillFrame] = useState(false)
+  useEffect(() => {
+    const q = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const apply = () => setStillFrame(q.matches)
+    apply()
+    q.addEventListener('change', apply)
+    return () => q.removeEventListener('change', apply)
+  }, [])
+
+  const nudge = useCallback((direction: 1 | -1) => {
+    const rail = railRef.current
+    if (!rail) return
+    // A card plus its gap, so an arrow moves the rail by exactly one panel.
+    const step = (rail.firstElementChild as HTMLElement | null)?.offsetWidth ?? 260
+    rail.scrollBy({ left: direction * (step + 12), behavior: 'smooth' })
+  }, [])
+
+  const drifting = !paused && !stillFrame
 
   return (
-    <div className="mt-14">
-      {/* Year of the focused panel. Client amendment: every figure in this
-          section is set in Minion Variable Concept Regular.
-
-          The two years are stacked rather than swapped in flow, so the row
-          below holds still while one dissolves into the other. */}
-      <div className="relative h-[clamp(2.4rem,5vw,3.6rem)]">
-        <AnimatePresence initial={false}>
-          <motion.p
-            key={milestones[active].year}
-            className="absolute inset-x-0 text-center font-minion text-[clamp(2.4rem,5vw,3.6rem)] font-normal leading-none text-ivory"
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.45, ease: EASE }}
-          >
-            {milestones[active].year}
-          </motion.p>
-        </AnimatePresence>
-      </div>
-
-      <div className="mt-8 flex gap-3 overflow-x-auto pb-4 md:overflow-visible">
-        {milestones.map((m, i) => {
-          const isActive = i === active
-          return (
-            <button
-              key={m.year}
-              onMouseEnter={() => setActive(i)}
-              onFocus={() => setActive(i)}
-              onClick={() => setActive(i)}
-              aria-label={`${m.year}: ${m.title}`}
-              className={`group relative h-[22rem] shrink-0 overflow-hidden rounded-sm text-left transition-[flex] duration-[900ms] ease-luxe md:h-[26rem] md:shrink ${
-                isActive ? 'md:flex-[2.2]' : 'md:flex-1'
-              }`}
-              style={{ width: 'min(72vw, 15rem)' }}
-            >
-              {m.art === false ? (
-                <div className="h-full w-full bg-gold-deep/25">
-                  <div
-                    className={`peranakan h-full w-full transition-opacity duration-[900ms] ${
-                      isActive ? 'opacity-30' : 'opacity-15'
+    <div
+      className="group/rail relative mt-12"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => { setPaused(false); setActive(null) }}
+    >
+      {/* The rail is a real scroller, so a swipe works on touch and the arrows
+          have something to scroll. The drift is a transform on the track
+          inside it, which leaves the scroll position alone. */}
+      <div
+        ref={railRef}
+        className="
+          flex gap-3 overflow-x-auto pb-4
+          [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden
+        "
+      >
+        <div
+          className="flex shrink-0 gap-3"
+          style={{
+            animation: 'journey-drift 60s linear infinite',
+            animationPlayState: drifting ? 'running' : 'paused',
+          }}
+        >
+          {loop.map((m, i) => {
+            const key = `${m.year}-${i}`
+            const isActive = active === key
+            return (
+              <button
+                key={key}
+                onMouseEnter={() => setActive(key)}
+                onFocus={() => { setPaused(true); setActive(key) }}
+                onBlur={() => setActive(null)}
+                aria-label={`${m.year}: ${m.title}`}
+                className={`
+                  group relative h-[20rem] w-[13rem] shrink-0 overflow-hidden rounded-sm text-left
+                  transition-[width,transform] duration-700 ease-luxe
+                  sm:h-[24rem] sm:w-[15rem] ${isActive ? 'sm:w-[19rem]' : ''}
+                `}
+              >
+                {m.art === false ? (
+                  /* 2026 has no photograph yet, so it carries the house's own
+                     Peranakan pattern rather than a gap in the row. */
+                  <div className="h-full w-full bg-gold-deep/25">
+                    <div
+                      className={`peranakan h-full w-full transition-opacity duration-700 ${
+                        isActive ? 'opacity-30' : 'opacity-15'
+                      }`}
+                      style={{ color: '#CBAA5D' }}
+                    />
+                  </div>
+                ) : (
+                  <img
+                    src={asset(`/assets/client/journey-${m.year}.webp`)}
+                    alt=""
+                    loading="lazy"
+                    className={`h-full w-full object-cover transition-all duration-700 ease-luxe ${
+                      isActive ? 'scale-100 grayscale-0' : 'scale-105 grayscale'
                     }`}
-                    style={{ color: '#CBAA5D' }}
                   />
-                </div>
-              ) : (
-                <img
-                  src={asset(`/assets/client/journey-${m.year}.webp`)}
-                  alt=""
-                  className={`h-full w-full object-cover transition-all duration-[900ms] ease-luxe ${
-                    isActive ? 'scale-100 grayscale-0' : 'scale-105 grayscale'
+                )}
+                <div
+                  className={`absolute inset-0 transition-opacity duration-700 ${
+                    isActive
+                      ? 'bg-gradient-to-t from-gold-deep/90 via-gold-deep/25 to-transparent'
+                      : 'bg-gradient-to-t from-ink/90 via-ink/40 to-ink/10'
                   }`}
-                  loading="lazy"
                 />
-              )}
-              <div
-                className={`absolute inset-0 transition-opacity duration-[900ms] ${
-                  isActive
-                    ? 'bg-gradient-to-t from-gold-deep/90 via-gold-deep/25 to-transparent'
-                    : 'bg-gradient-to-t from-ink/90 via-ink/40 to-ink/10'
-                }`}
-              />
 
-              {/* Year badge, always visible so the row reads as a timeline */}
-              <span className="absolute left-5 top-4 font-minion text-2xl font-normal text-ivory/85">{m.year}</span>
+                <span className="absolute left-5 top-4 font-minion text-2xl font-normal text-ivory/85">
+                  {m.year}
+                </span>
 
-              <div className="absolute inset-x-0 bottom-0 p-5">
-                {/* The title holds its place. Only its opacity and a small
-                    lift change, so nothing reflows as the panel widens. */}
-                <motion.h3
-                  className="font-display text-xl italic text-ivory"
-                  animate={{ y: isActive ? -4 : 0, opacity: isActive ? 1 : 0.8 }}
-                  transition={{ duration: 0.5, ease: EASE }}
-                >
-                  {m.title}
-                </motion.h3>
-
-                {/* The body's space is reserved on every panel, so opening one
-                    moves nothing. It is pinned to the open panel's width and
-                    clipped, which keeps its line breaks identical whatever the
-                    panel is currently doing. */}
-                <div className="h-[7rem] overflow-hidden pt-2">
-                  <motion.p
-                    className="text-[0.8rem] leading-snug text-ivory/85"
-                    style={{ width: COPY_WIDTH }}
-                    animate={{ opacity: isActive ? 1 : 0, y: isActive ? 0 : 10 }}
-                    transition={{
-                      duration: 0.55,
-                      ease: EASE,
-                      delay: isActive ? 0.18 : 0,
-                    }}
+                <div className="absolute inset-x-0 bottom-0 p-5">
+                  <h3 className="font-display text-lg italic leading-tight text-ivory">{m.title}</h3>
+                  {/* Reserved rather than animated open, so nothing below the
+                      card shifts as the copy appears. */}
+                  <div
+                    className={`h-[5.5rem] overflow-hidden pt-2 transition-opacity duration-500 ${
+                      isActive ? 'opacity-100' : 'opacity-0'
+                    }`}
                   >
-                    {m.body}
-                  </motion.p>
+                    <p className="text-[0.78rem] leading-snug text-ivory/85">{m.body}</p>
+                  </div>
                 </div>
-              </div>
-            </button>
-          )
-        })}
+              </button>
+            )
+          })}
+        </div>
       </div>
+
+      {/* Out on hover, and always there on touch, which has no hover to give. */}
+      {([['left', -1], ['right', 1]] as const).map(([side, direction]) => (
+        <button
+          key={side}
+          onClick={() => nudge(direction)}
+          aria-label={side === 'left' ? 'Previous years' : 'Next years'}
+          className={`
+            absolute top-1/2 z-10 grid h-11 w-11 -translate-y-1/2 place-items-center
+            rounded-full border border-ivory/25 bg-ink/70 text-ivory backdrop-blur
+            transition-opacity duration-300 hover:bg-ink
+            ${side === 'left' ? 'left-2' : 'right-2'}
+            opacity-100 [@media(hover:hover)]:opacity-0
+            [@media(hover:hover)]:group-hover/rail:opacity-100
+          `}
+        >
+          {side === 'left' ? <ChevronLeft width={18} /> : <ChevronRight width={18} />}
+        </button>
+      ))}
     </div>
   )
 }

@@ -154,7 +154,7 @@ def save_banner(
     dest: str,
     width: int = 2400,
     ratio: float = 3.0,
-    safe: float = 0.66,
+    safe: float = 0.58,
     quality: int = 80,
 ) -> None:
     """A page banner, re-framed so its subject survives a wide title bar.
@@ -177,8 +177,11 @@ def save_banner(
        crop keeping at least that fraction therefore always holds the whole
        bottle, whatever the header's proportions turn out to be.
 
-    `safe` is set against the tightest crop the header can produce, which is
-    about 0.70 once its height is capped to the viewport. See PageHeader.
+    `safe` is set below the tightest crop the header can produce, which measures
+    0.688 at its most extreme, a wide and short window. The margin is deliberate:
+    the subject band is found by a detector, and a detector that is a little out
+    on one photograph should cost some breathing room rather than the base of a
+    bottle. See PageHeader for where 0.688 comes from.
     """
     from PIL import ImageFilter
 
@@ -197,18 +200,37 @@ def save_banner(
     top, bottom = max(0.0, top - 0.02), min(1.0, bottom + 0.02)
     span = max(bottom - top, 0.05)
 
-    # Scale so the subject fills at most `safe` of the canvas. Never enlarge
-    # past filling the canvas: that would only throw source away.
-    scale = min(1.0, safe / span)
+    # Scale and place so the subject ends up centred and no larger than `safe`
+    # of the canvas height.
+    #
+    # Three limits, and the smallest wins:
+    #
+    #   safe / span     the subject must fit inside the safe band
+    #   0.5 / mid       centring must not push the frame's top off the canvas
+    #   0.5 / (1 - mid) nor its bottom
+    #
+    # The last two are what the first version of this got wrong. It scaled by
+    # the first limit alone, which often left the scale at 1.0, and a frame
+    # already filling the canvas has nowhere to shift to. The offset was then
+    # clamped back to zero and the subject stayed exactly where it started: the
+    # For Her bottle sat at 0.26 to 0.90 of the frame, so a wide crop took its
+    # base off. Solving for all three means there is always room to move.
+    subject_mid = (top + bottom) / 2
+    scale = min(
+        1.0,
+        safe / span,
+        0.5 / max(subject_mid, 1e-6),
+        0.5 / max(1.0 - subject_mid, 1e-6),
+    )
+
     inner_h = round(height * scale)
     inner_w = round(im.width * inner_h / im.height)
     inner = im.resize((inner_w, inner_h), Image.LANCZOS)
 
-    # Offset so the subject's own centre lands on the canvas centre, then keep
-    # the frame inside the canvas so no edge of it is left floating in blur.
-    subject_mid = (top + bottom) / 2
+    # The subject's own centre on the canvas centre, and the frame stays inside
+    # the canvas because the scale above guaranteed it fits.
     offset_y = round(height / 2 - subject_mid * inner_h)
-    offset_y = max(min(offset_y, 0), height - inner_h) if inner_h >= height else max(0, min(offset_y, height - inner_h))
+    offset_y = max(0, min(offset_y, height - inner_h))
     offset_x = (width - inner_w) // 2
 
     cover = max(width / im.width, height / im.height)

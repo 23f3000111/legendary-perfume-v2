@@ -133,10 +133,26 @@ export default function Footer() {
       </div>
 
       <div className="u-container relative flex flex-col items-center justify-between gap-4 border-t border-ivory/10 py-6 text-xs text-ivory/45 sm:flex-row">
-        <p>© 2026 Legendary Perfume · Crafted in Malaysia</p>
-        <div className="flex items-center gap-3 tracking-[0.14em] uppercase text-[0.62rem]">
+        <p className="text-center sm:text-left">© 2026 Legendary Perfume · Crafted in Malaysia</p>
+        <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[0.62rem] uppercase tracking-[0.14em]">
           <span>Visa</span><span>Mastercard</span><span>GrabPay</span><span>Touch ’n Go</span><span>Apple Pay</span>
         </div>
+      </div>
+
+      {/* The studio's credit. Asked for explicitly, and set brighter than the
+          rest of this bar so it is legible rather than technically present. */}
+      <div className="u-container relative border-t border-ivory/10 py-5 text-center">
+        <p className="text-[0.68rem] uppercase tracking-[0.18em] text-ivory/60">
+          Designed and developed by{' '}
+          <a
+            href="https://www.imsuyaglobal.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-medium text-gold underline decoration-gold/40 underline-offset-4 transition hover:text-ivory hover:decoration-ivory/60"
+          >
+            Imsuya Global
+          </a>
+        </p>
       </div>
     </footer>
   )

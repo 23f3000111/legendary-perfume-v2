@@ -124,3 +124,19 @@ export const Facebook = (p: P) => (
 export const TikTok = (p: P) => (
   <svg {...base(p)}><path d="M14 4c.3 2 1.6 3.4 3.7 3.6v2.5c-1.2 0-2.4-.4-3.4-1v5.2A4.9 4.9 0 1 1 9.5 9.4v2.6a2.3 2.3 0 1 0 1.9 2.3V4H14Z" /></svg>
 )
+
+/** A filled star, for the review ratings. */
+export const Star = (p: P) => (
+  <svg viewBox="0 0 24 24" fill="currentColor" width={p.width ?? 20} className={p.className} aria-hidden>
+    <path d="M12 2.6l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3-5.8 3 1.1-6.5L2.6 9.4l6.5-.9L12 2.6z" />
+  </svg>
+)
+
+/** Points back along a rail. */
+export const ChevronLeft = (p: P) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"
+       strokeLinecap="round" strokeLinejoin="round"
+       width={p.width ?? 20} className={p.className} aria-hidden>
+    <path d="M15 18l-6-6 6-6" />
+  </svg>
+)

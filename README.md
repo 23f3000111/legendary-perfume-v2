@@ -241,6 +241,18 @@ Two notes for the client on this round:
   confirming: RM 79 (was RM 99) for a 15ml Wish, RM 68 (was RM 98) for the
   3 Wishes Travel Kit, RM 189 (was RM 229) for a 50ml Spirit II.
 
+## Revision 6
+
+| Page | Change |
+| --- | --- |
+| Site wide | `color-scheme: light` declared, so a phone in dark mode stops inventing its own dark version of a design that is light by intent. This is what turned the porcelain bands muddy on iOS Safari |
+| Site wide | No horizontal overflow on any page, checked across iPhone 13, iPhone SE, Pixel 7 and iPad Mini |
+| Mobile nav | Rebuilt to the client's reference: a compact list where Fragrances, Collections and Customer Care expand in place, one at a time, with the concierge pinned at the foot. The old drawer was a dozen display-size links that scrolled past the fold |
+| Home | The review wall was set in CSS columns, which fill downward before they wrap, so the reading order ran down and back up and the columns ended ragged. It is a grid of equal cards now, with the star rating each review carried, and a snap scroller below `sm` |
+| Our Story | The Journey no longer squeezes eleven panels into one row. Each card keeps its size and the rail drifts endlessly, pausing on hover with an arrow at each end |
+| Shop | For Her and For Him re-cut a third time. The re-centring had never actually run: where the scale worked out to 1.0 there was no room to shift the frame and the offset was clamped back to zero, leaving the For Her bottle at 0.26 to 0.90 of the canvas. Verified by reading the built files off a grid rather than by re-detecting |
+| Footer | "Designed and developed by Imsuya Global", linked, on its own line |
+
 ## Notes
 
 - Prices are in **RM (MYR)**.

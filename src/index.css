@@ -2,6 +2,28 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  /* Match the meta tag. Between them these stop a phone in dark mode from
+     auto darkening a design that is light by intent, which is what made the
+     porcelain sections read as muddy brown on iOS Safari. */
+  :root {
+    color-scheme: light;
+  }
+
+  /* iOS Safari inflates text in a column it decides is too narrow, which
+     breaks the type scale on the shop grid and the review wall. */
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* No horizontal rubber banding on a phone, whatever a section does. */
+  html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+}
+
 /* ============================================================
    LEGENDARY — Heritage Luxe design system
    ============================================================ */
@@ -290,4 +312,19 @@
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* The Journey rail's endless drift.
+   The track holds the milestone list twice, so travelling exactly half its
+   width lands on an identical frame and the reset is invisible. Runs on the
+   compositor, so it stays smooth while React is busy elsewhere, and the
+   component pauses it by toggling animation-play-state rather than by
+   re-rendering anything. */
+@keyframes journey-drift {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [style*="journey-drift"] { animation: none !important; }
 }

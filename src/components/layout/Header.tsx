@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useShop, cartCount } from '../../store/shop'
 import { useUI } from '../../store/ui'
 import { collections } from '../../data/collections'
-import { Search, User, Bag, Menu, Close, ArrowUpRight } from '../ui/icons'
+import { Search, User, Bag, Menu, Close, ArrowUpRight, ChevronDown, WhatsApp } from '../ui/icons'
 import { Wordmark } from '../ui/Wordmark'
 
 const megaShop = [
@@ -176,16 +176,73 @@ export default function Header() {
   )
 }
 
+/**
+ * The mobile menu.
+ *
+ * Client change: the old drawer was a flat run of a dozen display-size links,
+ * which scrolled past the fold and gave a collection the same weight as the
+ * contact page. This is the shape they asked for instead: a compact list where
+ * the sections that have children expand in place, so the whole menu fits on a
+ * phone screen and the hierarchy is visible rather than flattened.
+ */
+type Section =
+  | { label: string; to: string }
+  | { label: string; children: { label: string; to: string }[] }
+
+const MOBILE_NAV: Section[] = [
+  { label: 'Home', to: '/' },
+  {
+    label: 'Fragrances',
+    children: [
+      { label: 'All Fragrances', to: '/shop' },
+      { label: 'Bestsellers', to: '/shop?filter=bestsellers' },
+      { label: 'For Her', to: '/shop?filter=her' },
+      { label: 'For Him', to: '/shop?filter=him' },
+      { label: 'Gifts & Sets', to: '/shop?filter=gifts' },
+    ],
+  },
+  {
+    label: 'Collections',
+    children: collections.map((c) => ({ label: c.name, to: `/shop?collection=${c.id}` })),
+  },
+  { label: 'Stores', to: '/stores' },
+  { label: 'Our Story', to: '/about' },
+  { label: 'Journal', to: '/journal' },
+  {
+    label: 'Customer Care',
+    children: [
+      { label: 'Track My Order', to: '/track' },
+      { label: 'FAQ', to: '/faq' },
+      { label: 'Shipping Policy', to: '/shipping' },
+      { label: 'Return, Refund & Exchange', to: '/returns' },
+    ],
+  },
+  { label: 'Contact', to: '/contact' },
+]
+
 function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const links = [
-    { label: 'Home', to: '/' },
-    { label: 'All Fragrances', to: '/shop' },
-    ...collections.map((c) => ({ label: c.name, to: `/shop?collection=${c.id}` })),
-    { label: 'Stores', to: '/stores' },
-    { label: 'Our Story', to: '/about' },
-    { label: 'Journal', to: '/journal' },
-    { label: 'Contact', to: '/contact' },
-  ]
+  // One section open at a time, so the list never grows past the screen.
+  const [expanded, setExpanded] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!open) setExpanded(null)
+  }, [open])
+
+  /* A drawer that scrolls the page behind it is the classic phone annoyance,
+     and on iOS the body keeps its scroll position only if it is pinned rather
+     than merely hidden. */
+  useEffect(() => {
+    if (!open) return
+    const { body } = document
+    const y = window.scrollY
+    const prev = body.style.cssText
+    body.style.cssText += `position:fixed;top:${-y}px;left:0;right:0;overflow:hidden;`
+    return () => {
+      body.style.cssText = prev
+      window.scrollTo(0, y)
+    }
+  }, [open])
+
   return (
     <AnimatePresence>
       {open && (
@@ -196,30 +253,86 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
             onClick={onClose}
           />
           <motion.aside
-            className="fixed inset-y-0 left-0 z-[91] flex w-[84%] max-w-sm flex-col bg-ivory px-7 py-6 lg:hidden"
+            /* Full height on the small viewport unit, so a phone's own toolbars
+               cannot cut the bottom of the panel off. */
+            className="fixed inset-y-0 left-0 z-[91] flex h-[100dvh] w-[88%] max-w-sm flex-col bg-ivory lg:hidden"
             initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
           >
-            <div className="flex items-center justify-between text-ink">
-              <Wordmark height="1.05rem" />
-              <button onClick={onClose} aria-label="Close menu"><Close width={24} /></button>
+            <div className="flex items-center justify-between border-b border-line px-6 py-5 text-ink">
+              <Wordmark height="1rem" />
+              <button onClick={onClose} aria-label="Close menu" className="-mr-2 p-2 text-ink">
+                <Close width={22} />
+              </button>
             </div>
-            <nav className="mt-10 flex flex-col gap-1">
-              {links.map((l, i) => (
-                <motion.div
-                  key={l.to + l.label}
-                  initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.06 * i + 0.1 }}
-                >
-                  <Link to={l.to} onClick={onClose} className="block border-b border-line py-3.5 font-display text-2xl text-ink">
-                    {l.label}
-                  </Link>
-                </motion.div>
-              ))}
+
+            <nav className="flex-1 overflow-y-auto overscroll-contain">
+              {MOBILE_NAV.map((section) => {
+                const isOpen = expanded === section.label
+
+                if ('to' in section) {
+                  return (
+                    <Link
+                      key={section.label}
+                      to={section.to}
+                      onClick={onClose}
+                      className="flex items-center justify-between border-b border-line/70 px-6 py-4 text-[0.95rem] text-ink transition active:bg-sand"
+                    >
+                      {section.label}
+                    </Link>
+                  )
+                }
+
+                return (
+                  <div key={section.label} className="border-b border-line/70">
+                    <button
+                      onClick={() => setExpanded(isOpen ? null : section.label)}
+                      aria-expanded={isOpen}
+                      className="flex w-full items-center justify-between px-6 py-4 text-left text-[0.95rem] text-ink transition active:bg-sand"
+                    >
+                      {section.label}
+                      <ChevronDown
+                        width={16}
+                        className={`shrink-0 text-smoke transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`}
+                      />
+                    </button>
+                    <motion.div
+                      initial={false}
+                      animate={{ height: isOpen ? 'auto' : 0, opacity: isOpen ? 1 : 0 }}
+                      transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+                      className="overflow-hidden bg-porcelain"
+                    >
+                      <ul className="py-1">
+                        {section.children.map((child) => (
+                          <li key={child.to + child.label}>
+                            <Link
+                              to={child.to}
+                              onClick={onClose}
+                              className="block py-2.5 pl-10 pr-6 text-sm text-ink-soft transition active:text-ink"
+                            >
+                              {child.label}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </motion.div>
+                  </div>
+                )
+              })}
             </nav>
-            <a href="https://api.whatsapp.com/send/?phone=%2B60193836633" target="_blank" rel="noreferrer" className="btn-gold mt-auto justify-center">
-              Chat with a Concierge
-            </a>
+
+            {/* Pinned, so the way to reach a person is always in reach and the
+                list scrolls under it rather than pushing it away. */}
+            <div className="border-t border-line px-6 py-4">
+              <a
+                href="https://api.whatsapp.com/send/?phone=%2B60193836633"
+                target="_blank"
+                rel="noreferrer"
+                className="btn-gold w-full justify-center gap-2 !py-3.5"
+              >
+                <WhatsApp width={16} /> Chat with a Concierge
+              </a>
+            </div>
           </motion.aside>
         </>
       )}

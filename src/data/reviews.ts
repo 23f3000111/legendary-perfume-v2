@@ -2,6 +2,11 @@ export interface Review {
   quote: string
   author: string
   product?: string
+  /**
+   * Stars, as left on the platform. Every review the client supplied was a
+   * five, so that is the default rather than something invented per entry.
+   */
+  rating?: number
   /** Deep link to the review on the platform it was left on. */
   href?: string
 }
