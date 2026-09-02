@@ -17,9 +17,20 @@
     text-size-adjust: 100%;
   }
 
-  /* No horizontal rubber banding on a phone, whatever a section does. */
+  /* No horizontal rubber banding on a phone, whatever a section does.
+     
+     `clip` rather than `hidden`, and this matters more than it looks.
+     `overflow-x: hidden` turns the element into a scroll container, and a
+     scroll container between the page and a `position: sticky` child stops
+     that child sticking at all. It silently unpinned the Four worlds rail:
+     the pan still had its full scroll height reserved, but the panel scrolled
+     away with the page and left a screen of empty ink behind it.
+
+     `clip` prevents the same overflow without creating a scroll container, so
+     sticky keeps working. Safari 15 and older ignore it and simply allow the
+     overflow, which is the better failure of the two. */
   html, body {
-    overflow-x: hidden;
+    overflow-x: clip;
     max-width: 100%;
   }
 }
@@ -55,7 +66,8 @@
   body {
     @apply bg-ivory text-ink font-sans;
     font-weight: 400;
-    overflow-x: hidden;
+    /* See the note above: hidden here would break sticky just as surely. */
+    overflow-x: clip;
   }
 
   ::selection {
