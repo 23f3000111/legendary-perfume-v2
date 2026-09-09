@@ -108,40 +108,61 @@ def save_webp(src: str, dest: str, max_side: int, quality: int = 82, keep_alpha:
     write(im, dest, quality=quality)
 
 
+# The concierge launcher's gold, as Concierge.tsx sets it:
+# linear-gradient(135deg, #CBAA5D, #B08D3E 55%, #8A6D2A).
+CONCIERGE_GOLD = [(0.0, (203, 170, 93)), (0.55, (176, 141, 62)), (1.0, (138, 109, 42))]
+
+
 def save_favicons(src: str) -> None:
-    """The browser tab icon, from the client's Logo-Icon.
+    """The browser tab icon: the concierge launcher, drawn square.
 
     Revision 7, "amend distorted logo on tab": the icon was
-    `public/assets/logo.avif`, a 352x52 wordmark, and a tab slot is square. A
-    browser fills that slot by squashing, which is the distortion the client
-    saw. So the client's crown mark is composited onto a square ink ground at
-    its own proportions instead, and nothing is stretched at any size.
+    `public/assets/logo.avif`, a 352x52 wordmark, and a tab slot is square, so
+    the browser squashed it. That is the distortion the client saw.
 
-    The crown is 4.4:1, so it is set close to the full width. A comfortable
-    margin looks better at 512px and turns the three peaks into three dots at
-    the 16px a tab actually paints.
+    The client then asked for the tab to carry what the chat launcher carries,
+    the white bottle on the house gold, so this composites exactly that: the
+    same three stop gradient running corner to corner, with `src`, the
+    launcher's own icon-perfume, laid over it in white.
+
+    Two differences from the launcher, both because a tab is tiny. The ground
+    fills the square rather than a circle, since a circle at 16px spends its
+    corners on nothing. And the bottle takes 64% of the height rather than the
+    launcher's 50%: at that size the margin is what disappears first.
     """
-    ink = (28, 24, 21, 255)
-    ivory = (233, 230, 224)
+    bottle = Image.open(src).convert("RGBA")
+    bottle = bottle.crop(bottle.getchannel("A").getbbox())
 
-    mark = Image.open(src).convert("RGBA")
-    mark = mark.crop(mark.getchannel("A").getbbox())
+    def ground(side: int) -> Image.Image:
+        """The 135deg gradient, interpolated along the top-left/bottom-right
+        diagonal so the corners land on the end stops as CSS puts them."""
+        import numpy as np
 
-    def square(side: int, pad: float) -> Image.Image:
-        canvas = Image.new("RGBA", (side, side), ink)
-        w = int(side * (1 - 2 * pad))
-        h = max(1, round(mark.height * w / mark.width))
-        art = mark.resize((w, h), Image.LANCZOS)
-        tint = Image.new("RGBA", art.size, ivory + (255,))
-        tint.putalpha(art.getchannel("A"))
-        canvas.alpha_composite(tint, ((side - w) // 2, (side - h) // 2))
+        # Distance along the diagonal, 0 at the top left corner and 1 at the
+        # bottom right, which is what a 135deg CSS gradient runs on.
+        ax = np.linspace(0, 1, side)
+        t = (ax[None, :] + ax[:, None]) / 2
+
+        stops = np.array([s for s, _ in CONCIERGE_GOLD])
+        cols = np.array([c for _, c in CONCIERGE_GOLD], dtype=float)
+        rgb = np.stack([np.interp(t, stops, cols[:, i]) for i in range(3)], axis=-1)
+        return Image.fromarray(rgb.round().astype("uint8"), "RGB").convert("RGBA")
+
+    def square(side: int, art_frac: float) -> Image.Image:
+        canvas = ground(side)
+        h = int(side * art_frac)
+        w = max(1, round(bottle.width * h / bottle.height))
+        art = bottle.resize((w, h), Image.LANCZOS)
+        white = Image.new("RGBA", art.size, (255, 255, 255, 255))
+        white.putalpha(art.getchannel("A"))
+        canvas.alpha_composite(white, ((side - w) // 2, (side - h) // 2))
         return canvas.convert("RGB")
 
     public = os.path.join(ROOT, "public")
-    square(512, 0.04).save(os.path.join(public, "favicon-512.png"), optimize=True)
+    square(512, 0.64).save(os.path.join(public, "favicon-512.png"), optimize=True)
     # Apple rounds and crops the corners itself, so this one keeps more air.
-    square(180, 0.07).save(os.path.join(public, "apple-touch-icon.png"), optimize=True)
-    square(256, 0.03).save(
+    square(180, 0.56).save(os.path.join(public, "apple-touch-icon.png"), optimize=True)
+    square(256, 0.68).save(
         os.path.join(public, "favicon.ico"), sizes=[(16, 16), (32, 32), (48, 48)]
     )
     print("  favicon.ico, favicon-512.png, apple-touch-icon.png")
@@ -988,7 +1009,9 @@ def main() -> int:
         save_webp(find("", needle, root=AMD6), f"store-{key}.webp", 900, quality=82)
 
     print("Tab icon")
-    save_favicons(find("", "logo-icon", root=AMD6))
+    # The same bottle the concierge launcher uses, which is what the client
+    # asked the tab to carry.
+    save_favicons(find(f"{HOME}/ICON/Perfume Icon", "perfume icon", ".png"))
 
     # 2026 has no photograph in the delivery, so its card carries the client's
     # own Bangunan Sultan Abdul Samad mark, which is what the milestone is

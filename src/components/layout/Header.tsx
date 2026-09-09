@@ -9,8 +9,10 @@ import { Search, User, Bag, Menu, Close, ArrowUpRight, ChevronDown, WhatsApp } f
 import { Wordmark } from '../ui/Wordmark'
 import SearchOverlay from '../SearchOverlay'
 
-const megaShop = [
-  { label: 'All Fragrances', to: '/shop' },
+// Client change, matching the footer: these four are hidden until All
+// Fragrances is pressed, since they are ways of looking at it rather than
+// destinations of their own.
+const megaShopFilters = [
   { label: 'Bestsellers', to: '/shop?filter=bestsellers' },
   { label: 'For Her', to: '/shop?filter=her' },
   { label: 'For Him', to: '/shop?filter=him' },
@@ -24,6 +26,9 @@ export default function Header() {
   const [mega, setMega] = useState(false)
   // Client note: "Search no function". It has one now.
   const [search, setSearch] = useState(false)
+  // The Shop column's dropdown inside the panel. Closed again each time the
+  // panel closes, so it always opens the way the client asked for.
+  const [megaShop, setMegaShop] = useState(false)
   const items = useShop((s) => s.items)
   const count = cartCount(items)
   const { openCart, toggleMenu, menuOpen, closeMenu, cartPulse } = useUI()
@@ -36,6 +41,8 @@ export default function Header() {
   }, [])
 
   useEffect(() => { closeMenu() }, [loc.pathname, closeMenu])
+
+  useEffect(() => { if (!mega) setMegaShop(false) }, [mega])
 
   const dark = isHome && !scrolled && !mega // light text over hero
   const solid = !dark
@@ -164,13 +171,38 @@ export default function Header() {
                 </div>
                 <div>
                   <p className="eyebrow mb-5">Shop</p>
-                  <ul className="space-y-3">
-                    {megaShop.map((l) => (
-                      <li key={l.to}>
-                        <Link to={l.to} onClick={() => setMega(false)} className="link-gold font-display text-lg text-ink">{l.label}</Link>
+                  {/* The footer's Shop column, in the panel. All Fragrances
+                      opens; the four filters sit under it behind a rule so the
+                      hierarchy is visible rather than flattened into five equal
+                      links. */}
+                  <button
+                    onClick={() => setMegaShop((v) => !v)}
+                    aria-expanded={megaShop}
+                    className="flex items-center gap-2 font-display text-lg text-ink transition hover:text-gold-deep"
+                  >
+                    All Fragrances
+                    <ChevronDown
+                      width={15}
+                      className={`shrink-0 text-gold transition-transform duration-300 ${megaShop ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+                  <motion.div
+                    initial={false}
+                    animate={{ height: megaShop ? 'auto' : 0, opacity: megaShop ? 1 : 0 }}
+                    transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+                    className="overflow-hidden"
+                  >
+                    <ul className="mt-3 space-y-3 border-l border-line pl-4">
+                      {megaShopFilters.map((l) => (
+                        <li key={l.to}>
+                          <Link to={l.to} onClick={() => setMega(false)} className="link-gold font-display text-lg text-ink">{l.label}</Link>
+                        </li>
+                      ))}
+                      <li>
+                        <Link to="/shop" onClick={() => setMega(false)} className="link-gold text-sm text-smoke">View every fragrance</Link>
                       </li>
-                    ))}
-                  </ul>
+                    </ul>
+                  </motion.div>
                 </div>
                 <Link to="/product/orchid" onClick={() => setMega(false)} className="group relative overflow-hidden">
                   <img src={asset('/assets/client/signature-orchid.webp')} alt="Orchid" className="h-56 w-full object-cover transition-transform duration-700 group-hover:scale-105" />
