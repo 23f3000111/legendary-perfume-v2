@@ -6,8 +6,12 @@ export interface Milestone {
   year: string
   title: string
   body: string
-  /** False where the house has no photograph for that year yet. */
-  art?: boolean
+  /**
+   * The card's picture. Omitted, the year's own `journey-<year>.webp` is used.
+   * A path names a different image, for a year whose photograph is not part of
+   * that set. `false` falls back to the house motif.
+   */
+  art?: boolean | string
 }
 
 /**
@@ -136,6 +140,37 @@ export default function JourneyCarousel({ milestones }: { milestones: Milestone[
     target.current += direction * step
   }, [])
 
+  // Which year the big label shows. The card under the pointer when there is
+  // one, and otherwise whichever is nearest the middle of the rail, so the
+  // label keeps pace with the drift rather than sitting on a stale year.
+  const [shownYear, setShownYear] = useState(milestones[0]?.year ?? '')
+
+  useEffect(() => {
+    if (active) {
+      const year = active.slice(0, active.lastIndexOf('-'))
+      setShownYear(year)
+      return
+    }
+    let frame = 0
+    const tick = () => {
+      const el = rail.current
+      if (el) {
+        const middle = el.scrollLeft + el.clientWidth / 2
+        let best: { year: string; distance: number } | null = null
+        for (const card of Array.from(el.children) as HTMLElement[]) {
+          const centre = card.offsetLeft + card.offsetWidth / 2
+          const distance = Math.abs(centre - middle)
+          const year = card.getAttribute('aria-label')?.slice(0, 4) ?? ''
+          if (year && (!best || distance < best.distance)) best = { year, distance }
+        }
+        if (best) setShownYear((prev) => (prev === best!.year ? prev : best!.year))
+      }
+      frame = requestAnimationFrame(tick)
+    }
+    frame = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(frame)
+  }, [active, milestones])
+
   return (
     <div
       className="group/rail relative mt-12"
@@ -143,6 +178,19 @@ export default function JourneyCarousel({ milestones }: { milestones: Milestone[
       onMouseLeave={() => { setPaused(false); setActive(null) }}
       onTouchStart={() => setPaused(true)}
     >
+      {/* Client layout: the year sits above the row, large and centred, and
+          changes with whichever card is being looked at. Set in Minion, as
+          every figure in this section is. Crossfaded rather than remounted,
+          which is what made the old one pop. */}
+      <p
+        aria-live="off"
+        className="mb-8 text-center font-minion text-[clamp(2.4rem,5vw,3.6rem)] font-normal leading-none text-ivory"
+      >
+        <span key={shownYear} className="inline-block animate-[fade-year_0.5s_ease]">
+          {shownYear}
+        </span>
+      </p>
+
       <div
         ref={rail}
         className="
@@ -167,28 +215,15 @@ export default function JourneyCarousel({ milestones }: { milestones: Milestone[
               `}
             >
               {m.art === false ? (
-                /* There is no photograph of the building in the delivery, and
-                   inventing one would be putting a picture of somewhere else
-                   under the house's name. So the card carries the client's own
-                   Bangunan Sultan Abdul Samad mark, which is what this year is
-                   about, over a gold ground with the house motif behind it. */
+                /* Nothing supplied for this year, so the house motif over a
+                   gold ground rather than a hole in the row. */
                 <div className="relative h-full w-full overflow-hidden bg-gradient-to-br from-[#8a6520] via-gold-deep to-ink">
                   <div className="peranakan absolute inset-0 opacity-20" style={{ color: '#E8C97A' }} />
-                  <div className="absolute left-1/2 top-[38%] h-44 w-44 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gold/30 blur-3xl" />
-                  <img
-                    src={asset('/assets/client/journey-2026-mark.webp')}
-                    alt=""
-                    loading="lazy"
-                    className={`absolute left-1/2 top-[36%] w-[62%] -translate-x-1/2 -translate-y-1/2 transition-all duration-700 ease-luxe ${
-                      isActive ? 'scale-105 opacity-95' : 'scale-100 opacity-80'
-                    }`}
-                    style={{ filter: 'brightness(0) invert(1)' }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-transparent to-ink/20" />
+                  <div className="absolute left-1/2 top-1/3 h-44 w-44 -translate-x-1/2 rounded-full bg-gold/30 blur-3xl" />
                 </div>
               ) : (
                 <img
-                  src={asset(`/assets/client/journey-${m.year}.webp`)}
+                  src={asset(typeof m.art === 'string' ? m.art : `/assets/client/journey-${m.year}.webp`)}
                   alt=""
                   loading="lazy"
                   className={`h-full w-full object-cover transition-all duration-700 ease-luxe ${

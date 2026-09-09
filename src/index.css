@@ -325,3 +325,11 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* The Journey's year label, changing without the pop the client objected to.
+   Only the opacity and a hair of travel; the element is keyed on the year, so
+   React swaps it and this plays on the new one. */
+@keyframes fade-year {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

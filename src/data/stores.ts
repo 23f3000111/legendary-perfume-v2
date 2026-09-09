@@ -43,6 +43,7 @@ export const stores: Store[] = [
     phone: '+60 11 6767 1888',
     hours: ['Daily · 10:00 to 22:00', 'Now open'],
     mapQuery: 'Parkson Elite Pavilion Kuala Lumpur, Jalan Bukit Bintang',
+    image: asset('/assets/client/store-pavilion-elite.webp'),
   },
   {
     id: 'genting',
@@ -74,6 +75,7 @@ export const stores: Store[] = [
     phone: '+60 19 281 2828',
     hours: ['Daily · 00:00 to 23:59', 'Now open'],
     mapQuery: 'Kuala Lumpur International Airport Terminal 1, Sepang, Selangor',
+    image: asset('/assets/client/store-klia-t1.webp'),
   },
   {
     id: 'klia-t2',
@@ -106,6 +108,7 @@ export const stores: Store[] = [
     phone: '+60 11 5867 7694',
     hours: ['Daily · 10:00 to 22:00', 'Now open'],
     mapQuery: 'Imago Shopping Mall, KK Times Square, Kota Kinabalu, Sabah',
+    image: asset('/assets/orchid-mirror.webp'),
   },
 ]
 

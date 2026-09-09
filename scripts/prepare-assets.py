@@ -108,6 +108,45 @@ def save_webp(src: str, dest: str, max_side: int, quality: int = 82, keep_alpha:
     write(im, dest, quality=quality)
 
 
+def save_favicons(src: str) -> None:
+    """The browser tab icon, from the client's Logo-Icon.
+
+    Revision 7, "amend distorted logo on tab": the icon was
+    `public/assets/logo.avif`, a 352x52 wordmark, and a tab slot is square. A
+    browser fills that slot by squashing, which is the distortion the client
+    saw. So the client's crown mark is composited onto a square ink ground at
+    its own proportions instead, and nothing is stretched at any size.
+
+    The crown is 4.4:1, so it is set close to the full width. A comfortable
+    margin looks better at 512px and turns the three peaks into three dots at
+    the 16px a tab actually paints.
+    """
+    ink = (28, 24, 21, 255)
+    ivory = (233, 230, 224)
+
+    mark = Image.open(src).convert("RGBA")
+    mark = mark.crop(mark.getchannel("A").getbbox())
+
+    def square(side: int, pad: float) -> Image.Image:
+        canvas = Image.new("RGBA", (side, side), ink)
+        w = int(side * (1 - 2 * pad))
+        h = max(1, round(mark.height * w / mark.width))
+        art = mark.resize((w, h), Image.LANCZOS)
+        tint = Image.new("RGBA", art.size, ivory + (255,))
+        tint.putalpha(art.getchannel("A"))
+        canvas.alpha_composite(tint, ((side - w) // 2, (side - h) // 2))
+        return canvas.convert("RGB")
+
+    public = os.path.join(ROOT, "public")
+    square(512, 0.04).save(os.path.join(public, "favicon-512.png"), optimize=True)
+    # Apple rounds and crops the corners itself, so this one keeps more air.
+    square(180, 0.07).save(os.path.join(public, "apple-touch-icon.png"), optimize=True)
+    square(256, 0.03).save(
+        os.path.join(public, "favicon.ico"), sizes=[(16, 16), (32, 32), (48, 48)]
+    )
+    print("  favicon.ico, favicon-512.png, apple-touch-icon.png")
+
+
 def subject_band(im: Image.Image, centre: float = 0.42, keep: float = 0.22) -> tuple[float, float]:
     """Where the product sits in a banner, top and bottom as fractions of height.
 
@@ -780,6 +819,13 @@ BANNERS_4 = {
     "for-him": ("", "banner photo_for him"),
 }
 
+# Revision 7: two store photographs the client sent for the counters that had
+# none. They go through the ordinary store treatment rather than the banner one.
+STORES_6 = {
+    "pavilion-elite": "pavilion kl_parkson elite",
+    "klia-t1":        "klia 1 eraman",
+}
+
 # Banners the client cropped themselves. These are wider than any title bar the
 # site produces, so `object-fit: cover` scales them by height and takes the crop
 # out of the width, and the bottle is never cut top or bottom. That is a better
@@ -936,6 +982,13 @@ def main() -> int:
     # Last, so a client-cropped banner wins over anything generated above.
     for key, needle in BANNERS_6.items():
         save_webp(find("", needle, root=AMD6), f"banner-{key}.webp", 2400, quality=82)
+
+    print("Store photographs")
+    for key, needle in STORES_6.items():
+        save_webp(find("", needle, root=AMD6), f"store-{key}.webp", 900, quality=82)
+
+    print("Tab icon")
+    save_favicons(find("", "logo-icon", root=AMD6))
 
     # 2026 has no photograph in the delivery, so its card carries the client's
     # own Bangunan Sultan Abdul Samad mark, which is what the milestone is

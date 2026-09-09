@@ -26,7 +26,7 @@ const timeline: Milestone[] = [
   { year: '2023', title: 'Expanding at KLIA2', body: 'Established our presence at KLIA Terminal 2, continuing to expand our reach in the global travel retail market.' },
   { year: '2024', title: 'Melaka Flagship', body: 'Opened our flagship doors on Jalan Hang Lekir, Melaka, breathing new life into a historic Peranakan shophouse through fine fragrance.' },
   { year: '2025', title: 'Cultural Revival and Expansion', body: 'Debuted our new counter in Genting Highlands while celebrating the release of the Nyonya Collection, weaving heritage notes into modern fine perfumery.' },
-  { year: '2026', title: 'Heritage Beyond Retail', body: 'Debuted at the historic Bangunan Sultan Abdul Samad, extending the house beyond retail into iconic cultural spaces that celebrate Malaysian identity and storytelling.', art: false },
+  { year: '2026', title: 'Heritage Beyond Retail', body: 'Debuted at the historic Bangunan Sultan Abdul Samad, extending the house beyond retail into iconic cultural spaces that celebrate Malaysian identity and storytelling.', art: '/assets/nyonya-heritage-house.webp' },
 ]
 
 const visionMission = [

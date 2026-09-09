@@ -7,6 +7,7 @@ import { useUI } from '../../store/ui'
 import { collections } from '../../data/collections'
 import { Search, User, Bag, Menu, Close, ArrowUpRight, ChevronDown, WhatsApp } from '../ui/icons'
 import { Wordmark } from '../ui/Wordmark'
+import SearchOverlay from '../SearchOverlay'
 
 const megaShop = [
   { label: 'All Fragrances', to: '/shop' },
@@ -21,6 +22,8 @@ export default function Header() {
   const isHome = loc.pathname === '/'
   const [scrolled, setScrolled] = useState(false)
   const [mega, setMega] = useState(false)
+  // Client note: "Search no function". It has one now.
+  const [search, setSearch] = useState(false)
   const items = useShop((s) => s.items)
   const count = cartCount(items)
   const { openCart, toggleMenu, menuOpen, closeMenu, cartPulse } = useUI()
@@ -71,7 +74,15 @@ export default function Header() {
 
             {/* Right icons */}
             <div className={`flex flex-1 items-center justify-end gap-4 md:gap-5 ${dark ? 'text-ivory' : 'text-ink'}`}>
-              <button className="hidden sm:block transition hover:text-gold" aria-label="Search"><Search width={20} /></button>
+              {/* Shown at every width now. A phone is where someone is most
+                  likely to reach for a search rather than browse the menu. */}
+              <button
+                onClick={() => { setMega(false); setSearch(true) }}
+                className="block transition hover:text-gold"
+                aria-label="Search"
+              >
+                <Search width={20} />
+              </button>
               <Link to="/checkout" className="hidden transition hover:text-gold sm:block" aria-label="Account"><User width={20} /></Link>
               <motion.button
                 key={cartPulse}
@@ -110,13 +121,18 @@ export default function Header() {
             >
               Home
             </NavLink>
-            <button
+            {/* Client change: hovering still opens the panel, but the word
+                itself is now a link. It was the only item in the bar that went
+                nowhere when pressed, which reads as broken rather than as a
+                menu. */}
+            <NavLink
+              to="/shop"
               onMouseEnter={() => setMega(true)}
-              onClick={() => setMega((v) => !v)}
+              onClick={() => setMega(false)}
               className="link-gold py-1"
             >
               FRAGRANCES
-            </button>
+            </NavLink>
             <NavLink to="/stores" className="link-gold py-1">Stores</NavLink>
             <NavLink to="/about" className="link-gold py-1">Our Story</NavLink>
             <NavLink to="/journal" className="link-gold py-1">Journal</NavLink>
@@ -169,6 +185,8 @@ export default function Header() {
           )}
         </AnimatePresence>
       </header>
+
+      <SearchOverlay open={search} onClose={() => setSearch(false)} />
 
       {/* Mobile drawer */}
       <MobileMenu open={menuOpen} onClose={closeMenu} />

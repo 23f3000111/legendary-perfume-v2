@@ -312,8 +312,9 @@ const WISH_NOTES: Record<WishKey, ScentNotes> = {
 
 /** The family each Wish falls into, read off its own note list. */
 const WISH_FAMILY: Record<WishKey, string> = {
-  i: 'Citrus Floral',
-  ii: 'Floral Amber',
+  // Revision 7: the client corrected the first two against their own sheet.
+  i: 'Floral',
+  ii: 'Woody Floral',
   iii: 'Fruity Floral',
 }
 

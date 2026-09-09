@@ -1,14 +1,18 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { WhatsApp, Instagram, Facebook, TikTok, ArrowRight, Check } from '../ui/icons'
+import { motion } from 'framer-motion'
+import { WhatsApp, Instagram, Facebook, TikTok, ArrowRight, Check, ChevronDown } from '../ui/icons'
 import { waLink } from '../../lib/concierge'
 import Particles from '../ui/Particles'
 import { Wordmark } from '../ui/Wordmark'
 
 // Client change: this column now mirrors the Shop menu rather than listing
 // collections, and every link resolves to a real destination.
-const shopLinks: [string, string][] = [
-  ['All Fragrances', '/shop'],
+//
+// Revision 7: the four filters below are hidden until All Fragrances is
+// pressed. Listed flat they read as five equal destinations, when four of them
+// are really ways of looking at the fifth.
+const shopFilters: [string, string][] = [
   ['Bestsellers', '/shop?filter=bestsellers'],
   ['For Her', '/shop?filter=her'],
   ['For Him', '/shop?filter=him'],
@@ -36,6 +40,9 @@ const careLinks: [string, string][] = [
 export default function Footer() {
   const [email, setEmail] = useState('')
   const [done, setDone] = useState(false)
+  // Closed to begin with: the client asked for the four filters to appear only
+  // when All Fragrances is pressed.
+  const [shopOpen, setShopOpen] = useState(false)
   // Client change: the newsletter sign-up appears on the contact page only.
   const showNewsletter = useLocation().pathname === '/contact'
 
@@ -106,11 +113,37 @@ export default function Footer() {
 
         <div>
           <p className="eyebrow text-ivory/50">Shop</p>
-          <ul className="mt-5 space-y-2.5 text-sm text-ivory/70">
-            {shopLinks.map(([label, to]) => (
-              <li key={label}><Link to={to} className="link-gold">{label}</Link></li>
-            ))}
-          </ul>
+          <div className="mt-5 text-sm text-ivory/70">
+            <button
+              onClick={() => setShopOpen((v) => !v)}
+              aria-expanded={shopOpen}
+              className="flex items-center gap-2 text-ivory transition hover:text-gold"
+            >
+              All Fragrances
+              <ChevronDown
+                width={14}
+                className={`shrink-0 text-gold transition-transform duration-300 ${shopOpen ? 'rotate-180' : ''}`}
+              />
+            </button>
+
+            {/* Indented behind a rule, so the four read as ways into All
+                Fragrances rather than as siblings of it. */}
+            <motion.div
+              initial={false}
+              animate={{ height: shopOpen ? 'auto' : 0, opacity: shopOpen ? 1 : 0 }}
+              transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+              className="overflow-hidden"
+            >
+              <ul className="mt-3 space-y-2.5 border-l border-ivory/20 pl-4">
+                {shopFilters.map(([label, to]) => (
+                  <li key={label}><Link to={to} className="link-gold">{label}</Link></li>
+                ))}
+                <li>
+                  <Link to="/shop" className="link-gold text-ivory/50">View every fragrance</Link>
+                </li>
+              </ul>
+            </motion.div>
+          </div>
         </div>
 
         <div>
@@ -132,32 +165,17 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="u-container relative flex flex-col items-center justify-between gap-4 border-t border-ivory/10 py-6 text-xs text-ivory/45 sm:flex-row">
+      {/* Revision 7: the studio credit that used to sit below this bar is gone
+          at the client's instruction. The concierge launcher floats over the
+          bottom right of the viewport, and this is the last line on the page
+          again, so the extra room below keeps the payment marks clear of it.
+          The launcher reaches about 84px up from the bottom edge at every
+          width, hence the 96px. */}
+      <div className="u-container relative flex flex-col items-center justify-between gap-4 border-t border-ivory/10 pb-24 pt-6 text-xs text-ivory/45 sm:flex-row">
         <p className="text-center sm:text-left">© 2026 Legendary Perfume · Crafted in Malaysia</p>
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[0.62rem] uppercase tracking-[0.14em]">
           <span>Visa</span><span>Mastercard</span><span>GrabPay</span><span>Touch ’n Go</span><span>Apple Pay</span>
         </div>
-      </div>
-
-      {/* The studio's credit. Asked for explicitly, and set brighter than the
-          rest of this bar so it is legible rather than technically present.
-
-          The concierge launcher floats at the bottom right of the viewport, and
-          this is the last line on the page, so on a phone the button sat over
-          the end of the link. The extra room below keeps the credit clear of
-          it, which is the whole point of the line. */}
-      <div className="u-container relative border-t border-ivory/10 pb-24 pt-5 text-center sm:pb-5">
-        <p className="text-[0.68rem] uppercase tracking-[0.18em] text-ivory/60">
-          Designed and developed by{' '}
-          <a
-            href="https://www.imsuyaglobal.com/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-medium text-gold underline decoration-gold/40 underline-offset-4 transition hover:text-ivory hover:decoration-ivory/60"
-          >
-            Imsuya Global
-          </a>
-        </p>
       </div>
     </footer>
   )
