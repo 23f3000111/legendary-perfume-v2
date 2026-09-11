@@ -52,7 +52,7 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
           <div className="peranakan pointer-events-none absolute inset-0 opacity-[0.05]" style={{ color: tone.hex }} />
           {off && (
             <span
-              className="absolute left-6 top-6 z-10 px-2.5 py-1 text-[0.62rem] font-medium uppercase tracking-[0.16em] text-ivory"
+              className="absolute left-4 top-4 z-10 px-2.5 py-1 text-[0.62rem] font-medium uppercase tracking-[0.16em] text-ivory"
               style={{ background: product.accent === 'graphite' ? '#1C1815' : tone.hex }}
             >
               {off}% off
@@ -60,36 +60,46 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
           )}
 
           {/* Lifestyle shot cross-fades to the box + bottle cut-out on hover.
-              Client amendment, ref lovemaya.co: the photograph is inset on all
-              four sides rather than bleeding to the tile's edge, so the accent
-              wash reads as a mount around it. The cut-out keeps a deeper inset
-              of its own, since it has no ground of its own to stand on. */}
-          <div className="relative aspect-[4/5] w-full p-3 sm:p-4">
+
+              Revision 8, "amend the visual images to fit the required
+              dimensions": fifteen of the eighteen lifestyle photographs are
+              square, and this frame was 4:5, so every one of them lost a fifth
+              of its width to the crop. That is what pressed the bottles against
+              the edges and cut the props off either side. The frame is square
+              now, matching the photographs and the product page's own gallery,
+              so the whole picture shows and the scene keeps its room on every
+              side. The three Nyonya shots are 4:5, and a square takes only
+              empty backdrop off their top and bottom.
+
+              The inset that revision 7 added is gone with it. It left the
+              photograph smaller than its tile and the name below out of line
+              with it; filling the tile puts the two on the same edge. */}
+          <div className="relative aspect-square w-full">
             <img
               src={product.image}
               alt={product.name}
               loading={index < 4 ? 'eager' : 'lazy'}
-              className="absolute inset-3 h-[calc(100%-1.5rem)] w-[calc(100%-1.5rem)] object-cover transition-opacity duration-700 ease-luxe group-hover:opacity-0 sm:inset-4 sm:h-[calc(100%-2rem)] sm:w-[calc(100%-2rem)]"
+              className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-luxe group-hover:opacity-0"
             />
             <img
               src={product.hoverImage}
               alt=""
               aria-hidden
               loading="lazy"
-              className="absolute inset-0 h-full w-full object-contain p-7 opacity-0 transition-opacity duration-700 ease-luxe group-hover:opacity-100 sm:p-8"
+              className="absolute inset-0 h-full w-full object-contain p-6 opacity-0 transition-opacity duration-700 ease-luxe group-hover:opacity-100"
             />
           </div>
 
           {/* Sold out sits over the tile rather than replacing the quick add,
               so the fragrance still reads as part of the house. */}
           {!now.inStock && (
-            <span className="absolute left-5 top-5 z-10 bg-ink/85 px-2.5 py-1 text-[0.62rem] uppercase tracking-[0.14em] text-ivory backdrop-blur">
+            <span className="absolute left-3 top-3 z-10 bg-ink/85 px-2.5 py-1 text-[0.62rem] uppercase tracking-[0.14em] text-ivory backdrop-blur">
               Sold out
             </span>
           )}
 
           {/* Quick add */}
-          <div className="absolute inset-x-6 bottom-6 translate-y-3 opacity-0 transition-all duration-500 ease-luxe group-hover:translate-y-0 group-hover:opacity-100">
+          <div className="absolute inset-x-3 bottom-3 translate-y-3 opacity-0 transition-all duration-500 ease-luxe group-hover:translate-y-0 group-hover:opacity-100">
             <button
               onClick={onAdd}
               disabled={!now.inStock}

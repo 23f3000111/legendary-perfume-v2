@@ -108,6 +108,29 @@ def save_webp(src: str, dest: str, max_side: int, quality: int = 82, keep_alpha:
     write(im, dest, quality=quality)
 
 
+def save_journal_nyonya(src: str) -> None:
+    """The Nyonya article's picture on the Journal page.
+
+    Revision 8, "need to amend this visual". The article used the collection's
+    square family shot, whose lower third is a baked in fade from the table to
+    charcoal. The Journal frames it at 4:3, and a centred 4:3 crop of a square
+    keeps that grey band while cutting the top off the Kebaya box, which is
+    what the client circled.
+
+    So the card gets its own 3:2 crop taken from the top of the frame. Measured
+    on the 1600px cover: the Kebaya box begins at about y=70, the bottles end at
+    about y=1000, and the table holds its colour until about y=1100 before
+    greying. A full width 3:2 crop ends at y=1067, so it keeps every box and
+    bottle whole and stops just above the fade. The collection cover itself is
+    left as it is, since the article's own banner still wants the square.
+    """
+    im = Image.open(src).convert("RGB")
+    im = im.crop((0, 0, im.width, round(im.width * 2 / 3)))
+    if im.width > 1600:
+        im = im.resize((1600, round(1600 * im.height / im.width)), Image.LANCZOS)
+    write(im, "journal-nyonya.webp", quality=84)
+
+
 # The concierge launcher's gold, as Concierge.tsx sets it:
 # linear-gradient(135deg, #CBAA5D, #B08D3E 55%, #8A6D2A).
 CONCIERGE_GOLD = [(0.0, (203, 170, 93)), (0.55, (176, 141, 62)), (1.0, (138, 109, 42))]
@@ -845,6 +868,9 @@ BANNERS_4 = {
 STORES_6 = {
     "pavilion-elite": "pavilion kl_parkson elite",
     "klia-t1":        "klia 1 eraman",
+    # Revision 8: the counter at Bangunan Sultan Abdul Samad, shared from the
+    # client's Google Drive and saved under this name.
+    "bsas":           "bangunan sultan abdul samad",
 }
 
 # Banners the client cropped themselves. These are wider than any title bar the
@@ -953,6 +979,9 @@ def main() -> int:
         # Revision 4 re-shot the Signature family photo.
         src = find4("", "home-signature") if key == "signature" else find(folder, needle)
         save_webp(src, f"collection-{key}.webp", 1600)
+
+    print("Journal cards")
+    save_journal_nyonya(find(*COLLECTION_COVERS["nyonya"]))
 
     print("Scented-memory cards")
     for key, (folder, needle) in PLACES.items():

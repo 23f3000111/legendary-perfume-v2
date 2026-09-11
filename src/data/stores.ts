@@ -46,6 +46,20 @@ export const stores: Store[] = [
     image: asset('/assets/client/store-pavilion-elite.webp'),
   },
   {
+    // Revision 8: missing from the list. The address is the client's; the
+    // photograph came from their Drive. No number or opening hours were given
+    // for this counter, so it carries the house line the other Kuala Lumpur
+    // counters share and no hours until the client sends them.
+    id: 'bsas',
+    name: 'Bangunan Sultan Abdul Samad',
+    region: 'Kuala Lumpur',
+    address: 'Jln Raja, Kuala Lumpur City Centre, 50050 Kuala Lumpur',
+    phone: '+60 11 6767 1888',
+    hours: ['Now open'],
+    mapQuery: 'Bangunan Sultan Abdul Samad, Jalan Raja, Kuala Lumpur',
+    image: asset('/assets/client/store-bsas.webp'),
+  },
+  {
     id: 'genting',
     name: 'Genting · Sky Avenue',
     region: 'Highlands',

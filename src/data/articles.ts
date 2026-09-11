@@ -25,6 +25,12 @@ export interface Article {
   readTime: string
   excerpt: string
   hero: string
+  /**
+   * The picture on the Journal page, where it differs from the hero. The hero
+   * runs as the article's wide banner; a card is a fixed frame, and a shot
+   * composed for one can crop badly in the other.
+   */
+  cardImage?: string
   /** Alt text for the hero image. */
   heroAlt: string
   body: Block[]
@@ -45,6 +51,10 @@ const entries: Article[] = [
     excerpt:
       'Inside the Peranakan culture that shaped the Nyonya Collection, and how a heritage of tiles, kebaya and kuih became three wearable Malaysian fragrances.',
     hero: asset('/assets/client/collection-nyonya.webp'),
+    // Revision 8: the square cover's lower third fades to charcoal, and the
+    // Journal's card crop kept that band. This is cut from the top of the same
+    // shot, with every box and bottle whole. See prepare-assets.py.
+    cardImage: asset('/assets/client/journal-nyonya.webp'),
     heroAlt: 'The three Nyonya Collection bottles beside their Peranakan patterned boxes',
     body: [
       {

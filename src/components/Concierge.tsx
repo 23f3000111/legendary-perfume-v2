@@ -40,6 +40,14 @@ export default function Concierge() {
     setInput('')
     setTyping(true)
     const reply = handle(clean)
+    // Revision 8: asking for a person goes straight to WhatsApp. It opens here,
+    // inside the tap, rather than after the typing pause below: a browser only
+    // lets a page open a new tab in direct response to a tap, and one opened a
+    // second later is blocked as a popup. The reply still lands with its
+    // button, for anybody whose browser blocked it anyway.
+    if (reply.handoff && reply.wa) {
+      window.open(waLink(reply.wa.text), '_blank', 'noopener,noreferrer')
+    }
     setTimeout(() => {
       setMsgs((m) => [...m, { role: 'bot', reply }])
       setTyping(false)

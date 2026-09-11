@@ -33,15 +33,19 @@ export default function Journal() {
       <section className="bg-ivory py-14 md:py-20">
         <div className="u-container">
           {/* Feature */}
+          {/* Revision 8, "need to amend this visual". The picture keeps its own
+              3:2 rather than stretching to the height of the text beside it:
+              on a tablet the copy runs taller than the picture, and stretching
+              turned the frame nearly square and cut the outer bottles off. */}
           <Link
             to={`/journal/${feature.slug}`}
-            className="group grid gap-8 overflow-hidden rounded-sm md:grid-cols-2 md:items-stretch"
+            className="group grid gap-8 overflow-hidden rounded-sm md:grid-cols-2 md:items-center"
           >
             <div className="overflow-hidden rounded-sm">
               <img
-                src={feature.hero}
+                src={feature.cardImage ?? feature.hero}
                 alt={feature.heroAlt}
-                className="aspect-[4/3] h-full w-full object-cover transition-transform duration-[1100ms] ease-luxe group-hover:scale-105"
+                className="aspect-[3/2] w-full object-cover transition-transform duration-[1100ms] ease-luxe group-hover:scale-105"
               />
             </div>
             <div className="flex flex-col justify-center">
@@ -64,7 +68,7 @@ export default function Journal() {
                 <Link to={`/journal/${post.slug}`} className="group block">
                   <div className="relative overflow-hidden rounded-sm">
                     <img
-                      src={post.hero}
+                      src={post.cardImage ?? post.hero}
                       alt={post.heroAlt}
                       className="aspect-[4/3] w-full object-cover transition-transform duration-[1100ms] ease-luxe group-hover:scale-105"
                     />

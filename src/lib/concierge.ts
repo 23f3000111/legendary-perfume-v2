@@ -29,6 +29,12 @@ export interface BotReply {
   products?: ProductRef[]
   wa?: { label: string; text: string }
   link?: { label: string; to: string }
+  /**
+   * Open WhatsApp straight away rather than offering a button for it. Only a
+   * reply to someone asking for a person sets this; the button still renders
+   * underneath, for a browser that blocks the new tab.
+   */
+  handoff?: boolean
 }
 
 function ref(id: string): ProductRef | null {
@@ -45,6 +51,17 @@ export const GREETING: BotReply = {
 
 const moodChips = moodList.map((m) => `Mood: ${m}`)
 
+/*
+ * Every pattern below matches whole words.
+ *
+ * Revision 8: pressing "Talk to a human" answered with a recommendation for
+ * Man, because the patterns matched anywhere inside a word and the "man" in
+ * "human" was tested before the request for a person was. The same flaw sent
+ * "woman" and "romantic" to Man, "where is my order" to the store locator, and
+ * anything containing "rm", like "warm" or "form", to the price list. Word
+ * boundaries fix the class of bug, and the request for a person is now tested
+ * first, since it is the one answer nobody should have to ask for twice.
+ */
 export function handle(input: string): BotReply {
   const raw = input.trim()
   const t = raw.toLowerCase()
@@ -53,14 +70,22 @@ export function handle(input: string): BotReply {
   const moodMatch = moodList.find((m) => t === `mood: ${m.toLowerCase()}`)
   if (moodMatch) return recommendByMood(moodMatch)
 
-  if (/find|scent|recommend|which perfume|help me choose|discover/.test(t)) {
+  if (/\b(human|humans|agent|person|someone|staff|whatsapp|speak|contact|call me|talk to|live chat)\b/.test(t)) {
+    return {
+      text: 'Of course. Opening WhatsApp now, where our team would love to help you personally. If it did not open, tap below.',
+      wa: { label: 'Chat on WhatsApp', text: 'Hi Legendary! I’d love some help choosing a fragrance.' },
+      handoff: true,
+    }
+  }
+
+  if (/\b(find|scent|scents|recommend|discover)\b|which perfume|help me choose/.test(t)) {
     return {
       text: 'Lovely. Tell me the mood you’re after and I’ll match you to a scent from the house.',
       chips: moodChips,
     }
   }
 
-  if (/gift|present|for my|anniversary|birthday|wrap/.test(t)) {
+  if (/\b(gift|gifts|gifting|present|anniversary|birthday|wrap|wrapping|for my)\b/.test(t)) {
     return {
       text:
         'A beautiful choice. Our sets arrive with complimentary gift wrapping. The 3 Wishes trio is our most loved gift, alcohol free and safe for every skin. Spirit is a fresh discovery trio for those who love to explore.',
@@ -69,16 +94,7 @@ export function handle(input: string): BotReply {
     }
   }
 
-  if (/store|boutique|shop near|location|where|visit|counter|map|direction/.test(t)) {
-    return {
-      text:
-        'You will find Legendary counters across Malaysia at Pavilion KL, KLCC Isetan, Genting Sky Avenue, our Melaka flagship, and the KLIA and Langkawi airports. Each with live maps and directions.',
-      link: { label: 'Open store locator', to: '/stores' },
-      chips: ['Talk to a human'],
-    }
-  }
-
-  if (/track|order|delivery|shipping|where is my|parcel|refund|return/.test(t)) {
+  if (/\b(track|tracking|order|orders|delivery|shipping|parcel|refund|return|returns|exchange)\b|where is my/.test(t)) {
     return {
       text:
         'I can help with that. For live order tracking, returns or exchanges, our team will assist you personally on WhatsApp. Tap below and share your order number.',
@@ -89,7 +105,16 @@ export function handle(input: string): BotReply {
     }
   }
 
-  if (/alcohol|ingredient|skin|safe|sensitive/.test(t)) {
+  if (/\b(store|stores|boutique|boutiques|location|locations|where|visit|counter|counters|map|directions?)\b|near me|shop near/.test(t)) {
+    return {
+      text:
+        'You will find Legendary counters across Malaysia: Pavilion KL, KLCC Isetan, Bangunan Sultan Abdul Samad, Genting Sky Avenue, our Melaka flagship, the KLIA and Langkawi airports, and Imago in Kota Kinabalu. Each has a live map and directions.',
+      link: { label: 'Open store locator', to: '/stores' },
+      chips: ['Talk to a human'],
+    }
+  }
+
+  if (/\b(alcohol|ingredient|ingredients|skin|safe|sensitive)\b/.test(t)) {
     return {
       text:
         'The 3 Wishes trio is fully alcohol free and gentle enough for sensitive skin, so it works as a soft everyday indulgence.',
@@ -97,18 +122,18 @@ export function handle(input: string): BotReply {
     }
   }
 
-  if (/orchid/.test(t))
+  if (/\borchids?\b/.test(t))
     return single('orchid', 'Orchid is our signature, the scent that began the house.')
-  if (/man|him|masculine|husband|boyfriend/.test(t))
+  if (/\b(man|men|him|male|masculine|husband|boyfriend)\b/.test(t))
     return single('man', 'For him, Man is citrus and spice grounded in dark woods: assured and magnetic.')
-  if (/nyonya|peranakan|heritage|kebaya|ondeh/.test(t))
+  if (/\b(nyonya|peranakan|heritage|kebaya|ondeh)\b/.test(t))
     return {
       text:
         'The Nyonya Collection reimagines Peranakan heritage as scent, from embroidered kebaya florals to the gula melaka sweetness of ondeh ondeh.',
       products: ['kebaya-blooms', 'ondeh-delights', 'nyonya-aromatic'].map(ref).filter(Boolean) as ProductRef[],
     }
 
-  if (/price|cost|how much|rm|cheap|expensive/.test(t)) {
+  if (/\b(price|prices|cost|rm|cheap|expensive)\b|how much/.test(t)) {
     return {
       text:
         'Our eaux de parfum begin at RM 149, with sets from RM 179. Many pieces are on offer right now. Shall I show you the collection?',
@@ -116,14 +141,7 @@ export function handle(input: string): BotReply {
     }
   }
 
-  if (/human|agent|person|talk|whatsapp|call|contact|speak/.test(t)) {
-    return {
-      text: 'Of course. Our team is a tap away on WhatsApp and would love to help you personally.',
-      wa: { label: 'Chat on WhatsApp', text: 'Hi Legendary! I’d love some help choosing a fragrance.' },
-    }
-  }
-
-  if (/hi|hello|hey|salam|good (morning|afternoon|evening)/.test(t)) {
+  if (/\b(hi|hello|hey|salam)\b|good (morning|afternoon|evening)/.test(t)) {
     return GREETING
   }
 

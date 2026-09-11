@@ -12,21 +12,25 @@ import { SITE } from '../lib/seo'
 /**
  * The Journey, rewritten from the client's Our Story copy sheet.
  *
- * Revision 5: every panel takes the client's own title and wording. 2019 was
- * struck out on their sheet and is gone. 2026 is new and has no photograph in
- * the delivery yet, so its panel falls back to the house pattern; send the
- * Bangunan Sultan Abdul Samad shot and it picks it up with no code change.
+ * Revision 5: every panel takes the client's own title and wording.
+ *
+ * Revision 8: 2019 was struck out on that sheet and had been removed. The
+ * client's newer document asks for it back, with this wording, so it is.
+ * 2026 now carries the client's photograph of the counter at Bangunan Sultan
+ * Abdul Samad, which is what that year is about; it is the same picture the
+ * store locator uses for that counter.
  */
 const timeline: Milestone[] = [
   { year: '2015', title: 'A House is Born', body: 'Founded in this year, marking the beginning of a captivating journey in fine fragrance, inspired by Malaysia’s blooming orchids.' },
   { year: '2016', title: 'Into the Department Store', body: 'Marking our retail expansion with an official presence in Parkson, bringing our fine fragrances to department store shoppers nationwide.' },
   { year: '2017', title: 'Taking Flight to the World', body: 'Debuted in travel retail with Valiram at KLIA Terminal 1, capturing the hearts of global travellers across Asia and beyond.' },
   { year: '2018', title: 'Expanding Beauty Retail', body: 'Partnered with SaSa Malaysia, establishing a nationwide presence to bring our signature scents closer to beauty enthusiasts everywhere.' },
+  { year: '2019', title: 'Top Selling Brand', body: 'Achieved top selling brand status at Parkson, reflecting strong customer demand.' },
   { year: '2022', title: 'Soaring to New Heights', body: 'Partnered with AirAsia to take Legendary to the skies, quickly ranking among the top three best selling fragrance brands on board.' },
   { year: '2023', title: 'Expanding at KLIA2', body: 'Established our presence at KLIA Terminal 2, continuing to expand our reach in the global travel retail market.' },
   { year: '2024', title: 'Melaka Flagship', body: 'Opened our flagship doors on Jalan Hang Lekir, Melaka, breathing new life into a historic Peranakan shophouse through fine fragrance.' },
   { year: '2025', title: 'Cultural Revival and Expansion', body: 'Debuted our new counter in Genting Highlands while celebrating the release of the Nyonya Collection, weaving heritage notes into modern fine perfumery.' },
-  { year: '2026', title: 'Heritage Beyond Retail', body: 'Debuted at the historic Bangunan Sultan Abdul Samad, extending the house beyond retail into iconic cultural spaces that celebrate Malaysian identity and storytelling.', art: '/assets/nyonya-heritage-house.webp' },
+  { year: '2026', title: 'Heritage Beyond Retail', body: 'Debuted at the historic Bangunan Sultan Abdul Samad, extending the house beyond retail into iconic cultural spaces that celebrate Malaysian identity and storytelling.', art: '/assets/client/store-bsas.webp' },
 ]
 
 const visionMission = [

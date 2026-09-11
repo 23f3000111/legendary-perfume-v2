@@ -61,6 +61,13 @@ export default function PageHeader({
      keep the visible band wider than that. An article's header keeps its old
      size, since its photograph is a normal frame rather than a 3:1 banner. */
   const depth = size === 'compact' ? '' : 'min-h-[max(19rem,min(28vw,62svh))]'
+
+  /* Only the page banners have a phone crop beside them, as
+     banner-<page>-sm.webp from prepare-assets.py. An article passes its own
+     photograph, which has none, and a <source> that names a missing file is
+     not a fallback: the browser takes it anyway, and on a phone the header
+     was left with no picture at all. So it is only offered for a banner. */
+  const phoneCrop = image && /\/banner-[^/]+\.webp$/.test(image) ? image.replace(/\.webp$/, '-sm.webp') : null
   return (
     <header
       className={`relative flex flex-col justify-center overflow-hidden bg-ink pb-12 pt-28 text-ivory md:pb-16 md:pt-36 ${depth}`}
@@ -72,10 +79,10 @@ export default function PageHeader({
               and filling the second with the first magnifies it four times over:
               a narrow slice of an enormous bottle. So a phone is served a frame
               cropped for it, generated beside the wide one in
-              prepare-assets.py. A banner with no phone crop simply falls back
-              to the wide one. */}
+              prepare-assets.py. Anything else, an article's photograph, is
+              served as it is at every width; see phoneCrop above. */}
           <picture className="absolute inset-0 h-full w-full">
-            <source media="(max-width: 640px)" srcSet={image.replace(/\.webp$/, '-sm.webp')} />
+            {phoneCrop && <source media="(max-width: 640px)" srcSet={phoneCrop} />}
             <img src={image} alt="" aria-hidden className="h-full w-full object-cover" />
           </picture>
           {/* Black transparency so the title always reads. */}
