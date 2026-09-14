@@ -34,10 +34,6 @@ export const productFaq: FaqItem[] = [
     q: 'What is your returns policy?',
     a: `We accept returns for faulty, damaged or incorrect items. Contact us on WhatsApp at ${WHATSAPP_DISPLAY} within 48 hours of arrival with your platform of purchase, item name, reason and a photo. Items must be unused, with tags and in original packaging. Approved refunds are issued to the original payment method within 14 working days. Sale items cannot be returned.`,
   },
-  {
-    q: 'Do you exchange items?',
-    a: 'For the quickest resolution, return the original item for a refund and place a separate order for the piece you would prefer. Exchanges are also complimentary at any Legendary boutique across Malaysia.',
-  },
 ]
 
 /**
@@ -288,10 +284,6 @@ export const faqSections: FaqSection[] = [
       {
         q: 'What is your returns policy?',
         a: `We accept returns for faulty, damaged or incorrect items. Contact us on WhatsApp at ${WHATSAPP_DISPLAY} within 48 hours of arrival with your order reference, item name, reason and a photo. Items must be unused, with tags and in original packaging. Approved refunds are issued to the original payment method within 14 working days. Sale items cannot be returned.`,
-      },
-      {
-        q: 'Do you exchange items?',
-        a: 'For the quickest resolution, return the original item for a refund and place a separate order for the piece you would prefer. Exchanges are also complimentary at any Legendary boutique across Malaysia.',
       },
     ],
   },

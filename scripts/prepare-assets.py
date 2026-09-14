@@ -182,13 +182,22 @@ def save_favicons(src: str) -> None:
         return canvas.convert("RGB")
 
     public = os.path.join(ROOT, "public")
-    square(512, 0.64).save(os.path.join(public, "favicon-512.png"), optimize=True)
+
+    # Revision 9: the crown icon this replaced was still showing beside the
+    # site in Google's results. Nothing was wrong with the files, which have
+    # carried the bottle since revision 7; Google caches a favicon against its
+    # URL and had not refetched. So the PNG icons are published at names it has
+    # never seen, which it has to fetch rather than reuse, and at 192px, a
+    # multiple of the 48px Google asks for. The .ico keeps its name, since a
+    # browser asks for /favicon.ico whether or not the page mentions it.
+    square(192, 0.64).save(os.path.join(public, "icon-192.png"), optimize=True)
+    square(512, 0.64).save(os.path.join(public, "icon-512.png"), optimize=True)
     # Apple rounds and crops the corners itself, so this one keeps more air.
     square(180, 0.56).save(os.path.join(public, "apple-touch-icon.png"), optimize=True)
     square(256, 0.68).save(
         os.path.join(public, "favicon.ico"), sizes=[(16, 16), (32, 32), (48, 48)]
     )
-    print("  favicon.ico, favicon-512.png, apple-touch-icon.png")
+    print("  favicon.ico, icon-192.png, icon-512.png, apple-touch-icon.png")
 
 
 def subject_band(im: Image.Image, centre: float = 0.42, keep: float = 0.22) -> tuple[float, float]:

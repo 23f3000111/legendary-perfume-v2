@@ -2,15 +2,33 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <!-- Client note, "amend distorted logo on tab": the icon used to be the
-         wordmark, a 352×52 strip, and a browser tab is a square. Squashing one
-         into the other is what looked broken. The client then asked the tab to
-         carry what the concierge launcher carries, so these are that same white
-         bottle on the house gold, composited square by
-         scripts/prepare-assets.py. Nothing is stretched at any size. -->
-    <link rel="icon" href="/favicon.ico" sizes="32x32" />
-    <link rel="icon" type="image/png" href="/favicon-512.png" sizes="512x512" />
+    <!--
+      The tab icon. Client note, "amend distorted logo on tab": it used to be
+      the wordmark, a 352×52 strip, and a tab slot is square, so the browser
+      squashed it. The client then asked the tab to carry what the concierge
+      launcher carries, so these are that same white bottle on the house gold,
+      composited square by scripts/prepare-assets.py, unstretched at any size.
+
+      Revision 9: the crown that briefly stood in between the two was still
+      showing beside the site in Google's results. The files were never the
+      problem: they have carried the bottle since revision 7, and /favicon.ico
+      serves it today. Google caches a favicon against its URL, and it had not
+      fetched ours again.
+
+      So the PNG icons are published under names Google has never seen, which
+      it has to fetch rather than serve from its own copy, and they are listed
+      first. 192 is a multiple of the 48px Google asks for. The .ico keeps its
+      name and comes last: a browser requests /favicon.ico whether or not the
+      page mentions it, so that URL has to stay where it is.
+
+      Google refreshes this when it next crawls the home page, which can take
+      days. Requesting indexing for the home page in Search Console is what
+      brings it forward; there is nothing further the site itself can do.
+    -->
+    <link rel="icon" type="image/png" href="/icon-192.png" sizes="192x192" />
+    <link rel="icon" type="image/png" href="/icon-512.png" sizes="512x512" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#1C1815" />
     <!-- The house palette is a fixed light one: ivory, sand and antique gold.
