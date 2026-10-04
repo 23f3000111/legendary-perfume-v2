@@ -5,6 +5,13 @@ interface UIState {
   conciergeOpen: boolean
   menuOpen: boolean
   cartPulse: number
+  /**
+   * Whether what the home hero is showing is dark or light. The header sits
+   * over the hero transparent, in ivory, and ivory disappears on the
+   * anniversary poster's cream, so it reads this to switch to ink.
+   */
+  heroTone: 'dark' | 'light'
+  setHeroTone: (tone: 'dark' | 'light') => void
   openCart: () => void
   closeCart: () => void
   toggleConcierge: () => void
@@ -19,6 +26,8 @@ export const useUI = create<UIState>((set) => ({
   conciergeOpen: false,
   menuOpen: false,
   cartPulse: 0,
+  heroTone: 'dark',
+  setHeroTone: (tone) => set({ heroTone: tone }),
   openCart: () => set({ cartOpen: true }),
   closeCart: () => set({ cartOpen: false }),
   toggleConcierge: () => set((s) => ({ conciergeOpen: !s.conciergeOpen })),
