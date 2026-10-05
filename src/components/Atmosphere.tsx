@@ -27,11 +27,13 @@ export default function Atmosphere() {
 
     const move = (e: MouseEvent) => { tx = e.clientX; ty = e.clientY }
     // Client note: over a button or link the ring used to swell to nearly
-    // twice its size and sat over the very thing being pointed at. It keeps
-    // its size now and marks the hover with a stronger gold and a faint fill.
+    // twice its size and sat over the very thing being pointed at. Then, held
+    // to its own size, the hover read as no effect at all. So it grows a
+    // little, by a third, and takes a stronger gold and a faint fill.
     const over = (e: MouseEvent) => {
       const t = e.target as HTMLElement
       const interactive = t.closest('a,button,input,textarea,[role="button"],label,select')
+      ring.style.transform = `translate(-50%,-50%) scale(${interactive ? 1.35 : 1})`
       ring.style.borderColor = interactive ? 'rgba(176,141,62,0.95)' : 'rgba(176,141,62,0.5)'
       ring.style.backgroundColor = interactive ? 'rgba(176,141,62,0.12)' : 'transparent'
     }
@@ -57,7 +59,7 @@ export default function Atmosphere() {
     <div
       ref={ringRef}
       aria-hidden
-      className="pointer-events-none fixed z-[70] hidden h-7 w-7 rounded-full border transition-[border-color,background-color] duration-200 md:block"
+      className="pointer-events-none fixed z-[70] hidden h-7 w-7 rounded-full border transition-[transform,border-color,background-color] duration-300 ease-out md:block"
       style={{ left: 0, top: 0, transform: 'translate(-50%,-50%)', borderColor: 'rgba(176,141,62,0.5)' }}
     />
   )
