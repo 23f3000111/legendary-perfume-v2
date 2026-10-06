@@ -31,7 +31,7 @@ export default function Header() {
   const [megaShop, setMegaShop] = useState(false)
   const items = useShop((s) => s.items)
   const count = cartCount(items)
-  const { openCart, toggleMenu, menuOpen, closeMenu, cartPulse, heroTone } = useUI()
+  const { openCart, toggleMenu, menuOpen, closeMenu, cartPulse } = useUI()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -44,12 +44,8 @@ export default function Header() {
 
   useEffect(() => { if (!mega) setMegaShop(false) }, [mega])
 
-  // Over the home hero the header is transparent. Its type is ivory over the
-  // film and turns ink while the anniversary poster is up, since the poster's
-  // cream would swallow ivory. Anywhere else it is the solid ivory bar.
-  const overHero = isHome && !scrolled && !mega
-  const dark = overHero && heroTone === 'dark' // light text over hero
-  const solid = !overHero
+  const dark = isHome && !scrolled && !mega // light text over hero
+  const solid = !dark
 
   return (
     <>
@@ -66,7 +62,7 @@ export default function Header() {
             <div className="flex flex-1 items-center">
               <button
                 onClick={toggleMenu}
-                className={`transition-colors duration-700 lg:hidden ${dark ? 'text-ivory' : 'text-ink'}`}
+                className={`lg:hidden ${dark ? 'text-ivory' : 'text-ink'}`}
                 aria-label="Open menu"
               >
                 <Menu width={24} />
@@ -84,7 +80,7 @@ export default function Header() {
             </Link>
 
             {/* Right icons */}
-            <div className={`flex flex-1 items-center justify-end gap-4 transition-colors duration-700 md:gap-5 ${dark ? 'text-ivory' : 'text-ink'}`}>
+            <div className={`flex flex-1 items-center justify-end gap-4 md:gap-5 ${dark ? 'text-ivory' : 'text-ink'}`}>
               {/* Shown at every width now. A phone is where someone is most
                   likely to reach for a search rather than browse the menu. */}
               <button
@@ -115,7 +111,7 @@ export default function Header() {
 
           {/* Bottom row — navigation (desktop) */}
           <nav
-            className={`hidden h-[52px] items-center justify-center gap-10 border-t text-[0.75rem] uppercase tracking-[0.2em] transition-colors duration-700 lg:flex ${
+            className={`hidden h-[52px] items-center justify-center gap-10 border-t text-[0.75rem] uppercase tracking-[0.2em] transition-colors lg:flex ${
               dark ? 'border-ivory/15 text-ivory' : 'border-line/70 text-ink'
             }`}
           >

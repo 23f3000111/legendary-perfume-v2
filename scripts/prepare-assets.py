@@ -456,34 +456,6 @@ def write(im: Image.Image, dest: str, quality: int = 82) -> None:
     report(path)
 
 
-def save_hero_poster(src: str) -> None:
-    """The 11th anniversary poster that alternates with the film in the hero.
-
-    The client's export is a 3482x1961 PNG whose interior is solid but whose
-    outermost 1 to 4px down the right and bottom edges are translucent, down to
-    alpha 4. Flattening those onto any colour would draw a line the artwork
-    never had, so 4px is trimmed all round first and the rest is opaque.
-
-    Three widths, so a phone downloads the 1280 and only a large high density
-    screen asks for the 3200.
-
-    The fill is what the poster sits on where a screen is too tall to show it
-    whole and full bleed, a phone held upright above all: the poster itself,
-    small and heavily blurred, so its own creams run out to the edges of the
-    frame. A blurred image compresses to almost nothing, and the browser's
-    upscaling finishes the softening.
-    """
-    from PIL import ImageFilter
-
-    im = Image.open(src).convert("RGBA")
-    im = im.crop((4, 4, im.width - 4, im.height - 4)).convert("RGB")
-    for width in (1280, 2400, 3200):
-        out = im.resize((width, round(width * im.height / im.width)), Image.LANCZOS)
-        write(out, f"hero-anniversary-{width}.webp", quality=84)
-    fill = im.resize((480, round(480 * im.height / im.width)), Image.LANCZOS)
-    write(fill.filter(ImageFilter.GaussianBlur(18)), "hero-anniversary-fill.webp", quality=70)
-
-
 def trim_alpha(im: Image.Image) -> Image.Image:
     box = im.getchannel("A").getbbox()
     return im.crop(box) if box else im
@@ -1102,12 +1074,6 @@ def main() -> int:
         "home-hero.mp4",
         duration=11.3,
     )
-
-    print("Hero anniversary poster")
-    # Revision 10: shown between plays of the film above. Sent as
-    # public/assets/client/Website Banner.png, and kept in AMD6 instead,
-    # since this script empties that folder before it writes.
-    save_hero_poster(find("", "website banner", root=AMD6))
 
     total = sum(
         os.path.getsize(os.path.join(dp, f))
