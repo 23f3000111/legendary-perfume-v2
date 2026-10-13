@@ -446,14 +446,55 @@ def ground_to_alpha(im: Image.Image, thresh: int = 26) -> Image.Image:
     return out
 
 
-def write(im: Image.Image, dest: str, quality: int = 82) -> None:
+def write(im: Image.Image, dest: str, quality: int = 82, icc: bytes | None = None) -> None:
+    """Save into OUT. `icc` embeds a colour profile, for artwork made in
+    something wider than sRGB; without it a browser reads the numbers as sRGB
+    and a Display P3 gold comes out flat."""
     path = os.path.join(OUT, dest)
     os.makedirs(os.path.dirname(path), exist_ok=True)
+    extra = {"icc_profile": icc} if icc else {}
     if dest.endswith(".png"):
-        im.save(path, "PNG", optimize=True)
+        im.save(path, "PNG", optimize=True, **extra)
     else:
-        im.save(path, "WEBP", quality=quality, method=6)
+        im.save(path, "WEBP", quality=quality, method=6, **extra)
     report(path)
+
+
+def save_hero_poster(src: str, name: str) -> None:
+    """A campaign poster that alternates with the film in the hero.
+
+    Written as hero-<name>-1280/2400/3200.webp and hero-<name>-fill.webp. Give
+    every poster its own name: /assets/ is served immutable for a year, so a
+    new poster under an old name would go on showing the old one to anybody
+    who had already seen it. Its entry in src/sections/Hero.tsx names the same
+    files.
+
+    Three widths, so a phone downloads the 1280 and only a large high density
+    screen asks for the 3200. The fill is what the poster sits on where a
+    screen is too tall to show it whole and full bleed, a phone held upright
+    above all: the poster itself, small and heavily blurred, so its own colours
+    run out to the edges of the frame.
+
+    The colour profile is carried through to every file, fill included, so a
+    Display P3 export keeps its golds and the poster's feathered edges match
+    the field they melt into. An export with a translucent fringe, as the
+    first anniversary PNG had down two edges, is trimmed 4px all round rather
+    than flattened onto a colour the artwork never had.
+    """
+    from PIL import ImageFilter
+
+    im = Image.open(src)
+    icc = im.info.get("icc_profile")
+    if im.mode in ("RGBA", "LA", "P"):
+        im = im.convert("RGBA")
+        if im.getchannel("A").getextrema()[0] < 255:
+            im = im.crop((4, 4, im.width - 4, im.height - 4))
+    im = im.convert("RGB")
+    for width in (1280, 2400, 3200):
+        out = im.resize((width, round(width * im.height / im.width)), Image.LANCZOS)
+        write(out, f"hero-{name}-{width}.webp", quality=84, icc=icc)
+    fill = im.resize((480, round(480 * im.height / im.width)), Image.LANCZOS)
+    write(fill.filter(ImageFilter.GaussianBlur(18)), f"hero-{name}-fill.webp", quality=70, icc=icc)
 
 
 def trim_alpha(im: Image.Image) -> Image.Image:
@@ -1074,6 +1115,13 @@ def main() -> int:
         "home-hero.mp4",
         duration=11.3,
     )
+
+    print("Hero poster")
+    # Shown between plays of the film above. Revision 11: the balloon artwork
+    # for the 11th anniversary, sent as public/Website Banner.jpg and kept in
+    # AMD6 instead, beside the cake poster it follows (Website Banner.png,
+    # no longer shown).
+    save_hero_poster(find("", "website banner", ".jpg", root=AMD6), "balloon")
 
     total = sum(
         os.path.getsize(os.path.join(dp, f))
