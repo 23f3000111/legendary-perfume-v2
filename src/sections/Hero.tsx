@@ -123,8 +123,15 @@ function frameFor(width: number, height: number): { fit: Fit; x: number; y: numb
   const widthLost = 1 - ratio / posterRatio
   if (widthLost > room - 0.04) return { fit: ratio >= 1 ? 'band' : 'card', x: 50, y: 50 }
   if (widthLost > 0) {
+    // Held between 0% and 100%. A frame only a hair narrower than the poster,
+    // which is what a 16:9 screen in full screen leaves once a scrollbar takes
+    // its 10 to 17px, loses a few pixels of width, and the split worked out
+    // above then asks for many times that from the left: 635% at 1920x1080.
+    // Past 100% the picture slid left off its own edge and the film showed
+    // through a strip down the right, which is what the client saw.
     const margin = (room - widthLost) / 2
-    return { fit: 'cover', x: Math.round(((left - margin) / widthLost) * 100), y: 50 }
+    const x = Math.min(1, Math.max(0, (left - margin) / widthLost))
+    return { fit: 'cover', x: Math.round(x * 100), y: 50 }
   }
 
   // Wider than the poster: how far down to start it, in px of its own height.
