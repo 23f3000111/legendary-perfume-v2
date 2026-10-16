@@ -1,6 +1,6 @@
 import { db } from './db.js'
 import { optionalEnv } from './http.js'
-import type { Order, OrderStatus } from './order.js'
+import { sameParcel, type Order, type OrderStatus, type Shipment } from './order.js'
 import { stripe } from './stripe.js'
 import { fromMinorUnits, getProduct } from './catalogue.js'
 
@@ -32,6 +32,14 @@ export interface OrderStore {
   find(reference: string): Promise<Order | null>
   /** Most recent first, for the dashboard. */
   recent(limit: number): Promise<Order[]>
+  /**
+   * Record the parcel an order went out in, or clear it with null. Returns true
+   * only if this call changed what the customer would be told, so that of two
+   * saves arriving together only one goes on to email them.
+   */
+  setShipment(order: Order, shipment: Shipment | null): Promise<boolean>
+  /** Stamp the time the customer was emailed about their parcel. */
+  markNotified(order: Order, at: string): Promise<void>
 }
 
 // ------------------------------------------------------------------ postgres
@@ -51,6 +59,7 @@ function rowToOrder(r: Record<string, any>): Order {
     paymentIntentId: r.payment_intent_id,
     createdAt: new Date(r.created_at).toISOString(),
     paidAt: r.paid_at ? new Date(r.paid_at).toISOString() : undefined,
+    shipment: r.shipment ?? undefined,
   }
 }
 
@@ -99,6 +108,37 @@ function postgresStore(): OrderStore {
         [Math.min(Math.max(limit, 1), 200)],
       )
       return rows.map(rowToOrder)
+    },
+    async setShipment(order, shipment) {
+      if (shipment === null) {
+        const { rowCount } = await (await db()).query(
+          'UPDATE orders SET shipment = NULL WHERE reference = $1 AND shipment IS NOT NULL',
+          [order.reference],
+        )
+        return rowCount === 1
+      }
+      // Conditional on the parcel details differing, so the row count says
+      // whether this call is the one that changed them.
+      const { rowCount } = await (await db()).query(
+        `UPDATE orders SET shipment = $2::jsonb
+         WHERE reference = $1
+           AND (shipment IS NULL
+                OR shipment ->> 'trackingNumber' IS DISTINCT FROM $3
+                OR shipment ->> 'courierName' IS DISTINCT FROM $4
+                OR COALESCE(shipment ->> 'trackingUrl', '') IS DISTINCT FROM $5)`,
+        [
+          order.reference, JSON.stringify(shipment),
+          shipment.trackingNumber, shipment.courierName, shipment.trackingUrl ?? '',
+        ],
+      )
+      return rowCount === 1
+    },
+    async markNotified(order, at) {
+      await (await db()).query(
+        `UPDATE orders SET shipment = shipment || jsonb_build_object('notifiedAt', $2::text)
+         WHERE reference = $1 AND shipment IS NOT NULL`,
+        [order.reference, at],
+      )
     },
   }
 }
@@ -176,6 +216,31 @@ function intentToOrder(intent: {
     paymentIntentId: intent.id,
     createdAt: at,
     paidAt: intent.status === 'succeeded' ? at : undefined,
+    shipment: m.ship_tracking
+      ? {
+          courier: m.ship_courier || 'other',
+          courierName: m.ship_name || m.ship_courier || '',
+          trackingNumber: m.ship_tracking,
+          trackingUrl: m.ship_url || undefined,
+          shippedAt: m.shipped_at || at,
+          notifiedAt: m.ship_notified || undefined,
+        }
+      : undefined,
+  }
+}
+
+/**
+ * The shipment as PaymentIntent metadata. Stripe removes a key set to an empty
+ * string, which is how a cleared shipment leaves no trace.
+ */
+function shipmentMetadata(shipment: Shipment | null): Record<string, string> {
+  return {
+    ship_courier: shipment?.courier ?? '',
+    ship_name: shipment?.courierName ?? '',
+    ship_tracking: shipment?.trackingNumber ?? '',
+    ship_url: shipment?.trackingUrl ?? '',
+    shipped_at: shipment?.shippedAt ?? '',
+    ship_notified: shipment?.notifiedAt ?? '',
   }
 }
 
@@ -205,6 +270,17 @@ function stripeStore(): OrderStore {
       return page.data
         .map(intentToOrder)
         .filter((o): o is Order => o !== null)
+    },
+    async setShipment(order, shipment) {
+      // No atomic compare here as Postgres has, so the check is against the
+      // order as read. One house, one dashboard: close enough for a fallback.
+      const changed = shipment === null ? Boolean(order.shipment) : !sameParcel(order.shipment, shipment)
+      if (!changed) return false
+      await stripe().paymentIntents.update(order.paymentIntentId, { metadata: shipmentMetadata(shipment) })
+      return true
+    },
+    async markNotified(order, at) {
+      await stripe().paymentIntents.update(order.paymentIntentId, { metadata: { ship_notified: at } })
     },
   }
 }

@@ -42,6 +42,15 @@ export interface CheckoutSession {
 
 export type OrderStatus = 'pending' | 'paid' | 'failed' | 'cancelled' | 'abandoned'
 
+/** The parcel, once the house has recorded its tracking number. */
+export interface TrackedShipment {
+  courierName: string
+  trackingNumber: string
+  /** The courier's own tracking page for this parcel, where one is known. */
+  trackingUrl?: string
+  shippedAt: string
+}
+
 export interface TrackedOrder {
   reference: string
   status: OrderStatus
@@ -61,6 +70,7 @@ export interface TrackedOrder {
     state: string
     country: string
   }
+  shipment?: TrackedShipment
 }
 
 /** An error carrying a message that is safe, and useful, to show a customer. */
@@ -193,6 +203,36 @@ export interface AdminOrder {
   shipping: TrackedOrder['shipping']
   note: string | null
   lines: OrderLine[]
+  shipment: AdminShipment | null
+}
+
+export interface AdminShipment extends TrackedShipment {
+  /** One of the couriers below, or 'other'. */
+  courier: string
+  /** When the customer was last emailed it; absent if no email has gone. */
+  notifiedAt?: string
+}
+
+/** A courier the dashboard offers. `linked` is whether the site knows its tracking page. */
+export interface AdminCourier {
+  id: string
+  name: string
+  linked: boolean
+}
+
+export interface ShipmentInput {
+  courier: string
+  trackingNumber: string
+  /** Only for an 'other' courier. */
+  courierName?: string
+  trackingUrl?: string
+}
+
+/** What the dashboard learns after recording a parcel. */
+export interface ShipResult {
+  order: AdminOrder
+  /** Null when nothing needed sending; otherwise whether the customer's email went. */
+  email: { sent: boolean; reason?: string } | null
 }
 
 export interface AdminSummary {
@@ -245,9 +285,23 @@ export function adminOrders(limit = 50): Promise<{
   orders: AdminOrder[]
   summary: AdminSummary
   storage: string
+  couriers: AdminCourier[]
 }> {
-  return request<{ orders: AdminOrder[]; summary: AdminSummary; storage: string }>(
+  return request<{ orders: AdminOrder[]; summary: AdminSummary; storage: string; couriers: AdminCourier[] }>(
     `/api/admin/orders?limit=${limit}`,
     withCookies,
   )
 }
+
+function patchOrder(body: Record<string, unknown>): Promise<ShipResult> {
+  return request<ShipResult>('/api/admin/orders', { ...withCookies, method: 'PATCH', body: JSON.stringify(body) })
+}
+
+/** Record the parcel's tracking number and email it to the customer. */
+export const adminShipOrder = (reference: string, shipment: ShipmentInput) => patchOrder({ reference, shipment })
+
+/** Email the customer the tracking number already on the order, again. */
+export const adminResendShipping = (reference: string) => patchOrder({ reference, resend: true })
+
+/** Take the tracking number off an order. The customer is not emailed. */
+export const adminClearShipping = (reference: string) => patchOrder({ reference, shipment: null })

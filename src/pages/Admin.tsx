@@ -2,12 +2,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
-  ApiError, adminOrders, adminPatchProduct, adminProducts, adminSession, adminSignIn, adminSignOut,
-  type AdminOrder, type AdminProduct, type AdminSession, type AdminSummary,
+  ApiError, adminClearShipping, adminOrders, adminPatchProduct, adminProducts, adminResendShipping,
+  adminSession, adminShipOrder, adminSignIn, adminSignOut,
+  type AdminCourier, type AdminOrder, type AdminProduct, type AdminSession, type AdminSummary, type ShipResult,
 } from '../lib/api'
 import { formatRM } from '../lib/format'
 import Seo from '../components/Seo'
-import { Check, ArrowRight, ShieldCheck, Truck, Bag, Sparkle } from '../components/ui/icons'
+import { Check, ArrowRight, ArrowUpRight, ShieldCheck, Truck, Bag, Sparkle } from '../components/ui/icons'
 
 /**
  * The house dashboard.
@@ -21,6 +22,10 @@ import { Check, ArrowRight, ShieldCheck, Truck, Bag, Sparkle } from '../componen
  * something is in the Bestsellers edit, and whether it appears at all. Copy,
  * photography and compositions stay in git where they are reviewed. See
  * api/_lib/overrides.ts for why the line is drawn there.
+ *
+ * On orders it records one thing: the courier and tracking number a paid order
+ * went out with, which emails the customer and shows on their Track my order
+ * page.
  */
 export default function Admin() {
   const [session, setSession] = useState<AdminSession | null>(null)
@@ -511,15 +516,24 @@ const STATUS_TONE: Record<AdminOrder['status'], string> = {
 
 function Orders() {
   const [orders, setOrders] = useState<AdminOrder[] | null>(null)
+  const [couriers, setCouriers] = useState<AdminCourier[]>([])
   const [error, setError] = useState<string | null>(null)
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState<string | null>(null)
 
   useEffect(() => {
     adminOrders(100)
-      .then((r) => setOrders(r.orders))
+      .then((r) => {
+        setOrders(r.orders)
+        setCouriers(r.couriers)
+      })
       .catch((e) => setError(e instanceof ApiError ? e.message : 'Could not load the orders.'))
   }, [])
+
+  const replace = useCallback(
+    (next: AdminOrder) => setOrders((all) => all?.map((o) => (o.reference === next.reference ? next : o)) ?? all),
+    [],
+  )
 
   const shown = useMemo(() => {
     if (!orders) return []
@@ -563,6 +577,16 @@ function Orders() {
                 <span className={`rounded-full px-2.5 py-0.5 text-[0.62rem] uppercase tracking-[0.1em] ${STATUS_TONE[o.status]}`}>
                   {o.status}
                 </span>
+                {o.status === 'paid' &&
+                  (o.shipment ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-ink/5 px-2.5 py-0.5 text-[0.62rem] uppercase tracking-[0.1em] text-ink-soft">
+                      <Truck width={11} /> shipped
+                    </span>
+                  ) : (
+                    <span className="rounded-full border border-gold/50 px-2.5 py-0.5 text-[0.62rem] uppercase tracking-[0.1em] text-gold-deep">
+                      to ship
+                    </span>
+                  ))}
                 <span className="text-xs text-smoke">
                   {new Date(o.placedAt).toLocaleString('en-MY', { dateStyle: 'medium', timeStyle: 'short' })}
                 </span>
@@ -609,11 +633,238 @@ function Orders() {
                       </p>
                     )}
                   </div>
+                  {o.status === 'paid' && <ShippingPanel order={o} couriers={couriers} onChange={replace} />}
                 </div>
               )}
             </div>
           ))}
         </div>
+      )}
+    </div>
+  )
+}
+
+// ----------------------------------------------------------------- shipping
+
+const when = (iso: string) => new Date(iso).toLocaleString('en-MY', { dateStyle: 'medium', timeStyle: 'short' })
+
+/**
+ * The parcel an order went out in.
+ *
+ * Saving a courier and tracking number emails the customer and puts it on
+ * their Track my order page. If the email cannot go, the number is still kept
+ * and the panel says so in as many words, with a button to send it again once
+ * the cause is fixed. A corrected number emails the customer again, telling
+ * them it replaces the first.
+ */
+function ShippingPanel({
+  order, couriers, onChange,
+}: {
+  order: AdminOrder
+  couriers: AdminCourier[]
+  onChange: (o: AdminOrder) => void
+}) {
+  const shipped = order.shipment
+  const [editing, setEditing] = useState(!shipped)
+  const [courier, setCourier] = useState(shipped?.courier ?? couriers[0]?.id ?? 'other')
+  const [number, setNumber] = useState(shipped?.trackingNumber ?? '')
+  const [otherName, setOtherName] = useState(shipped?.courier === 'other' ? shipped.courierName : '')
+  const [otherUrl, setOtherUrl] = useState(shipped?.courier === 'other' ? shipped.trackingUrl ?? '' : '')
+  const [busy, setBusy] = useState<null | 'save' | 'resend' | 'clear'>(null)
+  const [message, setMessage] = useState<{ tone: 'ok' | 'warn' | 'error'; text: string } | null>(null)
+
+  // The courier list arrives with the orders; default the picker once it does.
+  useEffect(() => {
+    if (!shipped && couriers.length && !couriers.some((c) => c.id === courier)) setCourier(couriers[0].id)
+  }, [couriers, shipped, courier])
+
+  const run = async (
+    kind: 'save' | 'resend' | 'clear',
+    call: () => Promise<ShipResult>,
+    done: (r: ShipResult) => string,
+  ) => {
+    setBusy(kind)
+    setMessage(null)
+    try {
+      const r = await call()
+      onChange(r.order)
+      if (r.email && !r.email.sent) {
+        setMessage({
+          tone: 'warn',
+          text: `${done(r)} The email to the customer did not go (${r.email.reason ?? 'the mail provider refused it'}). Use Resend email once that is fixed.`,
+        })
+      } else {
+        setMessage({ tone: 'ok', text: done(r) })
+      }
+      if (kind === 'save') setEditing(false)
+      if (kind === 'clear') {
+        setEditing(true)
+        setNumber('')
+      }
+    } catch (e) {
+      setMessage({ tone: 'error', text: e instanceof ApiError ? e.message : 'That did not save. Try again.' })
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const save = (e: React.FormEvent) => {
+    e.preventDefault()
+    void run(
+      'save',
+      () =>
+        adminShipOrder(order.reference, {
+          courier,
+          trackingNumber: number,
+          ...(courier === 'other' ? { courierName: otherName, trackingUrl: otherUrl } : {}),
+        }),
+      (r) =>
+        r.email === null
+          ? 'Those are the details already saved, so nothing was sent.'
+          : r.email.sent
+            ? `Saved, and emailed to ${order.customer.email}.`
+            : 'Saved.',
+    )
+  }
+
+  const resend = () =>
+    void run('resend', () => adminResendShipping(order.reference), () => `Emailed to ${order.customer.email} again.`)
+
+  const clear = () => {
+    if (!window.confirm('Take the tracking number off this order? The customer is not emailed about it.')) return
+    void run('clear', () => adminClearShipping(order.reference), () => 'Tracking number removed.')
+  }
+
+  const tone = {
+    ok: 'text-jade',
+    warn: 'border-l-2 border-gold bg-gold/10 py-2 pl-3 text-gold-deep',
+    error: 'border-l-2 border-[#A4352C] bg-[#A4352C]/5 py-2 pl-3 text-[#A4352C]',
+  }
+  const small = 'rounded-sm border border-line px-3 py-1.5 text-xs text-ink transition hover:border-gold disabled:opacity-50'
+  const field = 'mt-1 block border-b border-line bg-transparent py-1.5 text-sm text-ink outline-none transition focus:border-gold'
+
+  return (
+    <div className="border-t border-line/70 pt-5 sm:col-span-2">
+      <p className="eyebrow text-smoke">Shipping</p>
+
+      {shipped && !editing ? (
+        <div className="mt-2">
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-ink">
+            <Truck width={15} className="text-gold" />
+            <span>{shipped.courierName}</span>
+            <span className="select-all tracking-[0.06em]">{shipped.trackingNumber}</span>
+            {shipped.trackingUrl && (
+              <a
+                href={shipped.trackingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="link-gold inline-flex items-center gap-1 text-xs"
+              >
+                Track <ArrowUpRight width={12} />
+              </a>
+            )}
+          </p>
+          <p className="mt-1.5 text-xs text-smoke">
+            Shipped {when(shipped.shippedAt)}
+            {' · '}
+            {shipped.notifiedAt ? (
+              <>Customer emailed {when(shipped.notifiedAt)}</>
+            ) : (
+              <span className="text-gold-deep">Customer not emailed yet</span>
+            )}
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button onClick={() => { setEditing(true); setMessage(null) }} disabled={busy !== null} className={small}>
+              Change
+            </button>
+            <button onClick={resend} disabled={busy !== null} className={small}>
+              {busy === 'resend' ? 'Sending…' : 'Resend email'}
+            </button>
+            <button
+              onClick={clear}
+              disabled={busy !== null}
+              className="rounded-sm px-3 py-1.5 text-xs text-smoke transition hover:text-[#A4352C] disabled:opacity-50"
+            >
+              {busy === 'clear' ? 'Removing…' : 'Remove'}
+            </button>
+          </div>
+        </div>
+      ) : (
+        <form onSubmit={save} className="mt-2 space-y-3">
+          <div className="flex flex-wrap items-end gap-4">
+            <label className="block">
+              <span className="text-xs text-smoke">Courier</span>
+              <select value={courier} onChange={(e) => setCourier(e.target.value)} className={`${field} w-44`}>
+                {couriers.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              <span className="text-xs text-smoke">Tracking number</span>
+              <input
+                value={number}
+                onChange={(e) => setNumber(e.target.value)}
+                placeholder="As printed on the label"
+                autoComplete="off"
+                spellCheck={false}
+                className={`${field} w-56 tracking-[0.04em]`}
+              />
+            </label>
+          </div>
+          {courier === 'other' && (
+            <div className="flex flex-wrap items-end gap-4">
+              <label className="block">
+                <span className="text-xs text-smoke">Courier name</span>
+                <input
+                  value={otherName}
+                  onChange={(e) => setOtherName(e.target.value)}
+                  placeholder="e.g. GDex"
+                  className={`${field} w-44`}
+                />
+              </label>
+              <label className="block">
+                <span className="text-xs text-smoke">Tracking link (optional)</span>
+                <input
+                  value={otherUrl}
+                  onChange={(e) => setOtherUrl(e.target.value)}
+                  placeholder="https://"
+                  inputMode="url"
+                  className={`${field} w-72`}
+                />
+              </label>
+            </div>
+          )}
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            <button
+              type="submit"
+              disabled={busy !== null || !number.trim()}
+              className="inline-flex items-center gap-2 rounded-sm bg-ink px-4 py-2 text-xs uppercase tracking-[0.12em] text-ivory transition hover:bg-ink/85 disabled:opacity-50"
+            >
+              <Truck width={14} />
+              {busy === 'save' ? 'Saving…' : shipped ? 'Save and email the new number' : 'Mark as shipped and email customer'}
+            </button>
+            {shipped && (
+              <button
+                type="button"
+                onClick={() => { setEditing(false); setMessage(null) }}
+                className="text-xs text-smoke transition hover:text-ink"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+          <p className="text-xs text-smoke">
+            {order.customer.email} is emailed the courier and tracking number, and they appear on the customer&rsquo;s
+            Track my order page.
+          </p>
+        </form>
+      )}
+
+      {message && (
+        <p role="status" className={`mt-3 text-xs ${tone[message.tone]}`}>
+          {message.text}
+        </p>
       )}
     </div>
   )

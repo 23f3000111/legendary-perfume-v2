@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { ApiError, findOrder, type TrackedOrder } from '../lib/api'
+import { ApiError, findOrder, type TrackedOrder, type TrackedShipment } from '../lib/api'
 import { formatRM } from '../lib/format'
 import Seo from '../components/Seo'
 import PageHeader from '../components/ui/PageHeader'
 import { asset } from '../lib/asset'
-import { Check, Truck, ArrowRight, Sparkle } from '../components/ui/icons'
+import { Check, Truck, ArrowRight, ArrowUpRight, Sparkle } from '../components/ui/icons'
 
 /**
  * One page for both halves of life after the bag: the confirmation you land on
@@ -275,7 +275,15 @@ function OrderCard({
   /** Ask the server again, for an order that has not settled yet. */
   onRecheck: () => void
 }) {
-  const status = STATUS[order.status]
+  // A paid order the house has recorded a parcel for has left the building.
+  const shipment = order.status === 'paid' ? order.shipment : undefined
+  const status = shipment
+    ? {
+        label: 'Shipped',
+        body: `Your parcel is on its way with ${shipment.courierName}. Follow it to your door with the tracking number below.`,
+        tone: '#3F6B4E',
+      }
+    : STATUS[order.status]
   const placed = useMemo(
     () => new Date(order.placedAt).toLocaleDateString('en-MY', {
       day: 'numeric', month: 'long', year: 'numeric',
@@ -322,6 +330,8 @@ function OrderCard({
 
       <p className="mt-5 max-w-xl text-ink-soft">{status.body}</p>
 
+      {shipment && <Tracking shipment={shipment} />}
+
       <div className="mt-10 grid gap-10 lg:grid-cols-[1.2fr_0.8fr]">
         <div>
           <h2 className="font-display text-xl">What you ordered</h2>
@@ -364,5 +374,62 @@ function OrderCard({
         </aside>
       </div>
     </motion.div>
+  )
+}
+
+/**
+ * The parcel's tracking number, with the courier's own page a tap away.
+ *
+ * The number is selectable and has a copy button, because a customer usually
+ * pastes it into a courier's app rather than typing it. The link is only drawn
+ * if it is https: it was checked when the house saved it, and checking again
+ * here costs nothing.
+ */
+function Tracking({ shipment }: { shipment: TrackedShipment }) {
+  const [copied, setCopied] = useState(false)
+  const shipped = new Date(shipment.shippedAt).toLocaleDateString('en-MY', {
+    day: 'numeric', month: 'long', year: 'numeric',
+  })
+  const link = shipment.trackingUrl?.startsWith('https://') ? shipment.trackingUrl : undefined
+
+  const copy = async () => {
+    try {
+      await navigator.clipboard.writeText(shipment.trackingNumber)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      // No clipboard access here; the number is selectable, so it can still be copied by hand.
+    }
+  }
+
+  return (
+    <div className="mt-8 rounded-sm border border-gold/40 bg-porcelain p-6">
+      <p className="eyebrow eyebrow-gold">Tracking</p>
+      <p className="mt-2 text-sm text-ink-soft">
+        {shipment.courierName} &middot; Shipped {shipped}
+      </p>
+      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+        {/* Not the display face: its old style figures make a zero look like
+            a small o, and this is a code people copy into a courier's app. */}
+        <p className="select-all font-sans text-[clamp(1.2rem,3vw,1.6rem)] tabular-nums lining-nums tracking-[0.1em] text-ink">
+          {shipment.trackingNumber}
+        </p>
+        <button
+          onClick={copy}
+          className="rounded-sm border border-line px-3 py-1.5 text-xs uppercase tracking-[0.12em] text-ink-soft transition hover:border-gold hover:text-ink"
+        >
+          {copied ? 'Copied' : 'Copy'}
+        </button>
+      </div>
+      {link ? (
+        <a href={link} target="_blank" rel="noopener noreferrer" className="btn-solid mt-5 gap-2">
+          Track with {shipment.courierName} <ArrowUpRight width={16} />
+        </a>
+      ) : (
+        <p className="mt-4 text-sm text-ink-soft">
+          Enter this number on the {shipment.courierName} website to follow your parcel.
+        </p>
+      )}
+    </div>
   )
 }

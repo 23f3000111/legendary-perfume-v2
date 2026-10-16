@@ -12,6 +12,9 @@ import type { Order } from './order.js'
  *  - the house's own notification, carrying the same invoice plus the contact
  *    details needed to pack and ship it.
  *
+ * A third goes when the house records the parcel's tracking number in the
+ * dashboard: the customer's shipping notice.
+ *
  * With no RESEND_API_KEY set, both are logged rather than sent, so a local run
  * or a fresh deploy still completes a checkout end to end.
  */
@@ -110,7 +113,7 @@ function invoice(order: Order): string {
     </table>`
 }
 
-function shell(title: string, intro: string, order: Order, siteUrl: string, extra = ''): string {
+function shell(title: string, intro: string, order: Order, siteUrl: string, extra = '', top = ''): string {
   return `<!doctype html>
 <html><body style="margin:0;padding:0;background:#F4EEE2;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4EEE2;padding:32px 16px;">
@@ -124,6 +127,7 @@ function shell(title: string, intro: string, order: Order, siteUrl: string, extr
           <h1 style="margin:0 0 10px;font-family:Georgia,'Times New Roman',serif;font-weight:400;font-size:24px;color:#1C1815;">${escape(title)}</h1>
           <p style="margin:0 0 22px;font-size:14px;line-height:1.7;color:#5A524B;">${intro}</p>
         </td></tr>
+        ${top}
         <tr><td style="padding:0 32px;">
           <div style="font-size:11px;letter-spacing:0.18em;color:#B08D3E;margin-bottom:8px;">ORDER SUMMARY</div>
           ${invoice(order)}
@@ -265,6 +269,60 @@ export async function sendMerchantNotification(order: Order, siteUrl: string) {
       extra,
     ),
     order.customer.email,
+  )
+}
+
+/**
+ * The customer's shipping notice: their parcel's courier and tracking number,
+ * with a link straight to the courier's own tracking page where one is known.
+ *
+ * Built separately from sending so it can be looked at without sending it.
+ * `updated` is for a number corrected after an earlier notice, so the customer
+ * knows which of the two to use.
+ */
+export function shippingNoticeHtml(order: Order, siteUrl: string, updated = false): string {
+  const s = order.shipment
+  if (!s) throw new Error(`order ${order.reference} has no shipment`)
+
+  const track = s.trackingUrl
+    ? `<a href="${escape(s.trackingUrl)}"
+           style="display:inline-block;margin-top:18px;background:#B08D3E;color:#1C1815;text-decoration:none;padding:12px 24px;font-size:12px;letter-spacing:0.16em;text-transform:uppercase;">
+          Track your parcel
+        </a>`
+    : `<p style="margin:14px 0 0;font-size:13px;line-height:1.7;color:#5A524B;">
+          Enter this number on the ${escape(s.courierName)} website to follow your parcel.
+        </p>`
+
+  // The number is set in a sans with lining figures rather than the Georgia the
+  // rest of the mail uses: Georgia's zero is a small o, and this is a code the
+  // customer copies into a courier's app.
+  const panel = `<tr><td style="padding:0 32px 26px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F4EEE2;border:1px solid #E6DFD2;">
+        <tr><td style="padding:20px 22px 22px;">
+          <div style="font-size:11px;letter-spacing:0.18em;color:#B08D3E;">SHIPPED WITH</div>
+          <div style="margin-top:4px;font-size:15px;color:#1C1815;">${escape(s.courierName)}</div>
+          <div style="margin-top:14px;font-size:11px;letter-spacing:0.18em;color:#B08D3E;">TRACKING NUMBER</div>
+          <div style="margin-top:4px;font-family:Helvetica,Arial,sans-serif;font-size:21px;letter-spacing:0.1em;font-variant-numeric:lining-nums tabular-nums;color:#1C1815;">${escape(s.trackingNumber)}</div>
+          ${track}
+        </td></tr>
+      </table>
+    </td></tr>`
+
+  const name = escape(order.customer.name.split(' ')[0] || order.customer.name)
+  const intro = updated
+    ? `${name}, we have updated the tracking details for your parcel. Please use the number below; it replaces the one we sent you earlier.`
+    : `Good news, ${name}: your parcel has left us and is on its way with ${escape(s.courierName)}. Follow it to your door with the tracking number below.`
+
+  return shell(updated ? 'Your tracking number has changed' : 'Your order is on its way', intro, order, siteUrl, '', panel)
+}
+
+/** Email the customer their parcel's tracking number, and say whether it went. */
+export async function sendShippingNotice(order: Order, siteUrl: string, updated = false) {
+  return send(
+    order.customer.email,
+    updated ? `Updated tracking for your order ${order.reference}` : `Your order ${order.reference} is on its way`,
+    shippingNoticeHtml(order, siteUrl, updated),
+    optionalEnv('ORDER_REPLY_TO'),
   )
 }
 

@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto'
 import { HttpError } from './http.js'
 import type { OrderLine } from './catalogue.js'
+import { courierById, trackingLink } from './couriers.js'
 
 /**
  * `abandoned` is a checkout that was opened and never paid: the customer
@@ -26,6 +27,27 @@ export interface Address {
   country: string
 }
 
+/**
+ * A parcel handed to a courier, recorded from the dashboard.
+ *
+ * Kept apart from `status` on purpose. Status is the payment's own state, and
+ * the code that settles a payment moves any order that is not already `paid`
+ * to `paid`; a `shipped` status would let a late webhook knock a shipped order
+ * back to paid. So an order is shipped when it is paid and has one of these.
+ */
+export interface Shipment {
+  /** One of COURIERS, or 'other'. */
+  courier: string
+  /** As the customer sees it: the courier's name, or the house's own wording for 'other'. */
+  courierName: string
+  trackingNumber: string
+  /** Where the customer can follow it. Absent for an 'other' courier given no link. */
+  trackingUrl?: string
+  shippedAt: string
+  /** When the customer was last emailed about it. Absent until an email has actually gone. */
+  notifiedAt?: string
+}
+
 export interface Order {
   reference: string
   status: OrderStatus
@@ -40,6 +62,7 @@ export interface Order {
   paymentIntentId: string
   createdAt: string
   paidAt?: string
+  shipment?: Shipment
 }
 
 /**
@@ -113,6 +136,70 @@ export function parseNote(raw: unknown): string | undefined {
   return text(raw, 'note', 500)
 }
 
+/**
+ * The courier and number the dashboard sends, checked and made whole.
+ *
+ * A number pasted from a courier's app often carries spaces, so they go; what
+ * is left must look like a tracking number rather than a sentence. The link is
+ * built from the courier's own pattern, so only an 'other' courier may bring
+ * one, and it must be https: it goes into an email and onto a public page as a
+ * link, and a `javascript:` address in either would be an attack.
+ */
+export function parseShipment(raw: unknown, previous?: Shipment): Omit<Shipment, 'notifiedAt'> {
+  const s = (raw ?? {}) as Record<string, unknown>
+  const courier = courierById(typeof s.courier === 'string' ? s.courier : '')
+  if (!courier) throw new HttpError(400, 'Choose the courier the parcel went with.')
+
+  const trackingNumber = (typeof s.trackingNumber === 'string' ? s.trackingNumber : '').replace(/\s+/g, '')
+  if (!trackingNumber) throw new HttpError(400, 'Enter the tracking number.')
+  if (!/^[A-Za-z0-9-]{4,40}$/.test(trackingNumber)) {
+    throw new HttpError(400, 'That tracking number does not look right. Use only the letters and numbers on the label.')
+  }
+
+  let courierName = courier.name
+  let trackingUrl = trackingLink(courier.id, trackingNumber)
+  if (courier.id === 'other') {
+    courierName = typeof s.courierName === 'string' ? s.courierName.trim() : ''
+    if (!courierName) throw new HttpError(400, "Enter the courier's name.")
+    if (courierName.length > 60) throw new HttpError(400, 'That courier name is too long.')
+    const url = typeof s.trackingUrl === 'string' ? s.trackingUrl.trim() : ''
+    if (url) {
+      let parsed: URL
+      try {
+        parsed = new URL(url)
+      } catch {
+        throw new HttpError(400, 'That tracking link does not look right.')
+      }
+      if (parsed.protocol !== 'https:') throw new HttpError(400, 'The tracking link must start with https://')
+      if (url.length > 400) throw new HttpError(400, 'That tracking link is too long.')
+      trackingUrl = parsed.toString()
+    } else {
+      trackingUrl = undefined
+    }
+  }
+
+  return {
+    courier: courier.id,
+    courierName,
+    trackingNumber,
+    trackingUrl,
+    // A corrected number keeps the day it actually went out.
+    shippedAt: previous?.shippedAt ?? new Date().toISOString(),
+  }
+}
+
+type ParcelDetails = Pick<Shipment, 'courierName' | 'trackingNumber' | 'trackingUrl'>
+
+/** Whether two shipments would tell the customer the same thing. */
+export function sameParcel(a: ParcelDetails | undefined, b: ParcelDetails): boolean {
+  if (!a) return false
+  return (
+    a.courierName === b.courierName &&
+    a.trackingNumber === b.trackingNumber &&
+    (a.trackingUrl ?? '') === (b.trackingUrl ?? '')
+  )
+}
+
 /** What a customer is allowed to see back when they look an order up. */
 export function publicOrder(order: Order) {
   return {
@@ -127,6 +214,17 @@ export function publicOrder(order: Order) {
     paidAt: order.paidAt,
     customer: { name: order.customer.name, email: maskEmail(order.customer.email) },
     shipping: order.shipping,
+    // Only once it has been paid for: a tracking number on an order that is
+    // not paid would be a mistake in the dashboard, not something to show.
+    shipment:
+      order.status === 'paid' && order.shipment
+        ? {
+            courierName: order.shipment.courierName,
+            trackingNumber: order.shipment.trackingNumber,
+            trackingUrl: order.shipment.trackingUrl,
+            shippedAt: order.shipment.shippedAt,
+          }
+        : undefined,
   }
 }
 

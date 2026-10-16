@@ -89,6 +89,7 @@ try {
       created_at timestamptz NOT NULL DEFAULT now(), paid_at timestamptz);
     CREATE INDEX IF NOT EXISTS orders_email_idx ON orders ((customer ->> 'email'));
     CREATE INDEX IF NOT EXISTS orders_intent_idx ON orders (payment_intent_id);
+    ALTER TABLE orders ADD COLUMN IF NOT EXISTS shipment jsonb;
     CREATE TABLE IF NOT EXISTS product_overrides (
       product_id text PRIMARY KEY, in_stock boolean, price integer, compare_at integer,
       bestseller boolean, hidden boolean,
