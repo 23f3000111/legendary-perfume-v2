@@ -40,6 +40,130 @@ const blog = (name: string) => asset(`/Journal_Images/${name}`)
 
 const entries: Article[] = [
   /* ---------------------------------------------------------------- */
+  /*
+   * October 2026: the 11th anniversary piece. The client's own text, kept as
+   * written at their request, in their order and with their captions. Two
+   * small corrections ("perfume kiosks", "Malaysian airports") and one dash
+   * turned into a comma under the house rule are the only changes to it.
+   * The Where to Buy section and the FAQ were asked for on top, and come from
+   * the structured version of the piece, with the Nyonya fragrances given
+   * their full names and online ordering added to where to buy.
+   */
+  {
+    slug: 'elevenyears',
+    title: '11 Years of Legendary Perfume: Celebrating a Malaysian Fragrance Journey',
+    cardTitle: '11 Years of Legendary Perfume',
+    category: 'Anniversary',
+    date: '22 October 2026',
+    published: '2026-10-22',
+    readTime: '3 min',
+    // Not a paraphrase of the opening, which the page shows straight after it.
+    excerpt:
+      'From our signature Orchid to the Nyonya Collection, and from mall kiosks to a boutique in Melaka, we look back on eleven years of Legendary and the community at the heart of it.',
+    hero: asset('/assets/client/journal-elevenyears-klia.webp'),
+    heroAlt: 'The Legendary pop-up at KLIA Terminal 2, with the Nyonya Collection and two sun bear mascots',
+    body: [
+      {
+        t: 'lead',
+        text: 'For more than a decade, Legendary Perfume has been creating fragrances inspired by stories, memories, and elements of Malaysian identity. As we celebrate our 11th anniversary, we look back on a journey shaped not only by scent and creativity, but also by the community that has supported and grown with us throughout the years.',
+      },
+      {
+        t: 'p',
+        text: 'Over time, our collections have evolved and expanded. From individual fragrances that highlight different sides of Malaysia, such as our signature [Orchid](/product/orchid) fragrance, to complete collections inspired by Malaysian heritage, including our [Nyonya collection](/shop?collection=nyonya), each creation represents a different chapter of our identity as a Malaysian perfume brand.',
+      },
+      {
+        t: 'image',
+        src: asset('/assets/client/journal-elevenyears-orchid.webp'),
+        alt: 'The Orchid eau de parfum and its white box on a ceramic tray, beside a pink bloom',
+        caption: 'Our signature fragrance, Orchid',
+      },
+      {
+        t: 'image',
+        src: asset('/assets/client/journal-elevenyears-nyonya.webp'),
+        alt: 'The three Nyonya Collection fragrances and their patterned boxes, framed by kebaya fabric',
+        caption: 'Our Nyonya collection',
+      },
+      {
+        t: 'p',
+        text: 'Beyond creating Malaysia-inspired perfumes, Legendary has always believed in celebrating self-love and individuality. Through collections such as [Spirit](/shop?collection=spirit) and [3 Wishes](/shop?collection=three-wishes), we hope to create fragrances that allow people to express themselves freely, celebrate who they are, and discover a scent that feels uniquely personal.',
+      },
+      {
+        t: 'p',
+        text: 'Our journey has also allowed us to connect with customers from Malaysia and around the world as Legendary continues to expand its presence across the country. From growing our perfume kiosks in shopping malls, to opening our own standalone boutique in Melaka, bringing our fragrances to Malaysian airports, and most recently establishing a presence within a heritage building in the heart of Kuala Lumpur, every new location marks another chapter in our journey.',
+      },
+      {
+        t: 'image',
+        src: asset('/assets/client/journal-elevenyears-melaka.webp'),
+        alt: 'The Legendary boutique in Melaka, a white and gold heritage shophouse',
+        caption: 'Our standalone boutique in Melaka',
+        narrow: true,
+      },
+      {
+        t: 'p',
+        text: 'We even had a special pop-up at KLIA Terminal 2 as part of Malaysia’s tourism efforts, showcasing our Nyonya Collection and inviting travellers to experience Malaysian culture not only through fragrance, but through its visual storytelling as well.',
+      },
+      {
+        t: 'image',
+        src: asset('/assets/client/journal-elevenyears-klia.webp'),
+        alt: 'The Legendary pop-up at KLIA Terminal 2, with the Nyonya Collection and two sun bear mascots',
+      },
+      {
+        t: 'p',
+        text: 'For travellers, perfume can also make a meaningful souvenir from Malaysia. Unlike a traditional souvenir, fragrance has the unique ability to bring a memory back through scent, whether it recalls a holiday, a special moment, or time spent exploring Malaysia. Creating that connection has always been an important part of what we hope to achieve through Legendary.',
+      },
+      {
+        t: 'p',
+        text: 'But what makes our 11-year journey most special is the community we have built along the way. From every customer who has visited our kiosks, whether simply to experience our perfumes or to bring a fragrance home and share it with loved ones, to those supporting us through their screens: thank you for being the heart of Legendary.',
+      },
+      {
+        t: 'p',
+        text: 'Eleven years marks an exciting milestone for Legendary Perfume, but it also opens the door to an even brighter next chapter. As we continue to grow as a Malaysian fragrance brand, we look forward to creating new perfumes, sharing more stories inspired by Malaysia, and bringing even more memorable experiences to the community that has been with us throughout this journey.',
+      },
+      {
+        t: 'p',
+        text: 'There is still so much more to come from Legendary, and we can’t wait to share the journey with you.',
+      },
+      { t: 'h2', text: 'Where to Buy Legendary Perfume in Malaysia' },
+      {
+        t: 'table',
+        head: ['Location', 'What to expect'],
+        rows: [
+          ['Mall kiosks', 'The easiest place to sample the range'],
+          ['Melaka boutique', 'A white-and-gold heritage shophouse'],
+          ['Malaysian airports', 'A gift or souvenir for the journey home'],
+          ['Kuala Lumpur heritage building', 'The brand’s newest presence'],
+        ],
+      },
+      { t: 'cta', label: 'View our store locations', to: '/stores' },
+      { t: 'h2', text: 'Frequently Asked Questions' },
+      {
+        t: 'faq',
+        items: [
+          {
+            q: 'What is Legendary Perfume known for?',
+            a: 'A Malaysian fragrance brand known for perfumes inspired by Malaysian heritage, led by [Orchid](/product/orchid) and the [Nyonya Collection](/shop?collection=nyonya).',
+          },
+          {
+            q: 'What is in the Nyonya Collection?',
+            a: 'Three fragrances: [Kebaya Blooms](/product/kebaya-blooms), [Ondeh Delights](/product/ondeh-delights) and [Nyonya Aromatic](/product/nyonya-aromatic).',
+          },
+          {
+            q: 'Where can I buy Legendary Perfume?',
+            a: 'At mall kiosks across Malaysia, the Melaka boutique, Malaysian airport retail and a heritage building in Kuala Lumpur. [Every location](/stores) is listed with its address and opening hours, and you can also [order online](/shop).',
+          },
+          {
+            q: 'Is perfume a good souvenir from Malaysia?',
+            a: 'Yes. It is compact, easy to pack and tied to memory, so it brings a trip back long after you return.',
+          },
+          {
+            q: 'Which collections celebrate individuality?',
+            a: '[Spirit](/shop?collection=spirit) and [3 Wishes](/shop?collection=three-wishes).',
+          },
+        ],
+      },
+    ],
+  },
+  /* ---------------------------------------------------------------- */
   {
     slug: 'nyonya',
     title: 'Nyonya Collection: From Heritage to Legendary Perfume',

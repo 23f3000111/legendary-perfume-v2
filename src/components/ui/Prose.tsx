@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
-import { Sparkle } from './icons'
+import Accordion from './Accordion'
+import { ArrowRight, Sparkle } from './icons'
 
 /* ------------------------------------------------------------------
    A tiny content model shared by the policy pages and the journal
@@ -17,10 +18,29 @@ export type Block =
   | { t: 'ol'; items: string[] }
   | { t: 'quote'; text: string; cite?: string }
   | { t: 'tip'; text: string }
-  | { t: 'image'; src: string; alt: string; caption?: string }
+  /** `narrow` for an upright photograph, which at full column width would run a screen tall. */
+  | { t: 'image'; src: string; alt: string; caption?: string; narrow?: boolean }
   | { t: 'duo'; images: { src: string; alt: string }[] }
   | { t: 'table'; head: string[]; rows: string[][] }
   | { t: 'refs'; items: string[] }
+  /** A button to somewhere on the site, e.g. the store locator from an article. */
+  | { t: 'cta'; label: string; to: string }
+  /** Questions and answers, opened one at a time. Answers take inline markup. */
+  | { t: 'faq'; items: { q: string; a: string }[] }
+
+/**
+ * The questions in a Block[], as plain text, for an FAQPage in structured
+ * data: search engines and assistants read the answers there, where markup
+ * would only be noise.
+ */
+export function faqEntries(blocks: Block[]): { q: string; a: string }[] {
+  const plain = (text: string) =>
+    text
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/\*([^*]+)\*/g, '$1')
+  return blocks.flatMap((b) => (b.t === 'faq' ? b.items.map((f) => ({ q: f.q, a: plain(f.a) })) : []))
+}
 
 /**
  * Inline markup understood inside any `text` field:
@@ -169,7 +189,7 @@ function BlockView({ block: b, first }: { block: Block; first: boolean }) {
 
     case 'image':
       return (
-        <figure className={`${first ? '' : 'mt-10'}`}>
+        <figure className={`${first ? '' : 'mt-10'} ${b.narrow ? 'mx-auto max-w-sm' : ''}`}>
           <img src={b.src} alt={b.alt} loading="lazy" className="w-full rounded-sm object-cover" />
           {b.caption && <figcaption className="mt-3 text-xs text-smoke">{b.caption}</figcaption>}
         </figure>
@@ -185,9 +205,12 @@ function BlockView({ block: b, first }: { block: Block; first: boolean }) {
       )
 
     case 'table':
+      // Three columns or more keep a working width and scroll sideways on a
+      // phone. Two fit the screen as they are, and scrolling would only hide
+      // half of every row.
       return (
         <div className={`${first ? '' : 'mt-8'} -mx-5 overflow-x-auto px-5 sm:mx-0 sm:px-0`}>
-          <table className="w-full min-w-[34rem] border-collapse text-left">
+          <table className={`w-full border-collapse text-left ${b.head.length > 2 ? 'min-w-[34rem]' : ''}`}>
             <thead>
               <tr className="border-y border-line">
                 {b.head.map((h) => (
@@ -209,6 +232,32 @@ function BlockView({ block: b, first }: { block: Block; first: boolean }) {
               ))}
             </tbody>
           </table>
+        </div>
+      )
+
+    case 'cta':
+      return (
+        <div className={first ? '' : 'mt-8'}>
+          <Link to={b.to} className="btn-solid group gap-2">
+            {b.label}
+            <ArrowRight width={16} className="transition-transform duration-500 group-hover:translate-x-1" />
+          </Link>
+        </div>
+      )
+
+    case 'faq':
+      return (
+        <div className={first ? '' : 'mt-6'}>
+          <Accordion
+            items={b.items.map((f) => ({
+              title: f.q,
+              body: (
+                <p className="leading-[1.85] text-ink-soft">
+                  <RichText text={f.a} />
+                </p>
+              ),
+            }))}
+          />
         </div>
       )
 

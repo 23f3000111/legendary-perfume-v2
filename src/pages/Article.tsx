@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import PageHeader from '../components/ui/PageHeader'
-import Prose from '../components/ui/Prose'
+import Prose, { faqEntries } from '../components/ui/Prose'
 import ReadingProgress from '../components/ui/ReadingProgress'
 import ShareRow from '../components/ui/ShareRow'
 import { getArticle, articleNeighbours, type Article as Entry } from '../data/articles'
@@ -30,6 +30,9 @@ export default function Article() {
   }
 
   const { prev, next } = articleNeighbours(article.slug)
+  // An article that ends in questions and answers says so in its structured
+  // data too, as the FAQ page does, so they can be read straight from search.
+  const faq = faqEntries(article.body)
 
   return (
     <>
@@ -59,6 +62,19 @@ export default function Article() {
             publisher: { '@id': `${SITE.url}/#organisation` },
             mainEntityOfPage: absolute(`/journal/${article.slug}`),
           },
+          ...(faq.length
+            ? [
+                {
+                  '@type': 'FAQPage',
+                  '@id': absolute(`/journal/${article.slug}#faq`),
+                  mainEntity: faq.map((f) => ({
+                    '@type': 'Question',
+                    name: f.q,
+                    acceptedAnswer: { '@type': 'Answer', text: f.a },
+                  })),
+                },
+              ]
+            : []),
         ]}
       />
       <ReadingProgress target={body} />

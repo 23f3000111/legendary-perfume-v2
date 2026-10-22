@@ -36,6 +36,9 @@ AMD4 = os.path.join(ROOT, "client-assets", "amendment-4")
 # roughly 5:1 with the bottle close to full height. Nothing to re-frame.
 AMD6 = os.path.join(ROOT, "client-assets", "amendment-6")
 OUT = os.path.join(ROOT, "public", "assets", "client")
+# October 2026: the photographs for the 11 years journal article, from the
+# client's Drive folder, with the article text and FAQ source PDFs beside them.
+BLOG_2026_10 = os.path.join(ROOT, "client-assets", "blog-2026-10")
 
 INVISIBLE = dict.fromkeys(map(ord, "⁠​‎‏﻿"), None)
 
@@ -495,6 +498,23 @@ def save_hero_poster(src: str, name: str) -> None:
         write(out, f"hero-{name}-{width}.webp", quality=84, icc=icc)
     fill = im.resize((480, round(480 * im.height / im.width)), Image.LANCZOS)
     write(fill.filter(ImageFilter.GaussianBlur(18)), f"hero-{name}-fill.webp", quality=70, icc=icc)
+
+
+def save_journal_photo(src: str, dest: str, max_width: int, quality: int = 82) -> None:
+    """A photograph for a journal article, at the width its place needs.
+
+    Turned upright by its EXIF orientation, which a camera original can carry,
+    and with its colour profile kept: the client's Melaka shopfront is Display
+    P3, and read as sRGB its golds go flat.
+    """
+    from PIL import ImageOps
+
+    im = Image.open(src)
+    icc = im.info.get("icc_profile")
+    im = ImageOps.exif_transpose(im).convert("RGB")
+    if im.width > max_width:
+        im = im.resize((max_width, round(max_width * im.height / im.width)), Image.LANCZOS)
+    write(im, dest, quality=quality, icc=icc)
 
 
 def trim_alpha(im: Image.Image) -> Image.Image:
@@ -1032,6 +1052,20 @@ def main() -> int:
 
     print("Journal cards")
     save_journal_nyonya(find(*COLLECTION_COVERS["nyonya"]))
+
+    print("Journal: 11 years of Legendary")
+    # In the order the article uses them. The pop-up at KLIA Terminal 2 is also
+    # the article's header and its Journal card, so it is kept a little wider;
+    # past 1800px it only grew heavier behind the header's dark scrim (428 KB at
+    # 2400 against about 260 KB). The Melaka shopfront is upright and shown
+    # narrower in the column.
+    for source, name, width in (
+        ("01.jpg", "orchid", 1600),
+        ("03.png", "nyonya", 1600),
+        ("04.jpg", "melaka", 1200),
+        ("02.png", "klia", 1800),
+    ):
+        save_journal_photo(find("", source, root=BLOG_2026_10), f"journal-elevenyears-{name}.webp", width)
 
     print("Scented-memory cards")
     for key, (folder, needle) in PLACES.items():
