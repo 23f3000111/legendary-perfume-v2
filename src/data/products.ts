@@ -179,6 +179,90 @@ function spiritOneTrio(id: string): Variant[] {
   ]
 }
 
+/**
+ * The "Good to know" and "Care" notes every shimmer SKU carries. Spirit's
+ * shimmer particles settle in the spray tube unless the bottle is stored flat,
+ * so the sets and the 50ml singles all say so, in the same words.
+ */
+const SHIMMER_GOOD_TO_KNOW =
+  'Shimmering, radiant and long lasting, four to seven hours. A glowing eau de parfum crafted for an effortless, lingering shine.'
+const SHIMMER_CARE =
+  'Store flat so the delicate shimmer particles do not settle at the spray tube, and away from direct sunlight and heat. Shake well before use. Spray onto pulse points at the wrists, neck and behind the ears, then let it settle without rubbing.'
+
+/** Shop copy for the Spirit I fragrances sold on their own. */
+const SPIRIT_ONE_COPY: Record<
+  'hope' | 'love' | 'confidence',
+  { moods: Mood[]; accent: AccentKey; story: string; description: string }
+> = {
+  hope: {
+    moods: ['Serene', 'Playful'],
+    accent: 'teal',
+    story:
+      'Shine with Hope. Aqueous pear and green notes open bright, then jasmine and magnolia settle into warm woods.',
+    description:
+      'A refreshing celebration of new beginnings and quiet optimism, Hope is a luminous signature scent created to awaken your senses and uplift your spirit. Opening with a crisp, dewy blend of aqueous notes, fresh green accords and juicy pear, it unfolds into an airy floral heart of blooming jasmine, delicate muguet and graceful magnolia. Settling gently into a warm, comforting base of amber, soft musk and elegant woods, this refreshing eau de parfum leaves a serene, uplifting impression that lingers beautifully wherever you go.',
+  },
+  love: {
+    moods: ['Romantic', 'Serene'],
+    accent: 'rose',
+    story:
+      'Do with Love. Lemon and rose lead into powdery ambrette and clean linen, over a base of cedarwood and musk.',
+    description:
+      'A tender celebration of romance and timeless affection, Love is an enchanting signature scent created to capture the beauty of love in its many forms. Opening with a delicate, uplifting blend of fresh lemon, graceful rose and blooming muguet, it unfolds into a soft, alluring heart of powdery accords, ambrette and fresh linen. Settling gracefully into a warm, sensual base of patchouli, cedarwood and musk, this captivating eau de parfum leaves a beautifully intimate, lingering impression that speaks the language of love wherever you go.',
+  },
+  confidence: {
+    moods: ['Bold', 'Playful'],
+    accent: 'gold',
+    story:
+      'Strive with Confidence. Bergamot and pear spark first, then jasmine and leafy florals come to rest on creamy sandalwood.',
+    description:
+      'A radiant celebration of self-assurance and effortless elegance, Confidence is a captivating signature scent created to inspire you to embrace your individuality and leave a lasting impression. Opening with a vibrant blend of zesty bergamot, juicy pear and graceful rose, it unfolds into a luminous floral heart of blooming jasmine, fresh leafy accords and delicate muguet. Settling beautifully into a refined base of cedarwood, grapefruit and creamy sandalwood, this sophisticated eau de parfum leaves a confident, memorable presence wherever you go.',
+  },
+}
+
+/**
+ * Revision 12 (the client's "Revision #7", 28 October 2026): Hope, Love and
+ * Confidence are now sold on their own in 50ml, the way Passion, Life and
+ * Dream already were. Notes, families, occasion charts and botanicals are the
+ * Spirit I set's own; the botanical in each new Drive folder is byte for byte
+ * the one the set already shows, and the folders carry no chart. The photographs
+ * come from those folders. The client's titles put a dash between "Spirit I"
+ * and the fragrance, so the name is the fragrance alone and the subtitle names
+ * the set, as it does for Spirit II.
+ */
+const SPIRIT_ONE_SINGLES: Product[] = spiritOneTrio('spirit').map((v) => {
+  const id = v.name.toLowerCase()
+  const copy = SPIRIT_ONE_COPY[id as keyof typeof SPIRIT_ONE_COPY]
+  return {
+    id,
+    name: v.name,
+    subtitle: 'Spirit I, on its own',
+    collection: 'Spirit',
+    collectionId: 'spirit',
+    family: v.family!,
+    audience: 'Unisex',
+    moods: copy.moods,
+    price: 188,
+    compareAt: 238,
+    size: '50ml Eau de Parfum',
+    image: img(`p-${id}-life.webp`),
+    hoverImage: img(`p-${id}-pack.webp`),
+    gallery: [img(`p-${id}-life.webp`), img(`p-${id}-pack.webp`), img(`p-${id}-box.webp`)],
+    included: img(`p-${id}-included.webp`),
+    includedItems: includedWith(v.name, '50ml shimmering eau de parfum'),
+    radar: v.radar,
+    bloom: v.bloom,
+    accent: copy.accent,
+    badges: ['Spirit I'],
+    place: 'Kota Kinabalu',
+    story: copy.story,
+    description: copy.description,
+    goodToKnow: SHIMMER_GOOD_TO_KNOW,
+    care: SHIMMER_CARE,
+    notes: v.notes,
+  }
+})
+
 /** Shop copy for the Spirit II fragrances sold on their own. */
 const SPIRIT_TWO_COPY: Record<
   'passion' | 'life' | 'dream',
@@ -279,6 +363,11 @@ const SPIRIT_TWO_SINGLES: Product[] = SPIRIT_TWO_TRIO.map((v) => {
     place: 'Kota Kinabalu',
     story: copy.story,
     description: copy.description,
+    // Revision 12: these are shimmer pours too, and the client's sheet gives
+    // them the same store flat note as the set. They had fallen back to the
+    // house default, which says nothing about the shimmer.
+    goodToKnow: SHIMMER_GOOD_TO_KNOW,
+    care: SHIMMER_CARE,
     notes: v.notes,
   }
 })
@@ -480,8 +569,11 @@ export const products: Product[] = [
     compareAt: 238,
     size: '50ml Eau de Parfum',
     image: img('p-man-life.webp'),
-    hoverImage: img('p-man-pack.webp'),
-    gallery: [img('p-man-life.webp'), img('p-man-pack.webp'), img('p-man-box.webp')],
+    // Revision 12: the client asked for their side view of the box and bottle
+    // in place of the silver render, cut out so it sits on the wash like every
+    // other pack shot. It is the same view as the third photograph.
+    hoverImage: img('p-man-pack-side.webp'),
+    gallery: [img('p-man-life.webp'), img('p-man-pack-side.webp'), img('p-man-box.webp')],
     included: img('p-man-included.webp'),
     includedItems: includedWith('Man', '50ml eau de parfum'),
     radar: img('p-man-radar.webp'),
@@ -733,16 +825,19 @@ export const products: Product[] = [
       'Shine with Hope, do with Love, strive with Confidence. Enhance your journey by creating unforgettable moments with the three fragrances of Spirit I.',
     description:
       'Embodying the core spirit of a vibrant life, Spirit I is a curated set of three fragrances designed to inspire and empower. Hope: a luminous, airy harmony of crisp aqueous pear, blooming jasmine and magnolia, grounded in warm woods. Love: a soft, romantic embrace of fresh rose and lemon, turning into cosy linen, powdery ambrette and cedarwood. Confidence: an empowering burst of sparkling bergamot, juicy pear and vibrant leafy florals, anchored by rich sandalwood.',
-    goodToKnow:
-      'Shimmering, radiant and long lasting, four to seven hours. A glowing eau de parfum crafted for an effortless, lingering shine.',
-    care:
-      'Store flat so the delicate shimmer particles do not settle at the spray tube, and away from direct sunlight and heat. Shake well before use. Spray onto pulse points at the wrists, neck and behind the ears, then let it settle without rubbing.',
+    goodToKnow: SHIMMER_GOOD_TO_KNOW,
+    care: SHIMMER_CARE,
     notes: {
       top: ['Aqueous', 'Green', 'Pear', 'Bergamot'],
       heart: ['Jasmine', 'Muguet', 'Magnolia', 'Rose'],
       base: ['Amber', 'Musky', 'Woody', 'Cedarwood'],
     },
   },
+  /* ------------------------------------------------------------------
+     Revision 12: Hope, Love and Confidence in 50ml, straight after the
+     set they come from, the way the three Wishes follow 3 Wishes.
+     ------------------------------------------------------------------ */
+  ...SPIRIT_ONE_SINGLES,
   {
     // Client amendment: Spirit II was missing from the Spirit collection.
     // Prices and notes come from the client's Spirit II product sheet.
@@ -774,10 +869,8 @@ export const products: Product[] = [
       'Passion ignites, Dream takes flight, Life begins. A bold and uplifting set of three fragrances that carries ambition, tenderness and a fresh start.',
     description:
       'An empowering extension of the Spirit collection, Spirit II celebrates the vibrant rhythm and attitude of life. Guided by three chapters, Passion Ignites, Dreams Take Flight and Life Begins, each scent unfolds its own experience. Passion: a joyful explosion of tangy red berries and juicy blackcurrant, blooming into a luminous floral heart of rose, muguet and ylang ylang, wrapped in warm vanilla and musk. Dream: an ethereal composition of aquatic lotus and delicate freesia, leading to a romantic heart of white lily and peony, grounded by cedarwood and amber. Life: a lively, sophisticated blend of zesty bergamot, exotic lychee and warm nutmeg, turning into velvety rose and peony over a deep base of incense and vetiver.',
-    goodToKnow:
-      'Shimmering, radiant and long lasting, four to seven hours. A glowing eau de parfum crafted for an effortless, lingering shine.',
-    care:
-      'Store flat so the delicate shimmer particles do not settle at the spray tube, and away from direct sunlight and heat. Shake well before use. Spray onto pulse points at the wrists, neck and behind the ears, then let it settle without rubbing.',
+    goodToKnow: SHIMMER_GOOD_TO_KNOW,
+    care: SHIMMER_CARE,
     notes: {
       top: ['Red Berries', 'Blackcurrant'],
       heart: ['Rose', 'Muguet', 'Ylang Ylang'],
@@ -824,10 +917,8 @@ export const products: Product[] = [
       'The whole of Spirit I, packed for the road. Hope, Love and Confidence in cabin friendly sprays that slip into a handbag or a carry on.',
     description:
       'The whole of Spirit I, sized for the bag. Love: a soft, romantic embrace of fresh rose and lemon, turning into cosy linen, powdery ambrette and cedarwood. Confidence: an empowering burst of sparkling bergamot, juicy pear and vibrant leafy florals, anchored by rich sandalwood. Hope: a luminous, airy harmony of crisp aqueous pear, blooming jasmine and magnolia, grounded in warm woods.',
-    goodToKnow:
-      'Shimmering, radiant and long lasting, four to seven hours. A glowing eau de parfum crafted for an effortless, lingering shine.',
-    care:
-      'Store flat so the delicate shimmer particles do not settle at the spray tube, and away from direct sunlight and heat. Shake well before use. Spray onto pulse points at the wrists, neck and behind the ears, then let it settle without rubbing.',
+    goodToKnow: SHIMMER_GOOD_TO_KNOW,
+    care: SHIMMER_CARE,
     notes: {
       top: ['Aqueous', 'Green', 'Pear', 'Bergamot'],
       heart: ['Jasmine', 'Muguet', 'Magnolia', 'Rose'],
@@ -861,14 +952,19 @@ export function getProduct(id: string): Product | undefined {
   return products.find((p) => p.id === id)
 }
 
-export function relatedProducts(product: Product, count = 4): Product[] {
-  const same = products.filter(
-    (p) => p.id !== product.id && p.collectionId === product.collectionId,
-  )
-  const others = products.filter(
-    (p) => p.id !== product.id && p.collectionId !== product.collectionId,
-  )
-  return [...same, ...others].slice(0, count)
+/**
+ * "You may also like": the rest of the product's collection first, then the
+ * rest of the house.
+ *
+ * Revision 12: `hidden` is what the dashboard has taken off the shop. The
+ * client hid Spirit II and Dream and still found both recommended on Passion,
+ * because the shop and Bestsellers left hidden products out and this did not.
+ */
+export function relatedProducts(product: Product, count = 4, hidden: string[] = []): Product[] {
+  const others = products.filter((p) => p.id !== product.id && !hidden.includes(p.id))
+  const same = others.filter((p) => p.collectionId === product.collectionId)
+  const rest = others.filter((p) => p.collectionId !== product.collectionId)
+  return [...same, ...rest].slice(0, count)
 }
 
 export function productsByMood(mood: Mood): Product[] {

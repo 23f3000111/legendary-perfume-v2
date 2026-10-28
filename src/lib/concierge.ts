@@ -1,5 +1,6 @@
 import { products, moodList, moodCopy, type Mood } from '../data/products'
 import { formatRM } from './format'
+import { useStock } from '../store/stock'
 
 export const WHATSAPP_NUMBER = '60193836633'
 /** Client house style: numbers are spaced, never hyphenated. */
@@ -37,9 +38,15 @@ export interface BotReply {
   handoff?: boolean
 }
 
+/** Whether the dashboard has taken a product off the shop. */
+function isHidden(id: string): boolean {
+  return useStock.getState().hidden.includes(id)
+}
+
 function ref(id: string): ProductRef | null {
   const p = products.find((x) => x.id === id)
-  if (!p) return null
+  // Nothing the dashboard has taken off the shop is recommended here either.
+  if (!p || isHidden(p.id)) return null
   return { id: p.id, name: p.name, price: formatRM(p.price), family: p.family }
 }
 
@@ -155,7 +162,7 @@ export function handle(input: string): BotReply {
 }
 
 function recommendByMood(mood: Mood): BotReply {
-  const matches = products.filter((p) => p.moods.includes(mood)).slice(0, 3)
+  const matches = products.filter((p) => p.moods.includes(mood) && !isHidden(p.id)).slice(0, 3)
   return {
     text: `${moodCopy[mood].line}. Here’s what I’d wear:`,
     products: matches.map((p) => ref(p.id)).filter(Boolean) as ProductRef[],

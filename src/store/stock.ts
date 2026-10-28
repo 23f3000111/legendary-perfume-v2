@@ -32,7 +32,12 @@ export const useStock = create<StockState>((set, get) => ({
     if (get().loaded) return
     try {
       const { products, hidden } = await fetchCatalogueChanges()
-      set({ changes: products, hidden, loaded: true })
+      // Hidden is off sale as well as out of sight: the server refuses it at
+      // checkout. So a page reached by an old link or a bookmark shows it sold
+      // out, rather than putting it in the bag only for the payment to fail.
+      const changes = { ...products }
+      for (const id of hidden) changes[id] = { inStock: false }
+      set({ changes, hidden, loaded: true })
     } catch {
       // The built catalogue stands.
       set({ loaded: true })

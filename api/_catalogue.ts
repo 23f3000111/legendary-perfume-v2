@@ -108,6 +108,27 @@ export const PRODUCTS: Record<string, CatalogueEntry> = {
     "price": 188,
     "collection": "Spirit"
   },
+  "hope": {
+    "id": "hope",
+    "name": "Hope",
+    "size": "50ml Eau de Parfum",
+    "price": 188,
+    "collection": "Spirit"
+  },
+  "love": {
+    "id": "love",
+    "name": "Love",
+    "size": "50ml Eau de Parfum",
+    "price": 188,
+    "collection": "Spirit"
+  },
+  "confidence": {
+    "id": "confidence",
+    "name": "Confidence",
+    "size": "50ml Eau de Parfum",
+    "price": 188,
+    "collection": "Spirit"
+  },
   "spirit-ii": {
     "id": "spirit-ii",
     "name": "Spirit II",

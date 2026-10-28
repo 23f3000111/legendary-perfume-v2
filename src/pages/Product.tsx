@@ -49,6 +49,7 @@ export default function Product() {
 
   const add = useShop((s) => s.add)
   const changes = useStock((s) => s.changes)
+  const hidden = useStock((s) => s.hidden)
   const { pulse, openCart } = useUI()
 
   if (!product) {
@@ -66,7 +67,7 @@ export default function Product() {
   // Price and availability come from the dashboard where it has set them.
   const now = live(product, changes)
   const off = discountPct(now.price, now.compareAt)
-  const related = relatedProducts(product, 4)
+  const related = relatedProducts(product, 4, hidden)
 
   // A set breaks into one composition band per fragrance; anything else keeps
   // the single band it has always had.
@@ -151,7 +152,23 @@ export default function Product() {
       {/* Main — left gallery pins while the right column scrolls past it */}
       {/* Client note: image column narrowed and capped so the shot sits in
           proportion to the copy, with the thumbnails visible alongside it.
-          The gallery stays pinned while only this right column scrolls. */}
+          The gallery stays pinned while only this right column scrolls.
+
+          Revision 12, "product photos are cut off, especially the 3rd photo":
+          the cap used to be on the frame's height, so on a laptop screen the
+          square frame came out wide and short and object-cover sliced the top
+          and bottom off every photograph. The box shots stand on the bottom
+          edge of theirs, so the box and bottle lost their feet. The frame is
+          square at every size now, so every photograph, square like the
+          frame, shows whole.
+
+          A square frame capped by the screen's height left a wide empty gap
+          beside it on a short laptop screen, so from lg up the thumbnails
+          stand in a column to its left and the frame takes the rest of the
+          column. 250px is the header, the section's top padding and the
+          breadcrumb above the frame, plus a little room below it, so the
+          whole frame stays on screen as the gallery pins. Below lg the
+          thumbnails sit underneath as before. */}
       <section className="u-container grid items-start gap-12 py-10 md:py-16 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
         {/* Gallery */}
         <div className="lg:sticky lg:top-[150px] lg:self-start">
@@ -160,43 +177,45 @@ export default function Product() {
             <Link to="/shop" className="hover:text-gold">Fragrances</Link><span>/</span>
             <span className="text-ink">{product.name}</span>
           </nav>
-          <motion.div
-            key={active}
-            initial={{ opacity: 0.4, scale: 1.01 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}
-            className="relative overflow-hidden rounded-sm"
-            style={{ background: `linear-gradient(160deg, ${tone.soft}, rgba(251,248,242,0.6))` }}
-          >
-            {off && (
-              <span className="absolute left-4 top-4 z-10 px-2.5 py-1 text-[0.64rem] uppercase tracking-[0.14em] text-ivory" style={{ background: tone.hex }}>
-                Save {off}%
-              </span>
+          <div className="lg:flex lg:items-start lg:gap-3">
+            <motion.div
+              key={active}
+              initial={{ opacity: 0.4, scale: 1.01 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}
+              className="relative max-w-[52vh] overflow-hidden rounded-sm lg:min-w-0 lg:max-w-[calc(100vh-250px)] lg:flex-1"
+              style={{ background: `linear-gradient(160deg, ${tone.soft}, rgba(251,248,242,0.6))` }}
+            >
+              {off && (
+                <span className="absolute left-4 top-4 z-10 px-2.5 py-1 text-[0.64rem] uppercase tracking-[0.14em] text-ivory" style={{ background: tone.hex }}>
+                  Save {off}%
+                </span>
+              )}
+              <img
+                src={product.gallery[active]}
+                alt={product.name}
+                className={`aspect-square w-full ${
+                  // The pack cut-out is transparent, so it is fitted on the
+                  // accent wash rather than cropped to fill.
+                  product.gallery[active] === product.hoverImage
+                    ? 'object-contain p-8'
+                    : 'object-cover'
+                }`}
+              />
+            </motion.div>
+            {product.gallery.length > 1 && (
+              <div className="mt-4 flex gap-3 lg:order-first lg:mt-0 lg:flex-col">
+                {product.gallery.map((g, i) => (
+                  <button
+                    key={g}
+                    onClick={() => setActive(i)}
+                    className={`h-20 w-20 shrink-0 overflow-hidden rounded-sm ring-1 transition ${active === i ? 'ring-gold' : 'ring-line hover:ring-gold/50'}`}
+                    style={{ background: `linear-gradient(160deg, ${tone.soft}, rgba(251,248,242,0.6))` }}
+                  >
+                    <img src={g} alt="" className={g === product.hoverImage ? 'h-full w-full object-contain p-1.5' : 'h-full w-full object-cover'} />
+                  </button>
+                ))}
+              </div>
             )}
-            <img
-              src={product.gallery[active]}
-              alt={product.name}
-              className={`aspect-square max-h-[52vh] w-full ${
-                // The pack cut-out is transparent, so it is fitted on the
-                // accent wash rather than cropped to fill.
-                product.gallery[active] === product.hoverImage
-                  ? 'object-contain p-8'
-                  : 'object-cover'
-              }`}
-            />
-          </motion.div>
-          {product.gallery.length > 1 && (
-            <div className="mt-4 flex gap-3">
-              {product.gallery.map((g, i) => (
-                <button
-                  key={g}
-                  onClick={() => setActive(i)}
-                  className={`h-20 w-16 overflow-hidden rounded-sm ring-1 transition ${active === i ? 'ring-gold' : 'ring-line hover:ring-gold/50'}`}
-                  style={{ background: `linear-gradient(160deg, ${tone.soft}, rgba(251,248,242,0.6))` }}
-                >
-                  <img src={g} alt="" className={g === product.hoverImage ? 'h-full w-full object-contain p-1.5' : 'h-full w-full object-cover'} />
-                </button>
-              ))}
-            </div>
-          )}
+          </div>
         </div>
 
         {/* Info */}

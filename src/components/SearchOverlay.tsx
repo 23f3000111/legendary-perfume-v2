@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { products } from '../data/products'
 import { collections } from '../data/collections'
 import { formatRM } from '../lib/format'
+import { isListed, useStock } from '../store/stock'
 import { Search, Close } from './ui/icons'
 
 /**
@@ -11,7 +12,7 @@ import { Search, Close } from './ui/icons'
  *
  * Client note: the magnifying glass did nothing at all. It now opens this.
  *
- * The whole catalogue is eighteen fragrances and four collections, so the
+ * The whole catalogue is about twenty fragrances and four collections, so the
  * search runs in the browser over the data the page already has. There is no
  * request to make and no index to keep in step, and results appear as the
  * visitor types rather than after a round trip.
@@ -62,17 +63,19 @@ export default function SearchOverlay({ open, onClose }: { open: boolean; onClos
   }, [open])
 
   const q = query.trim().toLowerCase()
+  // What the dashboard has taken off the shop is not found here either.
+  const hidden = useStock((s) => s.hidden)
 
   const results = useMemo(() => {
     if (q.length < 2) return []
     const words = q.split(/\s+/)
     return INDEX
-      .filter(({ text }) => words.every((w) => text.includes(w)))
+      .filter(({ product, text }) => isListed(product, hidden) && words.every((w) => text.includes(w)))
       // A name match is what someone usually meant, so it sorts first.
       .sort((a, b) => Number(b.product.name.toLowerCase().includes(q)) - Number(a.product.name.toLowerCase().includes(q)))
       .slice(0, 6)
       .map(({ product }) => product)
-  }, [q])
+  }, [q, hidden])
 
   const matchingCollections = useMemo(
     () => (q.length < 2 ? [] : collections.filter((c) => c.name.toLowerCase().includes(q))),

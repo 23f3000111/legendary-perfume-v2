@@ -39,6 +39,11 @@ OUT = os.path.join(ROOT, "public", "assets", "client")
 # October 2026: the photographs for the 11 years journal article, from the
 # client's Drive folder, with the article text and FAQ source PDFs beside them.
 BLOG_2026_10 = os.path.join(ROOT, "client-assets", "blog-2026-10")
+# Revision 12 (the client's "Revision #7", 28 October 2026): one Drive folder
+# per Spirit I single, saved as spirit-i-hope, spirit-i-love and
+# spirit-i-confidence, and MAN's replacement photograph in man/. The two PDFs
+# the round arrived in sit beside them.
+AMD7 = os.path.join(ROOT, "client-assets", "amendment-7")
 
 INVISIBLE = dict.fromkeys(map(ord, "⁠​‎‏﻿"), None)
 
@@ -1084,7 +1089,15 @@ def main() -> int:
         life = LIFE_NEEDLES.get(pid, ("lifestyle picture",))
         save_webp(find_or_fallback(pid, folder, *life), f"p-{pid}-life.webp", 1400)
         save_webp(find_or_fallback(pid, folder, "white background box"), f"p-{pid}-box.webp", 1400)
-        save_cutout(find(folder, *PACK_NEEDLES[pid]), f"p-{pid}-pack.webp", 1400)
+        if pid == "man":
+            # Revision 12: the client replaced MAN's second photograph, a
+            # silver render of the box, with their side view of the box and
+            # bottle. It ships on white, so save_cutout takes the ground out
+            # and it sits on the wash like every other pack shot. A new name,
+            # because /assets/ is served immutable for a year.
+            save_cutout(find("man", "white background box", root=AMD7), "p-man-pack-side.webp", 1400)
+        else:
+            save_cutout(find(folder, *PACK_NEEDLES[pid]), f"p-{pid}-pack.webp", 1400)
         # Client note: the "What's included" flat-lay must sit on transparency
         # so the panel's own paper colour carries through behind it.
         included = (
@@ -1097,6 +1110,17 @@ def main() -> int:
             save_webp(find(folder, radar), f"p-{pid}-radar.webp", 1100, keep_alpha=True)
         if bloom:
             save_webp(find(folder, bloom), f"p-{pid}-bloom.webp", 1000, keep_alpha=True)
+
+    print("Spirit I singles")
+    # Revision 12: Hope, Love and Confidence in 50ml. Each folder holds the
+    # same four photographs as any other product's. The occasion chart and the
+    # botanical are the Spirit I set's own, so nothing is written for those.
+    for pid in ("hope", "love", "confidence"):
+        folder = f"spirit-i-{pid}"
+        save_webp(find(folder, "lifestyle picture", root=AMD7), f"p-{pid}-life.webp", 1400)
+        save_webp(find(folder, "white background box", root=AMD7), f"p-{pid}-box.webp", 1400)
+        save_cutout(find(folder, "website", root=AMD7), f"p-{pid}-pack.webp", 1400)
+        save_cutout(find(folder, "what you get", ".png", root=AMD7), f"p-{pid}-included.webp", 1600)
 
     print("Set variants")
     for pid, (folder, entries) in VARIANTS.items():

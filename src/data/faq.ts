@@ -142,12 +142,14 @@ export const faqSections: FaqSection[] = [
         a: 'Not yet, but it is something to look forward to. Each Wish is available on its own at 15ml, or all three together as a set or a travel kit.',
       },
       {
-        q: 'Why is there no single large bottle of Spirit I?',
-        a: 'Not yet, but it is something to look forward to. Spirit I ships as a trio and as a travel kit.',
+        // Revision 12: Spirit I's three fragrances now come in 50ml on their
+        // own, so this answer turned from "not yet" into yes.
+        q: 'Does Spirit I come in a single large bottle?',
+        a: 'Yes. Hope, Love and Confidence are each available on their own in a 50ml bottle, as well as together in the Spirit I trio and the travel kit.',
       },
       {
         q: 'Do Spirit I and Spirit II come in small single bottles?',
-        a: 'The three Spirit II fragrances, Passion, Life and Dream, are each available on their own at 50ml. Single bottles of Spirit I are not available yet, but it is something to look forward to.',
+        a: 'Each Spirit fragrance is also sold on its own, in a 50ml bottle. A smaller single bottle is not available yet, but it is something to look forward to.',
       },
       {
         q: 'Can I choose any three scents myself as a set?',

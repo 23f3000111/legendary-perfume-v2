@@ -6,10 +6,13 @@ import ProductCard from '../components/ProductCard'
 import Reveal from '../components/ui/Reveal'
 import { Kicker } from '../components/ui/SplitText'
 import { ArrowRight } from '../components/ui/icons'
+import { isListed, useStock } from '../store/stock'
 
 export default function Finder() {
   const [mood, setMood] = useState<Mood>('Serene')
-  const matches = productsByMood(mood).slice(0, 4)
+  // Nothing the dashboard has taken off the shop.
+  const hidden = useStock((s) => s.hidden)
+  const matches = productsByMood(mood).filter((p) => isListed(p, hidden)).slice(0, 4)
 
   return (
     <section className="bg-sand/60 py-24 md:py-32">
