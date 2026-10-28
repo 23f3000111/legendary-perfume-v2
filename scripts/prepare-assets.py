@@ -41,8 +41,8 @@ OUT = os.path.join(ROOT, "public", "assets", "client")
 BLOG_2026_10 = os.path.join(ROOT, "client-assets", "blog-2026-10")
 # Revision 12 (the client's "Revision #7", 28 October 2026): one Drive folder
 # per Spirit I single, saved as spirit-i-hope, spirit-i-love and
-# spirit-i-confidence, and MAN's replacement photograph in man/. The two PDFs
-# the round arrived in sit beside them.
+# spirit-i-confidence, and MAN's replacement photograph in man-2/. The two
+# PDFs the round arrived in sit beside them.
 AMD7 = os.path.join(ROOT, "client-assets", "amendment-7")
 
 INVISIBLE = dict.fromkeys(map(ord, "⁠​‎‏﻿"), None)
@@ -1090,12 +1090,14 @@ def main() -> int:
         save_webp(find_or_fallback(pid, folder, *life), f"p-{pid}-life.webp", 1400)
         save_webp(find_or_fallback(pid, folder, "white background box"), f"p-{pid}-box.webp", 1400)
         if pid == "man":
-            # Revision 12: the client replaced MAN's second photograph, a
-            # silver render of the box, with their side view of the box and
-            # bottle. It ships on white, so save_cutout takes the ground out
-            # and it sits on the wash like every other pack shot. A new name,
-            # because /assets/ is served immutable for a year.
-            save_cutout(find("man", "white background box", root=AMD7), "p-man-pack-side.webp", 1400)
+            # Revision 12: the client replaced MAN's second photograph. The
+            # original render stretched the bottle wide; theirs is the same
+            # front view with the bottle at its true proportions. Their first
+            # link was the side view the third photograph already uses, and
+            # sits in man/; the right file is in man-2/. A new name, because
+            # /assets/ is served immutable for a year, and both earlier names
+            # have been live.
+            save_cutout(find("man-2", "man website", root=AMD7), "p-man-pack-front.webp", 1400)
         else:
             save_cutout(find(folder, *PACK_NEEDLES[pid]), f"p-{pid}-pack.webp", 1400)
         # Client note: the "What's included" flat-lay must sit on transparency

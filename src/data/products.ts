@@ -569,11 +569,11 @@ export const products: Product[] = [
     compareAt: 238,
     size: '50ml Eau de Parfum',
     image: img('p-man-life.webp'),
-    // Revision 12: the client asked for their side view of the box and bottle
-    // in place of the silver render, cut out so it sits on the wash like every
-    // other pack shot. It is the same view as the third photograph.
-    hoverImage: img('p-man-pack-side.webp'),
-    gallery: [img('p-man-life.webp'), img('p-man-pack-side.webp'), img('p-man-box.webp')],
+    // Revision 12: the client's replacement for the second photograph, the
+    // same front view with the bottle at its true proportions. The original
+    // render had stretched it wide.
+    hoverImage: img('p-man-pack-front.webp'),
+    gallery: [img('p-man-life.webp'), img('p-man-pack-front.webp'), img('p-man-box.webp')],
     included: img('p-man-included.webp'),
     includedItems: includedWith('Man', '50ml eau de parfum'),
     radar: img('p-man-radar.webp'),
