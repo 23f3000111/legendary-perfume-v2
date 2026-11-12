@@ -102,7 +102,7 @@ so a user table would be ceremony without benefit: the password is exchanged for
 a signed, HttpOnly session cookie, and no session state is kept server side to
 go stale between function instances.
 
-Three views:
+The shop's views:
 
 - **Overview** — revenue, average order, what is awaiting payment, and what is
   actually selling by units.
@@ -113,12 +113,15 @@ Three views:
   expanding to the items, the delivery address and the contact details needed to
   pack it.
 
+The content views (**FAQ**, **Stores**, **Photos**, **History**) are described
+under [Content dashboard](#content-dashboard) below.
+
 ### What it can and cannot change
 
-Copy, photography and compositions stay in `src/data/` and in git, where they
-are reviewed before they go live. What a shopkeeper needs between deploys is a
-much smaller set, and that is what the dashboard writes: an override layer that
-the catalogue falls through to. See `api/_lib/overrides.ts`.
+Prices, stock and visibility change instantly, through an override layer that
+the catalogue falls through to. See `api/_lib/overrides.ts`. Content (copy and
+photographs) changes through the content dashboard instead, which publishes into
+git, so it is versioned and deployed like the rest of the site.
 
 A change reaches customers within the minute. The storefront reads
 `/api/catalogue` once per page load for the handful of products that currently
@@ -139,6 +142,74 @@ The dashboard needs somewhere durable to write.
 - **Not set** — a JSON file under `.data/`, for local development only. A
   serverless instance has no durable disk, so the dashboard says so plainly in a
   banner rather than pretending the change stuck.
+
+## Content dashboard
+
+The same `/admin` edits the site's content, so the Legendary team can make their
+own changes instead of sending revision PDFs. Stage 1 covers the **FAQ** and the
+**store list**. The Journal, Products, the pages and the hero poster follow, as
+set out in `docs/superpowers/specs/2026-11-12-content-dashboard-design.md`.
+
+- **Content lives in `src/content/*.json`.** The site imports it at build time,
+  so pages stay as fast as before and Google sees every word. `npm run build`
+  refuses content that fails its schema (`npm run check:content`), so a bad
+  document fails the build and the live site stays as it was.
+- **Drafts** save while the team types (`content_drafts` in Postgres). Nobody
+  else sees them.
+- **Preview** opens the real page with `?preview`. Only a signed-in session gets
+  the drafts.
+- **Publish** makes one commit to `main` through the GitHub API
+  (`api/admin/content.ts`). Vercel deploys it in about a minute, and the
+  dashboard watches Vercel's status on the commit until it says Live.
+- **Conflicts.** A draft remembers the version it began from. If the document
+  changed on GitHub since then (a developer's push, a second tab), publishing
+  stops and asks which version to keep. The ref update is never forced.
+- **History** lists every content commit. Restore puts back one document, as a
+  new commit.
+- **Photos** are shrunk in the browser first, because Vercel refuses any request
+  over 4.5 MB. Then `api/admin/media.ts` turns them upright, converts them to
+  sRGB and keeps a 3200 px master. It makes a copy at each place's size, named
+  by content hash under `public/assets/cms/`, so the year-long cache on
+  `/assets/` is never served an old photo.
+
+### Setting it up
+
+Three variables in Vercel, for **Production**:
+
+| Variable | Value |
+| --- | --- |
+| `GITHUB_TOKEN` | A fine-grained personal access token for `23f3000111/legendary-perfume-v2` only, with **Contents: Read and write** and nothing else |
+| `GITHUB_REPO` | `23f3000111/legendary-perfume-v2` |
+| `GITHUB_BRANCH` | `main` |
+
+Without them, the content tabs say publishing is not set up. Prices, stock and
+orders work as before.
+
+### Working on the code afterwards
+
+Dashboard publishes land on `main` as ordinary commits ("Dashboard: FAQ"). Pull
+before you push (`git pull --rebase v2 main`). Treat `src/content/*.json` as the
+dashboard's: if you must change one by hand, pull first and push promptly. A
+draft based on an older version then stops at the conflict question rather than
+overwriting your change.
+
+### Running it locally
+
+The local `.env` holds production keys and the production database. Never run
+the API with it. Run from a checkout without `.env`, or override every variable,
+`DATABASE_URL` included:
+
+```bash
+node scripts/fake-github.mjs 4010        # an in-memory GitHub seeded from this checkout
+ADMIN_PASSWORD=test ADMIN_SESSION_SECRET=dev GITHUB_TOKEN=fake GITHUB_REPO=local/legendary \
+  GITHUB_API_URL=http://127.0.0.1:4010 API_PORT=3010 node scripts/dev-api.mjs
+VITE_DEV_API=http://localhost:3010 npx vite
+```
+
+Leave `DATABASE_URL` unset for the file store under `.data/`, or point it at a
+throwaway Postgres. `npm test` runs the unit and API tests.
+`node scripts/dashboard-e2e.mjs` drives the whole flow against that stack in
+Chrome, in Safari's engine and on a phone; it needs a freshly started fake.
 
 
 ## Search, and answer engines

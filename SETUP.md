@@ -366,6 +366,9 @@ for **Production**:
 | `ADMIN_SESSION_SECRET` | 40+ random characters |
 | `SITE_URL` | `https://legendary.com.my` |
 | `VITE_SITE_URL` | `https://legendary.com.my` |
+| `GITHUB_TOKEN` | fine-grained token, this repository only, Contents: Read and write |
+| `GITHUB_REPO` | `23f3000111/legendary-perfume-v2` |
+| `GITHUB_BRANCH` | `main` |
 
 `VITE_`-prefixed variables are read **at build time** and baked into the bundle,
 so changing one needs a redeploy, not just a restart. The rest are read per
@@ -490,3 +493,6 @@ curl -s -X POST https://legendary.com.my/api/webhook   -H "stripe-signature: t=1
 | `ORDER_NOTIFY_EMAIL` | optional | Where order notifications go |
 | `ORDER_NOTIFY_CC` | optional | A second recipient for them |
 | `ORDER_REPLY_TO` | optional | Where customer replies go |
+| `GITHUB_TOKEN` | for content | Lets the content dashboard publish. Fine-grained, this repository only, Contents: Read and write |
+| `GITHUB_REPO` | for content | `owner/name` the dashboard commits to: `23f3000111/legendary-perfume-v2` |
+| `GITHUB_BRANCH` | optional | The branch Vercel deploys. Defaults to `main` |
