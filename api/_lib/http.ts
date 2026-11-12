@@ -38,6 +38,30 @@ export function handler(
   }
 }
 
+/**
+ * The request body exactly as it was sent, for Stripe's signature check and
+ * for photo uploads.
+ *
+ * A platform that has already parsed the body leaves the stream empty, so the
+ * parsed copy is re-serialised as a fallback. It is not byte identical, and a
+ * signature check on it can fail; the reconciler is what covers that case.
+ */
+export function nodeBody(req: VercelRequest): Promise<Buffer> {
+  if (req.readableEnded || req.readable === false) {
+    const parsed = (req as { body?: unknown }).body
+    if (Buffer.isBuffer(parsed)) return Promise.resolve(parsed)
+    if (typeof parsed === 'string') return Promise.resolve(Buffer.from(parsed, 'utf8'))
+    if (parsed) return Promise.resolve(Buffer.from(JSON.stringify(parsed), 'utf8'))
+    return Promise.resolve(Buffer.alloc(0))
+  }
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = []
+    req.on('data', (c: Buffer) => chunks.push(c))
+    req.on('end', () => resolve(Buffer.concat(chunks)))
+    req.on('error', reject)
+  })
+}
+
 export function requireMethod(req: VercelRequest, method: 'GET' | 'POST') {
   if (req.method !== method) {
     throw new HttpError(405, `Use ${method} for this endpoint.`)

@@ -88,7 +88,8 @@ async function loadHandler(file) {
     format: 'esm',
     platform: 'node',
     target: 'node20',
-    external: ['pg', 'stripe', 'resend'],
+    // sharp is a native module and cannot be bundled.
+    external: ['pg', 'stripe', 'resend', 'sharp'],
     absWorkingDir: ROOT,
     loader: { '.json': 'json' },
     logLevel: 'error',
@@ -133,8 +134,14 @@ const server = createServer(async (req, res) => {
       res.writeHead(out.status, Object.fromEntries(out.headers))
       res.end(Buffer.from(await out.arrayBuffer()))
     } else {
-      const isJson = (req.headers['content-type'] ?? '').includes('application/json')
-      req.body = isJson && raw.length ? JSON.parse(raw.toString('utf8')) : raw.toString('utf8')
+      // JSON is parsed and text is decoded, as the platform does. Anything else,
+      // a photo upload for one, stays the raw bytes: decoding an image as
+      // utf-8 would corrupt it.
+      const type = req.headers['content-type'] ?? ''
+      req.body = !raw.length ? ''
+        : type.includes('application/json') ? JSON.parse(raw.toString('utf8'))
+        : /^text\/|urlencoded/.test(type) ? raw.toString('utf8')
+        : raw
       req.query = Object.fromEntries(url.searchParams)
       let status = 200
       const shim = {

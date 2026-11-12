@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import type Stripe from 'stripe'
-import { optionalEnv } from './_lib/http.js'
+import { nodeBody, optionalEnv } from './_lib/http.js'
 import { sendMerchantNotification, sendOrderConfirmation } from './_lib/email.js'
 import { orderStore } from './_lib/store.js'
 import { stripe } from './_lib/stripe.js'
@@ -40,25 +40,6 @@ interface Outgoing {
 
 function isWebRequest(value: unknown): value is Request {
   return typeof (value as Request | undefined)?.headers?.get === 'function'
-}
-
-function nodeBody(req: VercelRequest): Promise<Buffer> {
-  // A platform that has already parsed the body leaves the stream empty, so the
-  // parsed copy is re-serialised as a fallback. It is not byte identical, and a
-  // signature check on it can fail; the reconciler is what covers that case.
-  if (req.readableEnded || req.readable === false) {
-    const parsed = (req as { body?: unknown }).body
-    if (Buffer.isBuffer(parsed)) return Promise.resolve(parsed)
-    if (typeof parsed === 'string') return Promise.resolve(Buffer.from(parsed, 'utf8'))
-    if (parsed) return Promise.resolve(Buffer.from(JSON.stringify(parsed), 'utf8'))
-    return Promise.resolve(Buffer.alloc(0))
-  }
-  return new Promise((resolve, reject) => {
-    const chunks: Buffer[] = []
-    req.on('data', (c: Buffer) => chunks.push(c))
-    req.on('end', () => resolve(Buffer.concat(chunks)))
-    req.on('error', reject)
-  })
 }
 
 async function handle({ method, signature, rawBody, origin }: Incoming): Promise<Outgoing> {

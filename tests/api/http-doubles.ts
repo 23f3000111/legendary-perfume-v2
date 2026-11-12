@@ -39,6 +39,9 @@ export async function invoke(handler: (req: any, res: any) => Promise<unknown>, 
     method: call.method ?? 'GET',
     query: call.query ?? {},
     body: call.body,
+    // The stream has been read and the body is above, as on the platform and in
+    // scripts/dev-api.mjs, so nodeBody() takes the body as it is.
+    readableEnded: true,
     headers: { ...(call.headers ?? {}), ...(call.cookie ? { cookie: call.cookie } : {}) },
   }
   await handler(req, res)
