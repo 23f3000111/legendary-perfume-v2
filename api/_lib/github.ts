@@ -156,6 +156,12 @@ export async function commitFiles(
   return commit.sha
 }
 
+/** When a commit was made, as an ISO date. */
+export async function commitDate(cfg: GitHubConfig, sha: string): Promise<string> {
+  const commit = await call<{ committer: { date: string } }>(cfg, 'GET', `git/commits/${sha}`)
+  return commit.committer.date
+}
+
 /** Commits that changed `path`, newest first, with the first line of each message. */
 export async function fileHistory(
   cfg: GitHubConfig,

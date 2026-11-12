@@ -112,7 +112,14 @@ export async function startFakeGitHub({
     if (method === 'GET' && (m = path.match(/^git\/commits\/([0-9a-f]{40})$/))) {
       const commit = commits.get(m[1])
       if (!commit) return [404, { message: 'Not Found' }]
-      return [200, { sha: m[1], tree: { sha: commit.tree }, parents: commit.parents.map((sha) => ({ sha })), message: commit.message }]
+      return [200, {
+        sha: m[1],
+        tree: { sha: commit.tree },
+        parents: commit.parents.map((sha) => ({ sha })),
+        message: commit.message,
+        author: { date: commit.date },
+        committer: { date: commit.date },
+      }]
     }
     if (method === 'GET' && (m = path.match(/^git\/trees\/([0-9a-f]{40})$/))) {
       const map = trees.get(m[1])
