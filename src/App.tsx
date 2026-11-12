@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import Layout from './components/layout/Layout'
 import Home from './pages/Home'
@@ -13,7 +14,9 @@ import Order from './pages/Order'
 import Faq from './pages/Faq'
 import Policy from './pages/Policy'
 import NotFound from './pages/NotFound'
-import Admin from './pages/Admin'
+/* The dashboard loads only when someone opens it: its editors and their code
+   stay out of the shop's own bundle. */
+const Admin = lazy(() => import('./pages/Admin'))
 
 export default function App() {
   return (
@@ -43,7 +46,16 @@ export default function App() {
       </Route>
       {/* The dashboard sits outside Layout: it wants none of the storefront's
           furniture, no intro curtain, no concierge, no cart. */}
-      <Route path="/admin" element={<Admin />} />
+      <Route
+        path="/admin"
+        element={
+          <Suspense
+            fallback={<div className="grid min-h-screen place-items-center text-sm text-smoke">Loading the dashboard…</div>}
+          >
+            <Admin />
+          </Suspense>
+        }
+      />
     </Routes>
   )
 }

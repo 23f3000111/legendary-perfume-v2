@@ -9,6 +9,10 @@ import {
 import { formatRM } from '../lib/format'
 import Seo from '../components/Seo'
 import { Check, ArrowRight, ArrowUpRight, ShieldCheck, Truck, Bag, Sparkle } from '../components/ui/icons'
+import History from '../admin/History'
+import { useContent } from '../admin/contentStore'
+
+type Tab = 'overview' | 'products' | 'orders' | 'faq' | 'stores' | 'photos' | 'history'
 
 /**
  * The house dashboard.
@@ -33,13 +37,20 @@ export default function Admin() {
   // this the page sat on "Loading the dashboard" for ever whenever the API was
   // unreachable, which is exactly when someone needs to be told why.
   const [unreachable, setUnreachable] = useState(false)
-  const [tab, setTab] = useState<'overview' | 'products' | 'orders'>('overview')
+  const [tab, setTab] = useState<Tab>('overview')
 
   useEffect(() => {
     adminSession()
       .then(setSession)
       .catch(() => setUnreachable(true))
   }, [])
+
+  // The editable content, loaded once signed in, so Overview can say what is
+  // unpublished and every editing tab opens on the same working copy.
+  const loadContent = useContent((s) => s.load)
+  useEffect(() => {
+    if (session?.signedIn) void loadContent()
+  }, [session?.signedIn, loadContent])
 
   return (
     <div className="min-h-screen bg-porcelain">
@@ -68,9 +79,18 @@ export default function Admin() {
             onSignOut={async () => setSession(await adminSignOut())}
           />
           <main className="u-container py-8">
-            {tab === 'overview' && <Overview />}
+            {tab === 'overview' && (
+              <div className="space-y-8">
+                <UnpublishedChanges onOpen={setTab} />
+                <Overview />
+              </div>
+            )}
             {tab === 'products' && <Products />}
             {tab === 'orders' && <Orders />}
+            {tab === 'faq' && <Note>The FAQ editor is on its way.</Note>}
+            {tab === 'stores' && <Note>The Stores editor is on its way.</Note>}
+            {tab === 'photos' && <Note>The photo library is on its way.</Note>}
+            {tab === 'history' && <History />}
           </main>
         </>
       )}
@@ -161,18 +181,57 @@ function SignIn({
 
 // ------------------------------------------------------------------- chrome
 
-const TABS = [
+const TABS: { key: Tab; label: string }[] = [
   { key: 'overview', label: 'Overview' },
   { key: 'products', label: 'Products' },
   { key: 'orders', label: 'Orders' },
-] as const
+  { key: 'faq', label: 'FAQ' },
+  { key: 'stores', label: 'Stores' },
+  { key: 'photos', label: 'Photos' },
+  { key: 'history', label: 'History' },
+]
+
+/** Which tab edits which document, for the Overview's list of unpublished work. */
+const DOC_TABS: Record<string, Tab> = { faq: 'faq', stores: 'stores' }
+
+function UnpublishedChanges({ onOpen }: { onOpen: (t: Tab) => void }) {
+  const content = useContent()
+  if (content.status === 'unconfigured') {
+    return (
+      <p className="rounded-sm border border-gold/40 bg-gold/5 px-5 py-3 text-xs leading-relaxed text-gold-deep">
+        Publishing is not set up yet, so the FAQ, Stores and Photos tabs cannot save. Add{' '}
+        <code>GITHUB_TOKEN</code> and <code>GITHUB_REPO</code> in Vercel and redeploy.
+      </p>
+    )
+  }
+  const dirty = content.dirty()
+  if (dirty.length === 0) return null
+  return (
+    <section className="rounded-sm border border-gold/40 bg-ivory p-6">
+      <h2 className="font-display text-xl">Unpublished changes</h2>
+      <p className="mt-1 text-xs text-smoke">Saved as drafts. Nobody sees them until you publish.</p>
+      <ul className="mt-4 flex flex-wrap gap-3">
+        {dirty.map((d) => (
+          <li key={d}>
+            <button
+              onClick={() => onOpen(DOC_TABS[d] ?? 'overview')}
+              className="rounded-sm border border-line px-3 py-1.5 text-xs text-ink transition hover:border-gold"
+            >
+              {content.docs[d]?.label ?? d}
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
 
 function Chrome({
   session, tab, onTab, onSignOut,
 }: {
   session: AdminSession
   tab: string
-  onTab: (t: 'overview' | 'products' | 'orders') => void
+  onTab: (t: Tab) => void
   onSignOut: () => void
 }) {
   return (
@@ -180,7 +239,7 @@ function Chrome({
       <div className="u-container flex flex-wrap items-center gap-x-8 gap-y-3 py-4">
         <Link to="/" className="font-display text-lg tracking-[0.14em] text-ink">LEGENDARY</Link>
         <span className="text-[0.65rem] uppercase tracking-[0.2em] text-gold-deep">Dashboard</span>
-        <nav className="flex gap-1">
+        <nav className="flex flex-wrap gap-1">
           {TABS.map((t) => (
             <button
               key={t.key}

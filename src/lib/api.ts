@@ -6,6 +6,9 @@
  * split, e.g. a static preview on GitHub Pages talking to the Vercel
  * deployment.
  */
+import type { DocKey } from '../../api/_lib/content/keys'
+import type { SlotKind } from '../../api/_lib/content/slots'
+
 const BASE = (import.meta.env.VITE_API_BASE ?? '').replace(/\/$/, '')
 
 export interface OrderLine {
@@ -75,7 +78,8 @@ export interface TrackedOrder {
 
 /** An error carrying a message that is safe, and useful, to show a customer. */
 export class ApiError extends Error {
-  constructor(readonly status: number, message: string) {
+  /** `detail` is the parsed error body, for answers that carry more than a message. */
+  constructor(readonly status: number, message: string, readonly detail?: unknown) {
     super(message)
   }
 }
@@ -101,7 +105,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     const message =
       (body as { error?: string } | null)?.error ??
       'Something went wrong on our side. Please try again.'
-    throw new ApiError(res.status, message)
+    throw new ApiError(res.status, message, body)
   }
   return body as T
 }
@@ -325,4 +329,102 @@ export interface PreviewDrafts {
 /** The drafts a preview tab shows in place of the published content. */
 export function adminPreviewDrafts(): Promise<PreviewDrafts> {
   return request<PreviewDrafts>('/api/admin/content?action=preview', withCookies)
+}
+
+export interface ContentIssue {
+  /** Dotted path to the field, e.g. "sections.0.items.2.a". */
+  path: string
+  message: string
+}
+
+export interface ContentDocState {
+  label: string
+  published: unknown
+  /** The published document's blob sha on GitHub. */
+  sha: string | null
+  draft: unknown | null
+  draftBase: string | null
+  errors: ContentIssue[]
+  /** Paths of fields holding a long dash, which house style avoids. */
+  warnings: string[]
+}
+
+export interface ContentState {
+  /** False until GITHUB_TOKEN and GITHUB_REPO are set. */
+  configured: boolean
+  branch: string
+  durable: boolean
+  docs: Partial<Record<DocKey, ContentDocState>>
+}
+
+export interface ContentCommit {
+  sha: string
+  date: string
+  message: string
+  docs: DocKey[]
+}
+
+export type DeployState = 'pending' | 'success' | 'failure' | 'none'
+
+const contentApi = (query: string) => `/api/admin/content?${query}`
+
+export function adminContentState(): Promise<ContentState> {
+  return request<ContentState>(contentApi('action=state'), withCookies)
+}
+
+export function adminSaveDraft(
+  doc: DocKey,
+  data: unknown,
+): Promise<{ draft: { baseSha: string | null; updatedAt: string }; errors: ContentIssue[]; warnings: string[] }> {
+  return request(contentApi('action=draft'), { ...withCookies, method: 'PUT', body: JSON.stringify({ doc, data }) })
+}
+
+export function adminDiscardDraft(doc: DocKey): Promise<{ ok: true }> {
+  return request(contentApi(`action=draft&doc=${doc}`), { ...withCookies, method: 'DELETE' })
+}
+
+/** One commit with every listed document. A 409's `detail.conflicts` names the ones changed meanwhile. */
+export function adminPublish(docs: DocKey[], overwrite: DocKey[] = []): Promise<{ commit: string }> {
+  return request(contentApi('action=publish'), { ...withCookies, method: 'POST', body: JSON.stringify({ docs, overwrite }) })
+}
+
+export function adminRestore(doc: DocKey, sha: string): Promise<{ commit: string }> {
+  return request(contentApi('action=restore'), { ...withCookies, method: 'POST', body: JSON.stringify({ doc, sha }) })
+}
+
+export function adminHistory(doc?: DocKey): Promise<{ commits: ContentCommit[] }> {
+  return request(contentApi(doc ? `action=history&doc=${doc}` : 'action=history'), withCookies)
+}
+
+export function adminDeployStatus(sha: string): Promise<{ state: DeployState }> {
+  return request(contentApi(`action=status&sha=${sha}`), withCookies)
+}
+
+export interface LibraryPhoto {
+  /** `m/<hash>.webp` */
+  file: string
+  url: string
+  width: number
+  height: number
+  published: boolean
+  createdAt: string
+}
+
+/** Add a photo to the library. The browser has already shrunk it under the upload limit. */
+export function adminUploadPhoto(photo: Blob): Promise<{ file: string; url: string; width: number; height: number }> {
+  return request('/api/admin/media', {
+    ...withCookies,
+    method: 'POST',
+    headers: { 'Content-Type': photo.type || 'application/octet-stream' },
+    body: photo,
+  })
+}
+
+/** A copy of a library photo sized for one kind of place; the path goes into the content. */
+export function adminDerivePhoto(file: string, kind: SlotKind): Promise<{ path: string; width: number; height: number }> {
+  return request(`/api/admin/media?derive=${encodeURIComponent(file)}&kind=${kind}`, { ...withCookies, method: 'POST' })
+}
+
+export function adminLibrary(): Promise<{ photos: LibraryPhoto[]; site: string[] }> {
+  return request('/api/admin/media', withCookies)
 }
