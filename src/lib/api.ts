@@ -80,10 +80,15 @@ export class ApiError extends Error {
   }
 }
 
+/** An API path as the browser should request it, with VITE_API_BASE in front. */
+export function apiUrl(path: string): string {
+  return `${BASE}${path}`
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let res: Response
   try {
-    res = await fetch(`${BASE}${path}`, {
+    res = await fetch(apiUrl(path), {
       ...init,
       headers: { 'Content-Type': 'application/json', ...(init?.headers ?? {}) },
     })
@@ -305,3 +310,19 @@ export const adminResendShipping = (reference: string) => patchOrder({ reference
 
 /** Take the tracking number off an order. The customer is not emailed. */
 export const adminClearShipping = (reference: string) => patchOrder({ reference, shipment: null })
+
+/* --------------------------------------------------------------- content ---
+ * The content dashboard: drafts, preview, publishing and photos. See
+ * api/admin/content.ts and api/admin/media.ts.
+ * -------------------------------------------------------------------------- */
+
+export interface PreviewDrafts {
+  drafts: Record<string, unknown>
+  /** Unpublished dashboard photos, as /assets/cms/... paths. */
+  media: string[]
+}
+
+/** The drafts a preview tab shows in place of the published content. */
+export function adminPreviewDrafts(): Promise<PreviewDrafts> {
+  return request<PreviewDrafts>('/api/admin/content?action=preview', withCookies)
+}

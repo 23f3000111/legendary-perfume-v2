@@ -29,7 +29,10 @@ export default defineConfig(({ command }) => {
        * would never meet it in production.
        */
       proxy: {
-        '/api': {
+        // Everything under /api except /api/_lib/: the site imports the content
+        // dashboard's shared schema code from api/_lib/content, and in dev
+        // those modules are files Vite must serve, not routes to forward.
+        '^/api/(?!_lib/)': {
           target: process.env.VITE_DEV_API ?? 'http://localhost:3000',
           changeOrigin: true,
         },

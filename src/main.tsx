@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { HelmetProvider } from 'react-helmet-async'
 import App from './App'
+import { bootPreview, previewWanted } from './content/preview'
 import './index.css'
 
 /**
@@ -37,12 +38,25 @@ try {
   // Private browsing can refuse sessionStorage; a normal load is unaffected.
 }
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <HelmetProvider>
-      <BrowserRouter basename={basename} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <App />
-      </BrowserRouter>
-    </HelmetProvider>
-  </React.StrictMode>,
-)
+function render() {
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      <HelmetProvider>
+        <BrowserRouter basename={basename} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <App />
+        </BrowserRouter>
+      </HelmetProvider>
+    </React.StrictMode>,
+  )
+}
+
+/*
+ * A preview tab from the dashboard loads the drafts before the first render,
+ * so every component reads them from the start. Everyone else renders at
+ * once, exactly as before: nothing here waits unless ?preview asked for it.
+ */
+if (previewWanted()) {
+  void bootPreview().finally(render)
+} else {
+  render()
+}

@@ -6,6 +6,7 @@ import CartDrawer from '../CartDrawer'
 import Concierge from '../Concierge'
 import Atmosphere from '../Atmosphere'
 import Intro from '../Intro'
+import PreviewRibbon from '../PreviewRibbon'
 import { useContentGuard } from '../../lib/contentGuard'
 import { useStock } from '../../store/stock'
 
@@ -61,6 +62,7 @@ export default function Layout() {
       <Footer />
       <CartDrawer />
       <Concierge />
+      <PreviewRibbon />
     </div>
   )
 }
