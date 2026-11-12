@@ -50,7 +50,6 @@ const env = () => ({
 
 const call = (c: Call) => invoke(content, { cookie, ...c })
 const publishedText = (path: string) => fake.files().get(path)?.toString('utf8')
-const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 beforeEach(async () => {
   delete process.env.DATABASE_URL
@@ -66,7 +65,7 @@ beforeEach(async () => {
   mkdirSync(join(work, 'app'))
   process.chdir(join(work, 'app'))
 
-  fake = await startFakeGitHub({ port: 0, seedDir: seed, token: 'test-token', statusDelayMs: 50 })
+  fake = await startFakeGitHub({ port: 0, seedDir: seed, token: 'test-token', statusDelayMs: null })
   process.env.ADMIN_SESSION_SECRET = 'test-secret'
   process.env.GITHUB_TOKEN = 'test-token'
   process.env.GITHUB_REPO = 'local/legendary'
@@ -140,7 +139,7 @@ describe('the content API', () => {
 
     const status = await call({ query: { action: 'status', sha: publish.body.commit } })
     expect(status.body.state).toBe('pending')
-    await wait(120)
+    fake.setStatus(publish.body.commit, 'success')
     expect((await call({ query: { action: 'status', sha: publish.body.commit } })).body.state).toBe('success')
   })
 

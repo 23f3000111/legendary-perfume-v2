@@ -38,7 +38,7 @@ beforeEach(async () => {
   mkdirSync(join(work, 'app'))
   process.chdir(join(work, 'app'))
 
-  fake = await startFakeGitHub({ port: 0, seedDir: seed, token: 'test-token', statusDelayMs: 50 })
+  fake = await startFakeGitHub({ port: 0, seedDir: seed, token: 'test-token', statusDelayMs: null })
   process.env.ADMIN_SESSION_SECRET = 'test-secret'
   process.env.GITHUB_TOKEN = 'test-token'
   process.env.GITHUB_REPO = 'local/legendary'

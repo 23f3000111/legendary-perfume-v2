@@ -21,7 +21,7 @@ beforeEach(async () => {
   writeFileSync(join(seed, 'src/content/stores.json'), '{"regions":[]}\n')
   mkdirSync(join(seed, 'public/assets/client'), { recursive: true })
   writeFileSync(join(seed, 'public/assets/client/a.webp'), Buffer.from([1, 2, 3]))
-  fake = await startFakeGitHub({ port: 0, seedDir: seed, token: 'test-token', statusDelayMs: 50 })
+  fake = await startFakeGitHub({ port: 0, seedDir: seed, token: 'test-token', statusDelayMs: null })
   cfg = { token: 'test-token', repo: 'local/legendary', branch: 'main', apiUrl: fake.url }
 })
 
@@ -30,7 +30,6 @@ afterEach(async () => {
   rmSync(seed, { recursive: true, force: true })
 })
 
-const wait = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 describe('the GitHub client', () => {
   it('commitFiles then readFile returns the new text and a new sha', async () => {
@@ -88,7 +87,7 @@ describe('the GitHub client', () => {
   it("deployState reads Vercel's status", async () => {
     const commit = await commitFiles(cfg, { message: 'Dashboard: FAQ', files: [{ path: 'src/content/faq.json', content: '{}\n' }] })
     expect(await deployState(cfg, commit)).toBe('pending')
-    await wait(120)
+    fake.setStatus(commit, 'success')
     expect(await deployState(cfg, commit)).toBe('success')
     fake.setStatus(commit, 'error')
     expect(await deployState(cfg, commit)).toBe('failure')

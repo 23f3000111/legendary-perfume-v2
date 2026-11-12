@@ -167,9 +167,13 @@ export async function startFakeGitHub({
       }
       refs.set(name, body.sha)
       statuses.set(body.sha, 'pending')
-      setTimeout(() => {
-        if (statuses.get(body.sha) === 'pending') statuses.set(body.sha, 'success')
-      }, statusDelayMs).unref()
+      // statusDelayMs: null leaves it pending until setStatus(), for tests
+      // that must not race a timer.
+      if (statusDelayMs !== null) {
+        setTimeout(() => {
+          if (statuses.get(body.sha) === 'pending') statuses.set(body.sha, 'success')
+        }, statusDelayMs).unref()
+      }
       return [200, { ref: `refs/heads/${name}`, object: { sha: body.sha, type: 'commit' } }]
     }
     if (method === 'GET' && (m = path.match(/^contents\/(.+)$/))) {
