@@ -92,6 +92,25 @@ export async function db(): Promise<Pool> {
            bestseller  boolean,
            hidden      boolean,
            updated_at  timestamptz NOT NULL DEFAULT now()
+         );
+
+         -- The content dashboard: unpublished drafts, and photos until the
+         -- publish that commits them. See api/_lib/content/store.ts.
+         CREATE TABLE IF NOT EXISTS content_drafts (
+           doc         text PRIMARY KEY,
+           data        jsonb NOT NULL,
+           base_sha    text,
+           updated_at  timestamptz NOT NULL DEFAULT now()
+         );
+         CREATE TABLE IF NOT EXISTS content_media (
+           file        text PRIMARY KEY,
+           bytes       bytea NOT NULL,
+           width       integer NOT NULL,
+           height      integer NOT NULL,
+           kind        text NOT NULL,
+           source      text,
+           published   boolean NOT NULL DEFAULT false,
+           created_at  timestamptz NOT NULL DEFAULT now()
          );`,
       )
       .then(() => undefined)

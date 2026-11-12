@@ -93,7 +93,14 @@ try {
     CREATE TABLE IF NOT EXISTS product_overrides (
       product_id text PRIMARY KEY, in_stock boolean, price integer, compare_at integer,
       bestseller boolean, hidden boolean,
-      updated_at timestamptz NOT NULL DEFAULT now());`)
+      updated_at timestamptz NOT NULL DEFAULT now());
+    CREATE TABLE IF NOT EXISTS content_drafts (
+      doc text PRIMARY KEY, data jsonb NOT NULL, base_sha text,
+      updated_at timestamptz NOT NULL DEFAULT now());
+    CREATE TABLE IF NOT EXISTS content_media (
+      file text PRIMARY KEY, bytes bytea NOT NULL, width integer NOT NULL, height integer NOT NULL,
+      kind text NOT NULL, source text, published boolean NOT NULL DEFAULT false,
+      created_at timestamptz NOT NULL DEFAULT now());`)
   ok()
 
   const reference = `LG-TEST-${Date.now().toString(36).slice(-4).toUpperCase()}`
