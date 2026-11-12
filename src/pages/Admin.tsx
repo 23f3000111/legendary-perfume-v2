@@ -9,7 +9,10 @@ import {
 import { formatRM } from '../lib/format'
 import Seo from '../components/Seo'
 import { Check, ArrowRight, ArrowUpRight, ShieldCheck, Truck, Bag, Sparkle } from '../components/ui/icons'
+import FaqEditor from '../admin/FaqEditor'
 import History from '../admin/History'
+import PhotoLibrary from '../admin/PhotoLibrary'
+import StoresEditor from '../admin/StoresEditor'
 import { useContent } from '../admin/contentStore'
 
 type Tab = 'overview' | 'products' | 'orders' | 'faq' | 'stores' | 'photos' | 'history'
@@ -75,7 +78,11 @@ export default function Admin() {
           <Chrome
             session={session}
             tab={tab}
-            onTab={setTab}
+            onTab={(next) => {
+              // The editing tabs run long, so a tab always opens at its top.
+              setTab(next)
+              window.scrollTo({ top: 0 })
+            }}
             onSignOut={async () => setSession(await adminSignOut())}
           />
           <main className="u-container py-8">
@@ -87,9 +94,9 @@ export default function Admin() {
             )}
             {tab === 'products' && <Products />}
             {tab === 'orders' && <Orders />}
-            {tab === 'faq' && <Note>The FAQ editor is on its way.</Note>}
-            {tab === 'stores' && <Note>The Stores editor is on its way.</Note>}
-            {tab === 'photos' && <Note>The photo library is on its way.</Note>}
+            {tab === 'faq' && <FaqEditor />}
+            {tab === 'stores' && <StoresEditor />}
+            {tab === 'photos' && <PhotoLibrary />}
             {tab === 'history' && <History />}
           </main>
         </>
