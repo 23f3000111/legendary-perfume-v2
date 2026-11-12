@@ -27,3 +27,6 @@ client-assets/
 Website.xlsx
 ~$*.xlsx
 .tmp-functions/
+
+# Git worktrees for isolated work, never committed
+.claude/worktrees/
