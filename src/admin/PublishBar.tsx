@@ -41,19 +41,28 @@ export default function PublishBar({ docs, previewPath }: { docs: DocKey[]; prev
       <div className="sticky bottom-0 z-20 -mx-5 mt-10 border-t border-line bg-ivory/95 px-5 py-3 backdrop-blur sm:-mx-8 sm:px-8 lg:-mx-14 lg:px-14">
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
           <div className="min-w-0 flex-1 text-sm" aria-live="polite">
+            {/* Unpublished work always shows. A finished "Live" gives way to new
+                edits; a deploy still running, or a failure, stays in view. */}
             {busy ? (
               <span className="text-ink">Publishing…</span>
-            ) : showStatus && publishing.state === 'deploying' ? (
-              <span className="text-ink">Published. The site updates in about a minute…</span>
-            ) : showStatus && publishing.state === 'live' ? (
-              <span className="text-jade">Live. The site shows your changes.</span>
-            ) : showStatus && publishing.state === 'failed' ? (
-              <span className={danger}>{publishing.message}</span>
             ) : (
-              <span className="text-ink-soft">
-                Unpublished changes: <span className="text-ink">{labels(dirty)}</span>
-                <SaveNote docs={dirty} />
+              dirty.length > 0 && (
+                <span className="block text-ink-soft">
+                  Unpublished changes: <span className="text-ink">{labels(dirty)}</span>
+                  <SaveNote docs={dirty} />
+                </span>
+              )
+            )}
+            {!busy && showStatus && publishing.state === 'deploying' && (
+              <span className="block text-ink">
+                {dirty.length ? 'Your last publish is still going live.' : 'Published. The site updates in about a minute…'}
               </span>
+            )}
+            {!busy && showStatus && publishing.state === 'live' && dirty.length === 0 && (
+              <span className="block text-jade">Live. The site shows your changes.</span>
+            )}
+            {!busy && showStatus && publishing.state === 'failed' && (
+              <span className={`block ${danger}`}>{publishing.message}</span>
             )}
             {hasProblems && !busy && (
               <span className={`mt-1 block text-xs ${danger}`}>Fix the fields marked in red before publishing.</span>
