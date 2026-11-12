@@ -6,7 +6,7 @@
   "description": "Legendary — A Scented Memory of Malaysia",
   "scripts": {
     "dev": "node scripts/dev.mjs",
-    "build": "npm run catalogue && tsc --noEmit && npm run check:functions && vite build && node scripts/build-seo.mjs",
+    "build": "npm run catalogue && npm run check:content && tsc --noEmit && npm run check:functions && vite build && node scripts/build-seo.mjs",
     "preview": "vite preview",
     "catalogue": "node scripts/build-catalogue.mjs",
     "smoke": "node scripts/smoke-checkout.mjs",
@@ -14,7 +14,9 @@
     "dev:site": "vite",
     "db:check": "node scripts/db-check.mjs",
     "check:functions": "node scripts/check-functions.mjs",
-    "test": "vitest run"
+    "test": "vitest run",
+    "parity": "node scripts/parity.mjs",
+    "check:content": "node scripts/check-content.mjs"
   },
   "dependencies": {
     "@stripe/react-stripe-js": "^6.8.2",
@@ -37,6 +39,7 @@
     "@vercel/node": "^9.0.1",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.19",
+    "playwright-core": "^1.65.0",
     "postcss": "^8.4.40",
     "tailwindcss": "^3.4.7",
     "typescript": "^5.5.4",

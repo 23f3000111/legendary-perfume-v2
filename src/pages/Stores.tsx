@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { asset } from '../lib/asset'
-import { stores, regions, mapEmbedUrl, directionsUrl } from '../data/stores'
+import { storesDoc, mapEmbedUrl, directionsUrl } from '../data/stores'
 import PageHeader from '../components/ui/PageHeader'
 import BrandLogo from '../components/ui/BrandLogo'
 import { Pin, Phone, Clock, ArrowUpRight, WhatsApp } from '../components/ui/icons'
@@ -33,10 +33,13 @@ const sellers: { name: string; file: string; tall?: boolean }[] = [
 ]
 
 export default function Stores() {
+  // Read at render, so a preview's drafts show. See src/data/stores.ts.
+  const stores = storesDoc.stores
+  const regions = ['All', ...storesDoc.regions]
   const [region, setRegion] = useState('All')
   const list = useMemo(
     () => (region === 'All' ? stores : stores.filter((s) => s.region === region)),
-    [region],
+    [region, stores],
   )
   const [selectedId, setSelectedId] = useState(stores[0].id)
   const selected = stores.find((s) => s.id === selectedId) ?? list[0]
@@ -99,7 +102,7 @@ export default function Stores() {
                     <div className="flex gap-4 p-4">
                       <div className="h-24 w-24 shrink-0 overflow-hidden rounded-sm bg-sand">
                         {s.image ? (
-                          <img src={s.image} alt={s.name} className="h-full w-full object-cover" />
+                          <img src={asset(s.image)} alt={s.name} className="h-full w-full object-cover" />
                         ) : (
                           <div className="flex h-full w-full flex-col items-center justify-center bg-ink/90 px-1 text-center text-ivory">
                             <span className="font-display text-[0.62rem] leading-tight tracking-[0.1em]">NOW<br />OPEN</span>

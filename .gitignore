@@ -30,3 +30,6 @@ Website.xlsx
 
 # Git worktrees for isolated work, never committed
 .claude/worktrees/
+
+# Page captures from scripts/parity.mjs
+.parity-*.json

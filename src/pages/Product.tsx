@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { getProduct, relatedProducts } from '../data/products'
-import { productFaq } from '../data/faq'
+import { faq } from '../data/faq'
 import { accent } from '../lib/accents'
 import { formatRM, discountPct } from '../lib/format'
 import { useShop } from '../store/shop'
@@ -421,7 +421,7 @@ export default function Product() {
           </div>
 
           <div className="border-t border-line">
-            {productFaq.map((f, i) => (
+            {faq.product.map((f, i) => (
               <div key={f.q} className="border-b border-line">
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}

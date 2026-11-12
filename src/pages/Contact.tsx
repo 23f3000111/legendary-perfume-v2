@@ -7,7 +7,7 @@ import Accordion from '../components/ui/Accordion'
 import { Phone, Instagram, Facebook, Pin, Check, ArrowRight } from '../components/ui/icons'
 import { waLink, WHATSAPP_DISPLAY } from '../lib/concierge'
 import { directionsUrl, HEAD_OFFICE } from '../data/stores'
-import { productFaq } from '../data/faq'
+import { faq } from '../data/faq'
 import Seo from '../components/Seo'
 import { ApiError, sendContactMessage } from '../lib/api'
 
@@ -257,7 +257,7 @@ export default function Contact() {
 
           <div className="mt-12">
             <Accordion
-              items={productFaq.map((f) => ({
+              items={faq.product.map((f) => ({
                 title: f.q,
                 body: <p className="leading-relaxed text-ink-soft">{f.a}</p>,
               }))}

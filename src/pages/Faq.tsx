@@ -4,7 +4,7 @@ import PageHeader from '../components/ui/PageHeader'
 import Accordion from '../components/ui/Accordion'
 import { Kicker } from '../components/ui/SplitText'
 import { ArrowRight, WhatsApp } from '../components/ui/icons'
-import { faqSections, faqIntro } from '../data/faq'
+import { faq } from '../data/faq'
 import { waLink, WHATSAPP_DISPLAY } from '../lib/concierge'
 import Seo from '../components/Seo'
 
@@ -13,13 +13,13 @@ export default function Faq() {
     <>
       <Seo
         title="Frequently asked questions"
-        description={faqIntro}
+        description={faq.intro}
         image="/assets/client/banner-contact.webp"
         crumbs={[{ name: 'Home', path: '/' }, { name: 'FAQ', path: '/faq' }]}
         jsonLd={[
           {
             '@type': 'FAQPage',
-            mainEntity: faqSections.flatMap((s) =>
+            mainEntity: faq.sections.flatMap((s) =>
               s.items.map((f) => ({
                 '@type': 'Question',
                 name: f.q,
@@ -35,7 +35,7 @@ export default function Faq() {
       <PageHeader
         eyebrow="Customer Care"
         title="Frequently asked questions"
-        intro={faqIntro}
+        intro={faq.intro}
         crumbs={[{ label: 'Home', to: '/' }, { label: 'FAQ' }]}
         image={asset('/assets/client/banner-contact.webp')}
       />
@@ -45,7 +45,7 @@ export default function Faq() {
           the page keeps their grouping and gives each section its own heading. */}
       <section className="bg-ivory py-16 md:py-24">
         <div className="u-narrow space-y-14">
-          {faqSections.map((section) => (
+          {faq.sections.map((section) => (
             <div key={section.title}>
               <h2 className="font-display text-[clamp(1.5rem,2.8vw,2rem)] leading-tight">
                 {section.title}

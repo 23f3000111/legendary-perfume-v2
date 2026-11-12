@@ -6,7 +6,7 @@
 // rather than projected from raw coordinates.
 import { asset } from '../lib/asset'
 import { getProduct, productsByCollection } from './products'
-import { stores } from './stores'
+import { storesDoc, type Store } from './stores'
 
 export interface ScentPlace {
   id: string
@@ -104,8 +104,8 @@ export function placeTarget(place: ScentPlace) {
   const product = getProduct(place.productId)!
   const inCollection = place.collectionId ? productsByCollection(place.collectionId) : []
   const boutiques = place.storeIds
-    .map((id) => stores.find((s) => s.id === id))
-    .filter((s): s is (typeof stores)[number] => !!s)
+    .map((id) => storesDoc.stores.find((s) => s.id === id))
+    .filter((s): s is Store => !!s)
 
   return {
     product,
