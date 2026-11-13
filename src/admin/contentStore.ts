@@ -101,7 +101,7 @@ let poll: ReturnType<typeof setTimeout> | undefined
 const messageOf = (err: unknown, fallback: string) => (err instanceof ApiError ? err.message : fallback)
 
 /** Whether a document holds edits the server does not have yet. */
-const unsaved = (doc: DocKey, entry: EditableDoc) =>
+const holdsUnsavedWork = (doc: DocKey, entry: EditableDoc) =>
   timers.has(doc) || saving.has(doc) || entry.save === 'error' || entry.save === 'signed-out'
 
 export const useContent = create<ContentStore>((set, get) => {
@@ -199,7 +199,7 @@ export const useContent = create<ContentStore>((set, get) => {
           // still being typed: work not on the server yet stays on screen with
           // the version it began from, and only what GitHub holds is refreshed.
           const mine = local[key]
-          docs[key] = mine && unsaved(key, mine)
+          docs[key] = mine && holdsUnsavedWork(key, mine)
             ? { ...fresh, working: mine.working, draftBase: mine.draftBase, errors: mine.errors, warnings: mine.warnings, save: mine.save, saveMessage: mine.saveMessage }
             : fresh
         }
