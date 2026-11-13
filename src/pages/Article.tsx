@@ -7,10 +7,11 @@ import ShareRow from '../components/ui/ShareRow'
 import { getArticle, articleNeighbours, type Article as Entry } from '../data/articles'
 import { ChevronRight } from '../components/ui/icons'
 import Seo from '../components/Seo'
+import { asset } from '../lib/asset'
 import { absolute, SITE } from '../lib/seo'
 
 /**
- * One template for every journal article. Copy lives in src/data/articles.ts as
+ * One template for every journal article. Copy lives in src/content/journal.json as
  * Block[], so this file owns the furniture around the words and nothing else.
  */
 export default function Article() {
@@ -91,7 +92,7 @@ export default function Article() {
           { label: 'Journal', to: '/journal' },
           { label: article.cardTitle ?? article.title },
         ]}
-        image={article.hero}
+        image={asset(article.hero)}
       />
 
       <section className="bg-ivory py-16 md:py-24">

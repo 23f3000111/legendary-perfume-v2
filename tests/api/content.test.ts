@@ -32,6 +32,22 @@ const STORES = (image?: string) => ({
   ],
 })
 
+const JOURNAL = () => ({
+  articles: [
+    {
+      slug: 'nyonya',
+      title: 'Nyonya Collection: From Heritage to Legendary Perfume',
+      category: 'Heritage',
+      published: '2025-12-31',
+      minutes: 5,
+      excerpt: 'Inside the Peranakan culture that shaped the Nyonya Collection.',
+      hero: '/assets/client/collection-nyonya.webp',
+      heroAlt: 'The three Nyonya Collection bottles beside their patterned boxes',
+      body: [{ t: 'p', text: 'Malaysia is a land rich in culture, stories and traditions.' }],
+    },
+  ],
+})
+
 /** The published format, written out by hand here rather than by the code under test. */
 const asFile = (data: unknown) => JSON.stringify(data, null, 2) + '\n'
 
@@ -59,6 +75,7 @@ beforeEach(async () => {
   mkdirSync(join(seed, 'src/content'), { recursive: true })
   writeFileSync(join(seed, 'src/content/faq.json'), asFile(FAQ()))
   writeFileSync(join(seed, 'src/content/stores.json'), asFile(STORES()))
+  writeFileSync(join(seed, 'src/content/journal.json'), asFile(JOURNAL()))
   mkdirSync(join(seed, 'public/assets/client'), { recursive: true })
   writeFileSync(join(seed, 'public/assets/client/store-bsas.webp'), Buffer.from([1, 2, 3]))
   // The draft store's files go here, away from the seed.

@@ -1,12 +1,15 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { asset } from '../../lib/asset'
 import Accordion from './Accordion'
 import { ArrowRight, Sparkle } from './icons'
 
 /* ------------------------------------------------------------------
    A tiny content model shared by the policy pages and the journal
-   articles. Copy lives in src/data as Block[] so the house typography
-   is defined once, here, and every long-form page reads the same.
+   articles. Copy lives in src/data and src/content as Block[] so the
+   house typography is defined once, here, and every long-form page
+   reads the same. Photo paths are root paths (/assets/...), resolved
+   with asset() as they are drawn.
    ------------------------------------------------------------------ */
 
 export type Block =
@@ -190,7 +193,7 @@ function BlockView({ block: b, first }: { block: Block; first: boolean }) {
     case 'image':
       return (
         <figure className={`${first ? '' : 'mt-10'} ${b.narrow ? 'mx-auto max-w-sm' : ''}`}>
-          <img src={b.src} alt={b.alt} loading="lazy" className="w-full rounded-sm object-cover" />
+          <img src={asset(b.src)} alt={b.alt} loading="lazy" className="w-full rounded-sm object-cover" />
           {b.caption && <figcaption className="mt-3 text-xs text-smoke">{b.caption}</figcaption>}
         </figure>
       )
@@ -199,7 +202,7 @@ function BlockView({ block: b, first }: { block: Block; first: boolean }) {
       return (
         <div className={`${first ? '' : 'mt-10'} grid gap-3 sm:grid-cols-2`}>
           {b.images.map((im) => (
-            <img key={im.src} src={im.src} alt={im.alt} loading="lazy" className="aspect-[4/5] w-full rounded-sm object-cover" />
+            <img key={im.src} src={asset(im.src)} alt={im.alt} loading="lazy" className="aspect-[4/5] w-full rounded-sm object-cover" />
           ))}
         </div>
       )

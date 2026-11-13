@@ -58,7 +58,8 @@ async function load(entry) {
 
 const { products } = await load('src/data/products.ts')
 const { collections } = await load('src/data/collections.ts')
-const { articles } = await load('src/data/articles.ts')
+const { articleList } = await load('src/data/articles.ts')
+const articles = articleList()
 const { storesDoc } = await load('src/data/stores.ts')
 const stores = storesDoc.stores
 

@@ -3,7 +3,9 @@ import { applyDrafts, previewRequested } from './preview'
 import { CONTENT } from './registry'
 import { asset, setPreviewMedia } from '../lib/asset'
 import { faq } from '../data/faq'
+import { articleList, getArticle } from '../data/articles'
 import faqJson from './faq.json'
+import journalJson from './journal.json'
 
 afterEach(() => setPreviewMedia([]))
 
@@ -37,6 +39,22 @@ describe('preview', () => {
       applyDrafts({ faq: saved }, CONTENT)
     }
     expect(faq.intro).toBe(saved.intro)
+  })
+
+  // A new article only exists in the draft until it is published, and preview
+  // has to show its page and put it first on the Journal page.
+  it('a draft applied to the registry is what the journal reads', () => {
+    const saved = structuredClone(journalJson)
+    const fresh = { ...saved.articles[0], slug: 'newpiece', title: 'A new piece', published: '2027-01-01' }
+    try {
+      // Added at the end of the file: the pages put it first by its date.
+      applyDrafts({ journal: { articles: [...saved.articles, fresh] } }, CONTENT)
+      expect(getArticle('newpiece')?.title).toBe('A new piece')
+      expect(articleList()[0].slug).toBe('newpiece')
+    } finally {
+      applyDrafts({ journal: saved }, CONTENT)
+    }
+    expect(getArticle('newpiece')).toBeUndefined()
   })
 
   it('previewRequested reads the query or the session flag', () => {

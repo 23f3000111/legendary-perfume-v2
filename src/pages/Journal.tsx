@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { asset } from '../lib/asset'
-import { articles } from '../data/articles'
+import { articleList } from '../data/articles'
 import PageHeader from '../components/ui/PageHeader'
 import { RevealGroup, RevealItem } from '../components/ui/Reveal'
 import { ArrowUpRight } from '../components/ui/icons'
@@ -8,11 +8,11 @@ import Seo from '../components/Seo'
 
 /**
  * The Journal index. The newest article leads at half width, the rest follow in
- * a row of three. Everything comes from src/data/articles.ts, already sorted
+ * a row of three. Everything comes from articleList() in src/data/articles.ts, sorted
  * newest first, so adding an article here is a data change and nothing more.
  */
 export default function Journal() {
-  const [feature, ...rest] = articles
+  const [feature, ...rest] = articleList()
 
   return (
     <>
@@ -43,7 +43,7 @@ export default function Journal() {
           >
             <div className="overflow-hidden rounded-sm">
               <img
-                src={feature.cardImage ?? feature.hero}
+                src={asset(feature.cardImage ?? feature.hero)}
                 alt={feature.heroAlt}
                 className="aspect-[3/2] w-full object-cover transition-transform duration-[1100ms] ease-luxe group-hover:scale-105"
               />
@@ -68,7 +68,7 @@ export default function Journal() {
                 <Link to={`/journal/${post.slug}`} className="group block">
                   <div className="relative overflow-hidden rounded-sm">
                     <img
-                      src={post.cardImage ?? post.hero}
+                      src={asset(post.cardImage ?? post.hero)}
                       alt={post.heroAlt}
                       className="aspect-[4/3] w-full object-cover transition-transform duration-[1100ms] ease-luxe group-hover:scale-105"
                     />
