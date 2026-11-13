@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { requireAdmin } from '../_lib/auth.js'
 import { handler, HttpError, json } from '../_lib/http.js'
@@ -108,6 +109,41 @@ async function draftsByDoc(store: ContentStore): Promise<Map<DocKey, Draft>> {
   return new Map((await store.drafts()).map((d) => [d.doc, d]))
 }
 
+/** JSON with every object's keys in order, so the same content always reads the same, however it was stored. */
+function canonical(value: unknown): string {
+  if (Array.isArray(value)) return `[${value.map(canonical).join(',')}]`
+  if (value && typeof value === 'object') {
+    const entries = Object.entries(value as Record<string, unknown>).filter(([, v]) => v !== undefined)
+    entries.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    return `{${entries.map(([k, v]) => `${JSON.stringify(k)}:${canonical(v)}`).join(',')}}`
+  }
+  return JSON.stringify(value)
+}
+
+/**
+ * A draft's version: a hash of what it holds. Two windows on one document share
+ * its one draft, so each says which version it last saw, and a save, discard
+ * or publish from a window that missed another window's save is refused rather
+ * than quietly replacing it.
+ */
+const draftRev = (draft: Draft | undefined): string | null =>
+  draft ? createHash('sha1').update(canonical(draft.data)).digest('hex') : null
+
+/** The draft version a window last saw: a hash, or null when it knew of no draft. */
+function revParam(value: unknown): string | null {
+  if (value === null || value === 'none') return null
+  if (typeof value !== 'string' || !/^[0-9a-f]{40}$/.test(value)) throw new HttpError(400, 'Unknown version.')
+  return value
+}
+
+/** Refuse when the window's last-seen draft is not the one stored now. */
+function sameDraft(docs: DocKey[], drafts: Map<DocKey, Draft>, seen: (doc: DocKey) => string | null): void {
+  const changed = docs.filter((doc) => draftRev(drafts.get(doc)) !== seen(doc))
+  if (changed.length) {
+    throw new HttpError(409, `${labels(changed)} changed in another window. Reload the page to see the latest.`)
+  }
+}
+
 // ------------------------------------------------------------------ actions
 
 async function state(cfg: GitHubConfig, store: ContentStore) {
@@ -125,6 +161,7 @@ async function state(cfg: GitHubConfig, store: ContentStore) {
       sha: current[i].sha,
       draft: draft?.data ?? null,
       draftBase: draft?.baseSha ?? null,
+      draftRev: draftRev(draft),
       errors: check(doc, showing).issues,
       warnings: findDashes(showing),
     }
@@ -145,10 +182,16 @@ async function saveDraft(cfg: GitHubConfig, store: ContentStore, req: VercelRequ
   // change the base and let the publish overwrite it unasked. A later save
   // keeps the first base (see store.ts).
   const sent = 'base' in input ? baseParam(input.base) : undefined
-  const existing = (await draftsByDoc(store)).get(doc)
+  const drafts = await draftsByDoc(store)
+  // A window that says which draft it last saw is refused if another window has saved since.
+  if ('rev' in input) {
+    const seen = revParam(input.rev)
+    sameDraft([doc], drafts, () => seen)
+  }
+  const existing = drafts.get(doc)
   const baseSha = existing ? existing.baseSha : sent !== undefined ? sent : (await published(cfg, doc)).sha
   const draft = await store.saveDraft(doc, data, baseSha)
-  return { draft, errors: check(doc, data).issues, warnings: findDashes(data) }
+  return { draft: { ...draft, rev: draftRev(draft) }, errors: check(doc, data).issues, warnings: findDashes(data) }
 }
 
 async function preview(store: ContentStore) {
@@ -202,6 +245,17 @@ async function publish(cfg: GitHubConfig, store: ContentStore, req: VercelReques
   const overwrite = new Set(Array.isArray(input.overwrite) ? input.overwrite.filter(isDocKey) : [])
 
   const drafts = await draftsByDoc(store)
+  // A window that says which drafts it last saw is refused if another window has saved since.
+  if (input.revs && typeof input.revs === 'object') {
+    const revs = input.revs as Record<string, unknown>
+    const seen = new Map(docs.filter((doc) => doc in revs).map((doc) => [doc, revParam(revs[doc])]))
+    try {
+      sameDraft([...seen.keys()], drafts, (doc) => seen.get(doc) ?? null)
+    } catch (err) {
+      if (err instanceof HttpError) return [409, { error: err.message, conflicts: [] }]
+      throw err
+    }
+  }
   const ready: { doc: DocKey; draft: Draft; parsed: unknown }[] = []
   const errors: Partial<Record<DocKey, Issue[]>> = {}
   for (const doc of docs) {
@@ -329,7 +383,10 @@ export default handler(async (req: VercelRequest, res: VercelResponse) => {
         return json(res, 200, await state(cfg, store))
       case 'draft':
         if (req.method === 'DELETE') {
-          await store.deleteDraft(docParam(req.query.doc))
+          const doc = docParam(req.query.doc)
+          const rev = first(req.query.rev)
+          if (rev !== undefined) sameDraft([doc], await draftsByDoc(store), () => revParam(rev))
+          await store.deleteDraft(doc)
           return json(res, 200, { ok: true })
         }
         want(req, 'PUT')

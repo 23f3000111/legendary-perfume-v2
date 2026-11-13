@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { SLOT_KINDS, type SlotKind } from '../../api/_lib/content/slots'
 import { adminDerivePhoto, apiUrl } from '../lib/api'
 import { asset } from '../lib/asset'
@@ -13,13 +13,15 @@ import { danger, small } from './styles'
  * the site already shows is used as it is.
  */
 export default function PhotoField({
-  kind, value, onChange, label, disabled,
+  kind, value, onChange, label, disabled, onBusy,
 }: {
   kind: SlotKind
   value?: string
   onChange: (path: string | undefined) => void
   label?: string
   disabled?: boolean
+  /** Told when a photo starts and stops being uploaded or fitted, so the form can hold still meanwhile. */
+  onBusy?: (busy: boolean) => void
 }) {
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -27,20 +29,41 @@ export default function PhotoField({
   const input = useRef<HTMLInputElement>(null)
   const coarse = coarsePointer()
 
+  // An upload takes seconds, and the form goes on meanwhile: someone types the
+  // photo's description, or closes the form. The photo is placed through the
+  // onChange of the latest render, so nothing typed in the meantime is undone,
+  // and not at all once this field is gone; the photo stays in the library.
+  const latest = useRef({ onChange, onBusy })
+  useLayoutEffect(() => {
+    latest.current = { onChange, onBusy }
+  })
+  const alive = useRef(true)
+  useEffect(() => {
+    alive.current = true
+    return () => {
+      alive.current = false
+    }
+  }, [])
+  const done = (path: string | undefined) => {
+    if (alive.current) latest.current.onChange(path)
+  }
+
   const run = async (work: () => Promise<void>) => {
     setError(null)
+    latest.current.onBusy?.(true)
     try {
       await work()
     } catch (err) {
       setError(messageOf(err))
     } finally {
       setBusy(null)
+      latest.current.onBusy?.(false)
     }
   }
   const place = async (master: string) => {
     setBusy('Fitting the photo…')
     const { path } = await adminDerivePhoto(master, kind)
-    onChange(path)
+    done(path)
   }
   const upload = (file: File) =>
     run(async () => {
@@ -52,7 +75,7 @@ export default function PhotoField({
     setPicking(false)
     void run(async () => {
       if ('master' in choice) await place(choice.master)
-      else onChange(choice.site)
+      else done(choice.site)
     })
   }
   const locked = disabled || Boolean(busy)

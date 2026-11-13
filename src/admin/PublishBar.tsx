@@ -1,4 +1,5 @@
 import type { DocKey } from '../../api/_lib/content/keys'
+import { changeSummary } from './changes'
 import { useContent } from './contentStore'
 import { danger, primary, small } from './styles'
 
@@ -22,6 +23,13 @@ export default function PublishBar({ docs, previewPath }: { docs: DocKey[]; prev
   const hasProblems = dirty.some((d) => (state.docs[d]?.errors.length ?? 0) > 0)
   const unsaved = dirty.some((d) => state.docs[d]?.save === 'signed-out' || state.docs[d]?.save === 'error')
   const labels = (list: DocKey[]) => list.map((d) => state.docs[d]?.label ?? d).join(', ')
+  // The Journal is one document holding every article, so say which articles a change touches.
+  const summaries = dirty
+    .map((d) => changeSummary(d, state.docs[d]?.working, state.docs[d]?.published))
+    .filter((s): s is string => Boolean(s))
+  const overwrites = (publishing.conflicts ?? [])
+    .map((d) => (publishing.theirs && d in publishing.theirs ? changeSummary(d, state.docs[d]?.working, publishing.theirs[d]) : null))
+    .filter((s): s is string => Boolean(s))
 
   const preview = async () => {
     // Opened at once, inside the click, so no pop-up blocker objects; pointed
@@ -32,7 +40,8 @@ export default function PublishBar({ docs, previewPath }: { docs: DocKey[]; prev
   }
 
   const discard = async () => {
-    if (!window.confirm(`Discard your unpublished changes to ${labels(dirty)}? This cannot be undone.`)) return
+    const what = summaries.length ? ` ${summaries.join(' ')}` : ''
+    if (!window.confirm(`Discard your unpublished changes to ${labels(dirty)}?${what} This cannot be undone.`)) return
     for (const d of dirty) await state.discard(d)
   }
 
@@ -50,6 +59,9 @@ export default function PublishBar({ docs, previewPath }: { docs: DocKey[]; prev
                 <span className="block text-ink-soft">
                   Unpublished changes: <span className="text-ink">{labels(dirty)}</span>
                   <SaveNote docs={dirty} />
+                  {summaries.map((s) => (
+                    <span key={s} className="mt-0.5 block text-xs text-ink-soft">{s}</span>
+                  ))}
                 </span>
               )
             )}
@@ -95,6 +107,11 @@ export default function PublishBar({ docs, previewPath }: { docs: DocKey[]; prev
               {labels(publishing.conflicts ?? [])} changed on the site after you started editing. You can publish
               your version over it, or drop your changes and see the newer one.
             </p>
+            {overwrites.map((s) => (
+              <p key={s} className="mt-3 text-sm leading-relaxed text-ink">
+                Publishing yours changes the site as it is now. {s}
+              </p>
+            ))}
             <div className="mt-6 flex flex-wrap justify-end gap-3">
               <button onClick={() => void state.takeTheirs(publishing.conflicts ?? [])} className={small}>
                 Take the newer one

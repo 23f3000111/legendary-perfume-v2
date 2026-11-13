@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { DocKey } from '../../api/_lib/content/keys'
-import { ApiError, adminHistory, type ContentCommit } from '../lib/api'
+import { ApiError, adminHistory, adminVersion, type ContentCommit } from '../lib/api'
+import { restoreChanges, titleList } from './changes'
 import { useContent } from './contentStore'
 import { danger, panel, small } from './styles'
 
@@ -44,9 +45,21 @@ export default function History() {
   const current = new Map<DocKey, string>()
   for (const c of commits) for (const d of c.docs) if (!current.has(d)) current.set(d, c.sha)
 
-  const put = (doc: DocKey, commit: ContentCommit) => {
+  const put = async (doc: DocKey, commit: ContentCommit) => {
     const label = docs[doc]?.label ?? doc
-    if (!window.confirm(`Put the ${label} back as it was on ${when(commit.date, false)}?`)) return
+    // The Journal holds every article, so a restore can take some off the site
+    // and bring others back. Say which before asking.
+    let what = ''
+    if (doc === 'journal') {
+      try {
+        const { removed, returned } = restoreChanges(docs[doc]?.published, (await adminVersion(doc, commit.sha)).data)
+        if (removed.length) what += ` This takes ${titleList(removed)} off the site.`
+        if (returned.length) what += ` It brings back ${titleList(returned)}.`
+      } catch {
+        // The plain question still stands.
+      }
+    }
+    if (!window.confirm(`Put the ${label} back as it was on ${when(commit.date, false)}?${what}`)) return
     void restore(doc, commit.sha)
   }
 
@@ -73,7 +86,7 @@ export default function History() {
                 ) : (
                   <button
                     key={d}
-                    onClick={() => put(d, c)}
+                    onClick={() => void put(d, c)}
                     disabled={publishing.state === 'publishing'}
                     className={small}
                   >

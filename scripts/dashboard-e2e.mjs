@@ -94,7 +94,12 @@ const context = await browser.newContext({ viewport: { width: 1440, height: 900 
 const page = await context.newPage()
 const errors = []
 page.on('pageerror', (e) => errors.push(String(e)))
-page.on('dialog', (d) => d.accept())
+/** Every question the dashboard asked, accepted, so the checks can read what it said. */
+const dialogs = []
+page.on('dialog', (d) => {
+  dialogs.push(d.message())
+  d.accept()
+})
 
 try {
   // 1. Sign in
@@ -232,14 +237,26 @@ try {
     .jpeg()
     .toBuffer()
   await header.locator('input[type="file"]').setInputFiles({ name: 'header.jpg', mimeType: 'image/jpeg', buffer: photo })
+  // The description goes in while the photo is still uploading, as the form invites.
+  // Placing the photo must not undo it.
+  const description = page.getByLabel('Header photo description', { exact: true })
+  await description.fill('A plain sand coloured card')
   await header.locator('img').waitFor({ timeout: 60000 })
-  await page.getByLabel('Header photo description', { exact: true }).fill('A plain sand coloured card')
+  const descriptionKept = (await description.inputValue()) === 'A plain sand coloured card'
+  check('13c. typing while the photo uploads is kept', descriptionKept, descriptionKept ? '' : `the box holds "${await description.inputValue()}"`)
+  if (!descriptionKept) await description.fill('A plain sand coloured card')
   await body.locator('textarea').first().fill('The first paragraph of the new article.')
   await body.locator('button:text-is("Add below")').first().click()
   await body.locator('select').first().selectOption('h2')
   await body.locator('button:text-is("Add")').first().click()
   await body.getByLabel('Heading', { exact: true }).fill('A heading added below')
   await page.waitForSelector('text=Saved as a draft')
+  const bar = (await page.locator('div.sticky', { hasText: 'Unpublished changes' }).innerText()).replace(/\s+/g, ' ')
+  check(
+    '13d. the publish bar names the articles it will put live',
+    bar.includes('New: Testing the journal') && bar.includes('Changed: Benefits of Alcohol-Free Perfumes'),
+    bar.slice(0, 200),
+  )
   await page.click('button:text-is("Publish")')
   await page.waitForSelector('text=Live. The site shows your changes.', { timeout: 30000 })
   await page.click('button:text-is("OK")')
@@ -266,12 +283,40 @@ try {
   check('14a. history lists the Journal publish', /\bJournal\b/.test(await page.locator('main').innerText()))
   await page.click('button:text-is("Restore Journal")')
   await until(async () => (await ghFile('src/content/journal.json')).toString('utf8') === seedJournal, 'the restored Journal')
+  check(
+    '14c. the restore question names the article it takes off the site',
+    (dialogs.at(-1) ?? '').includes('This takes Testing the journal off the site.'),
+    dialogs.at(-1),
+  )
   const journalLog = await ghLog('src/content/journal.json')
   check(
     '14b. restoring the Journal puts the seeded file back byte for byte, as a new commit',
     journalLog[0].startsWith('Dashboard: restore Journal to '),
     journalLog.join(' | '),
   )
+
+  // 15. Two windows on the Journal share its one draft: the window that missed
+  // the other's save is told so, and the other window's draft stands.
+  const second = await context.newPage()
+  second.on('pageerror', (e) => errors.push(String(e)))
+  second.on('dialog', (d) => d.accept())
+  await second.goto(`${site}/admin`, { waitUntil: 'networkidle' })
+  await openTab(second, 'Journal')
+  await openTab(page, 'Journal')
+  await page.waitForSelector('text=Newest first, as the Journal page shows them.')
+  await second.waitForSelector('text=Newest first, as the Journal page shows them.')
+  await second.locator('li', { hasText: 'Nyonya Collection' }).locator('button:text-is("Edit")').click()
+  await second.getByLabel('Summary', { exact: true }).fill('Changed in the second window.')
+  await second.waitForSelector('text=Saved as a draft')
+  await page.locator('li', { hasText: 'Perfume Gift Guide' }).locator('button:text-is("Edit")').click()
+  await page.getByLabel('Summary', { exact: true }).fill('Changed in the first window.')
+  await page.waitForSelector('text=Journal changed in another window. Reload the page to see the latest.', { timeout: 15000 })
+  const stored = await second.evaluate(async () => (await (await fetch('/api/admin/content?action=preview', { credentials: 'include' })).json()).drafts.journal)
+  check(
+    "15. a window that missed another window's save is told so, and the other window's draft stands",
+    JSON.stringify(stored).includes('Changed in the second window.') && !JSON.stringify(stored).includes('Changed in the first window.'),
+  )
+  await second.close()
 } catch (err) {
   failures++
   console.log(`FAIL  stopped: ${err.message}`)

@@ -344,6 +344,8 @@ export interface ContentDocState {
   sha: string | null
   draft: unknown | null
   draftBase: string | null
+  /** The draft's version, which this window sends back so another window's save is never replaced unseen. */
+  draftRev: string | null
   errors: ContentIssue[]
   /** Paths of fields holding a long dash, which house style avoids. */
   warnings: string[]
@@ -381,12 +383,19 @@ export function adminSaveDraft(
   doc: DocKey,
   data: unknown,
   base: string | null,
-): Promise<{ draft: { baseSha: string | null; updatedAt: string }; errors: ContentIssue[]; warnings: string[] }> {
-  return request(contentApi('action=draft'), { ...withCookies, method: 'PUT', body: JSON.stringify({ doc, data, base }) })
+  /** The draft version this window last saw, or null for none; a 409 means another window saved since. */
+  rev?: string | null,
+): Promise<{ draft: { baseSha: string | null; updatedAt: string; rev: string }; errors: ContentIssue[]; warnings: string[] }> {
+  return request(contentApi('action=draft'), {
+    ...withCookies,
+    method: 'PUT',
+    body: JSON.stringify(rev === undefined ? { doc, data, base } : { doc, data, base, rev }),
+  })
 }
 
-export function adminDiscardDraft(doc: DocKey): Promise<{ ok: true }> {
-  return request(contentApi(`action=draft&doc=${doc}`), { ...withCookies, method: 'DELETE' })
+export function adminDiscardDraft(doc: DocKey, rev?: string | null): Promise<{ ok: true }> {
+  const seen = rev === undefined ? '' : `&rev=${rev ?? 'none'}`
+  return request(contentApi(`action=draft&doc=${doc}${seen}`), { ...withCookies, method: 'DELETE' })
 }
 
 /**
@@ -396,8 +405,15 @@ export function adminDiscardDraft(doc: DocKey): Promise<{ ok: true }> {
 export function adminPublish(
   docs: DocKey[],
   overwrite: DocKey[] = [],
+  /** The draft version of each document this window last saw. */
+  revs?: Partial<Record<DocKey, string | null>>,
 ): Promise<{ commit: string; shas: Partial<Record<DocKey, string>> }> {
-  return request(contentApi('action=publish'), { ...withCookies, method: 'POST', body: JSON.stringify({ docs, overwrite }) })
+  return request(contentApi('action=publish'), { ...withCookies, method: 'POST', body: JSON.stringify({ docs, overwrite, revs }) })
+}
+
+/** A document as it was at a commit. */
+export function adminVersion(doc: DocKey, sha: string): Promise<{ data: unknown }> {
+  return request(contentApi(`action=version&doc=${doc}&sha=${sha}`), withCookies)
 }
 
 export function adminRestore(doc: DocKey, sha: string): Promise<{ commit: string }> {

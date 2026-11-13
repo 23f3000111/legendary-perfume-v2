@@ -39,6 +39,12 @@ export interface EditableDoc {
    * happened before the first save (another tab, a developer's push).
    */
   draftBase: string | null
+  /**
+   * The version of the draft this window last saw, null when it knows of none.
+   * Every save, discard and publish sends it, so a window that missed another
+   * window's save is refused rather than quietly replacing it.
+   */
+  draftRev: string | null
   errors: ContentIssue[]
   warnings: string[]
   save: SaveState
@@ -51,6 +57,8 @@ export interface Publishing {
   /** The documents this publish (or restore) covers. */
   docs?: DocKey[]
   conflicts?: DocKey[]
+  /** After a conflict, the newer published copy of each, so the dialog can say what Keep mine would undo. */
+  theirs?: Partial<Record<DocKey, unknown>>
   message?: string
 }
 
@@ -117,12 +125,12 @@ export const useContent = create<ContentStore>((set, get) => {
     try {
       if (sameContent(working, entry.published)) {
         // Back to what is published: there is nothing to keep a draft of.
-        await adminDiscardDraft(doc)
-        patchDoc(doc, { save: settled(), draftBase: entry.sha, errors: [], warnings: [] })
+        await adminDiscardDraft(doc, entry.draftRev)
+        patchDoc(doc, { save: settled(), draftBase: entry.sha, draftRev: null, errors: [], warnings: [] })
         return
       }
-      const res = await adminSaveDraft(doc, working, entry.draftBase)
-      patchDoc(doc, { save: settled(), draftBase: res.draft.baseSha, errors: res.errors, warnings: res.warnings })
+      const res = await adminSaveDraft(doc, working, entry.draftBase, entry.draftRev)
+      patchDoc(doc, { save: settled(), draftBase: res.draft.baseSha, draftRev: res.draft.rev, errors: res.errors, warnings: res.warnings })
     } catch (err) {
       patchDoc(
         doc,
@@ -191,6 +199,7 @@ export const useContent = create<ContentStore>((set, get) => {
             sha: d.sha,
             working: d.draft ?? d.published,
             draftBase: d.draft ? d.draftBase : d.sha,
+            draftRev: d.draft ? d.draftRev ?? null : null,
             errors: d.errors,
             warnings: d.warnings,
             save: d.draft ? 'saved' : 'idle',
@@ -200,7 +209,7 @@ export const useContent = create<ContentStore>((set, get) => {
           // the version it began from, and only what GitHub holds is refreshed.
           const mine = local[key]
           docs[key] = mine && holdsUnsavedWork(key, mine)
-            ? { ...fresh, working: mine.working, draftBase: mine.draftBase, errors: mine.errors, warnings: mine.warnings, save: mine.save, saveMessage: mine.saveMessage }
+            ? { ...fresh, working: mine.working, draftBase: mine.draftBase, draftRev: mine.draftRev, errors: mine.errors, warnings: mine.warnings, save: mine.save, saveMessage: mine.saveMessage }
             : fresh
         }
         set({ status: 'ready', docs, durable: state.durable, error: undefined })
@@ -240,9 +249,9 @@ export const useContent = create<ContentStore>((set, get) => {
       // A save still on its way would put the draft back after it is gone.
       while (saving.has(doc)) await saving.get(doc)
       try {
-        await adminDiscardDraft(doc)
+        await adminDiscardDraft(doc, get().docs[doc]?.draftRev ?? null)
         const entry = get().docs[doc]
-        if (entry) patchDoc(doc, { working: entry.published, save: 'idle', draftBase: entry.sha, errors: [], warnings: [] })
+        if (entry) patchDoc(doc, { working: entry.published, save: 'idle', draftBase: entry.sha, draftRev: null, errors: [], warnings: [] })
       } catch (err) {
         patchDoc(doc, { saveMessage: messageOf(err, 'Could not discard. Check the connection.') })
       }
@@ -260,20 +269,32 @@ export const useContent = create<ContentStore>((set, get) => {
         return
       }
       try {
-        const { commit, shas } = await adminPublish(docs, overwrite)
+        const revs = Object.fromEntries(docs.map((d) => [d, get().docs[d]?.draftRev ?? null]))
+        const { commit, shas } = await adminPublish(docs, overwrite, revs)
         // The server cleared these drafts: what was edited is what is published,
         // at the version the server reports, which the next draft starts from.
         for (const doc of docs) {
           const entry = get().docs[doc]!
           const sha = shas?.[doc] ?? entry.sha
-          patchDoc(doc, { published: entry.working, sha, draftBase: sha, save: 'idle' })
+          patchDoc(doc, { published: entry.working, sha, draftBase: sha, draftRev: null, save: 'idle' })
         }
         set({ publishing: { state: 'deploying', commit, docs } })
         watchDeploy(commit, docs)
       } catch (err) {
-        if (err instanceof ApiError && err.status === 409) {
-          const conflicts = (err.detail as { conflicts?: DocKey[] } | undefined)?.conflicts ?? []
-          set({ publishing: { state: 'conflict', docs, conflicts, message: err.message } })
+        const conflicts = err instanceof ApiError && err.status === 409
+          ? (err.detail as { conflicts?: DocKey[] } | undefined)?.conflicts ?? []
+          : []
+        if (conflicts.length) {
+          set({ publishing: { state: 'conflict', docs, conflicts, message: messageOf(err, '') } })
+          // The newer version, so the dialog can say what Keep mine would undo.
+          // Nothing on screen changes until the team chooses.
+          try {
+            const state = await adminContentState()
+            const theirs = Object.fromEntries(conflicts.map((d) => [d, state.docs[d]?.published]))
+            if (get().publishing.state === 'conflict') set({ publishing: { ...get().publishing, theirs } })
+          } catch {
+            // The dialog still offers both choices without it.
+          }
           return
         }
         if (err instanceof ApiError && err.status === 400) {

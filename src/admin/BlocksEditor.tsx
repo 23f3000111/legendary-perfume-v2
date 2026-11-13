@@ -29,6 +29,10 @@ export default function BlocksEditor({
   disabled?: boolean
 }) {
   const [addingAfter, setAddingAfter] = useState<number | null>(null)
+  // While a photo is uploading, the blocks hold still, so it lands on the block it was chosen for.
+  const [photosAtWork, setPhotosAtWork] = useState(0)
+  const onPhotoBusy = (busy: boolean) => setPhotosAtWork((n) => Math.max(0, n + (busy ? 1 : -1)))
+  const locked = disabled || photosAtWork > 0
   const set = (index: number, next: JournalBlock) => onChange(blocks.map((b, i) => (i === index ? next : b)))
   const move = (from: number, to: number) => {
     setAddingAfter(null)
@@ -53,22 +57,28 @@ export default function BlocksEditor({
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <span className="text-xs text-smoke">{BLOCK_LABELS[block.t]}</span>
             <div className="flex shrink-0 gap-3">
-              <button type="button" disabled={disabled || i === 0} onClick={() => move(i, i - 1)} className={control}>
+              <button type="button" disabled={locked || i === 0} onClick={() => move(i, i - 1)} className={control}>
                 Move up
               </button>
-              <button type="button" disabled={disabled || i === blocks.length - 1} onClick={() => move(i, i + 1)} className={control}>
+              <button type="button" disabled={locked || i === blocks.length - 1} onClick={() => move(i, i + 1)} className={control}>
                 Move down
               </button>
-              <button type="button" disabled={disabled} onClick={() => setAddingAfter(addingAfter === i ? null : i)} className={control}>
+              <button type="button" disabled={locked} onClick={() => setAddingAfter(addingAfter === i ? null : i)} className={control}>
                 Add below
               </button>
-              <button type="button" disabled={disabled} onClick={() => remove(i)} className={`${control} hover:text-[#A4352C]`}>
+              <button type="button" disabled={locked} onClick={() => remove(i)} className={`${control} hover:text-[#A4352C]`}>
                 Remove
               </button>
             </div>
           </div>
           <div className="space-y-4">
-            <BlockFields block={block} onChange={(next) => set(i, next)} err={(p) => err(`${i}.${p}`)} disabled={disabled} />
+            <BlockFields
+              block={block}
+              onChange={(next) => set(i, next)}
+              err={(p) => err(`${i}.${p}`)}
+              disabled={disabled}
+              onPhotoBusy={onPhotoBusy}
+            />
           </div>
           {addingAfter === i && (
             <div className="mt-4 border-t border-line pt-4">
@@ -78,14 +88,14 @@ export default function BlocksEditor({
                   setAddingAfter(null)
                   onChange(insertAt(blocks, i + 1, blankBlock(t)))
                 }}
-                disabled={disabled}
+                disabled={locked}
               />
             </div>
           )}
         </div>
       ))}
 
-      <AddBlock label="Add to the end" onAdd={(t) => onChange([...blocks, blankBlock(t)])} disabled={disabled} />
+      <AddBlock label="Add to the end" onAdd={(t) => onChange([...blocks, blankBlock(t)])} disabled={locked} />
     </div>
   )
 }
@@ -120,12 +130,13 @@ const linesError = (err: Err, count: number) =>
   err('items') ?? Array.from({ length: count }, (_, k) => err(`items.${k}`)).find(Boolean)
 
 function BlockFields({
-  block, onChange, err, disabled,
+  block, onChange, err, disabled, onPhotoBusy,
 }: {
   block: JournalBlock
   onChange: (next: JournalBlock) => void
   err: Err
   disabled?: boolean
+  onPhotoBusy: (busy: boolean) => void
 }) {
   switch (block.t) {
     case 'p':
@@ -185,6 +196,7 @@ function BlockFields({
             value={block.src || undefined}
             onChange={(src) => onChange({ ...block, src: src ?? '' })}
             disabled={disabled}
+            onBusy={onPhotoBusy}
           />
           {err('src') && <p className={`text-xs ${danger}`}>{err('src')}</p>}
           <TextField

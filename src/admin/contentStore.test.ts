@@ -31,12 +31,16 @@ function serverState(): ContentState {
     branch: 'main',
     durable: true,
     docs: {
-      faq: { label: 'FAQ', published: FAQ(), sha: 'sha-faq-1', draft: null, draftBase: null, errors: [], warnings: [] },
+      faq: { label: 'FAQ', published: FAQ(), sha: 'sha-faq-1', draft: null, draftBase: null, draftRev: null, errors: [], warnings: [] },
     },
   }
 }
 
-const savedDraft = (doc: string) => ({ draft: { doc, data: {}, baseSha: 'sha-faq-1', updatedAt: '2026-11-12T10:00:00.000Z' }, errors: [], warnings: [] })
+const savedDraft = (doc: string, rev = 'rev-saved') => ({
+  draft: { doc, data: {}, baseSha: 'sha-faq-1', updatedAt: '2026-11-12T10:00:00.000Z', rev },
+  errors: [],
+  warnings: [],
+})
 
 beforeEach(async () => {
   vi.useFakeTimers()
@@ -62,42 +66,43 @@ describe('the dashboard content store', () => {
     expect(mocked.adminSaveDraft).not.toHaveBeenCalled()
     await vi.advanceTimersByTimeAsync(1)
     expect(mocked.adminSaveDraft).toHaveBeenCalledTimes(1)
-    expect(mocked.adminSaveDraft).toHaveBeenCalledWith('faq', FAQ('Two'), 'sha-faq-1')
+    expect(mocked.adminSaveDraft).toHaveBeenCalledWith('faq', FAQ('Two'), 'sha-faq-1', null)
     expect(useContent.getState().docs.faq?.save).toBe('saved')
   })
 
   it('a draft continuing a saved one carries that draft’s base', async () => {
     const state = serverState()
-    state.docs.faq = { ...state.docs.faq!, draft: FAQ('Drafted yesterday'), draftBase: 'sha-faq-0' }
+    state.docs.faq = { ...state.docs.faq!, draft: FAQ('Drafted yesterday'), draftBase: 'sha-faq-0', draftRev: 'rev-0' }
     mocked.adminContentState.mockResolvedValue(state)
     await useContent.getState().load()
     useContent.getState().edit('faq', FAQ('Drafted yesterday, and today'))
     await vi.advanceTimersByTimeAsync(800)
-    expect(mocked.adminSaveDraft).toHaveBeenCalledWith('faq', FAQ('Drafted yesterday, and today'), 'sha-faq-0')
+    expect(mocked.adminSaveDraft).toHaveBeenCalledWith('faq', FAQ('Drafted yesterday, and today'), 'sha-faq-0', 'rev-0')
   })
 
   it('after a discard the next draft starts from the published version', async () => {
     const state = serverState()
-    state.docs.faq = { ...state.docs.faq!, draft: FAQ('Drafted yesterday'), draftBase: 'sha-faq-0' }
+    state.docs.faq = { ...state.docs.faq!, draft: FAQ('Drafted yesterday'), draftBase: 'sha-faq-0', draftRev: 'rev-0' }
     mocked.adminContentState.mockResolvedValue(state)
     await useContent.getState().load()
     await useContent.getState().discard('faq')
+    expect(mocked.adminDiscardDraft).toHaveBeenCalledWith('faq', 'rev-0')
     useContent.getState().edit('faq', FAQ('A fresh start'))
     await vi.advanceTimersByTimeAsync(800)
-    expect(mocked.adminSaveDraft).toHaveBeenCalledWith('faq', FAQ('A fresh start'), 'sha-faq-1')
+    expect(mocked.adminSaveDraft).toHaveBeenCalledWith('faq', FAQ('A fresh start'), 'sha-faq-1', null)
   })
 
   it('after editing back to the published text the next draft starts from the published version', async () => {
     const state = serverState()
-    state.docs.faq = { ...state.docs.faq!, draft: FAQ('Drafted yesterday'), draftBase: 'sha-faq-0' }
+    state.docs.faq = { ...state.docs.faq!, draft: FAQ('Drafted yesterday'), draftBase: 'sha-faq-0', draftRev: 'rev-0' }
     mocked.adminContentState.mockResolvedValue(state)
     await useContent.getState().load()
     useContent.getState().edit('faq', FAQ())
     await vi.advanceTimersByTimeAsync(800)
-    expect(mocked.adminDiscardDraft).toHaveBeenCalledWith('faq')
+    expect(mocked.adminDiscardDraft).toHaveBeenCalledWith('faq', 'rev-0')
     useContent.getState().edit('faq', FAQ('A fresh start'))
     await vi.advanceTimersByTimeAsync(800)
-    expect(mocked.adminSaveDraft).toHaveBeenCalledWith('faq', FAQ('A fresh start'), 'sha-faq-1')
+    expect(mocked.adminSaveDraft).toHaveBeenCalledWith('faq', FAQ('A fresh start'), 'sha-faq-1', null)
   })
 
   it('after a publish the next draft starts from the version just published', async () => {
@@ -107,7 +112,7 @@ describe('the dashboard content store', () => {
     await useContent.getState().publish(['faq'])
     useContent.getState().edit('faq', FAQ('Second change'))
     await vi.advanceTimersByTimeAsync(800)
-    expect(mocked.adminSaveDraft).toHaveBeenLastCalledWith('faq', FAQ('Second change'), 'sha-faq-2')
+    expect(mocked.adminSaveDraft).toHaveBeenLastCalledWith('faq', FAQ('Second change'), 'sha-faq-2', null)
   })
 
   it('an edit back to the published text discards the draft instead of saving it', async () => {
@@ -116,7 +121,7 @@ describe('the dashboard content store', () => {
     edit('faq', FAQ())
     await vi.advanceTimersByTimeAsync(800)
     expect(mocked.adminSaveDraft).not.toHaveBeenCalled()
-    expect(mocked.adminDiscardDraft).toHaveBeenCalledWith('faq')
+    expect(mocked.adminDiscardDraft).toHaveBeenCalledWith('faq', null)
     expect(useContent.getState().dirty()).toEqual([])
   })
 
@@ -193,7 +198,7 @@ describe('the dashboard content store', () => {
     expect(mocked.adminDiscardDraft).not.toHaveBeenCalled()
     release()
     await discarding
-    expect(mocked.adminDiscardDraft).toHaveBeenCalledWith('faq')
+    expect(mocked.adminDiscardDraft).toHaveBeenCalledWith('faq', 'rev-saved')
     expect(useContent.getState().docs.faq?.working).toEqual(FAQ())
   })
 
@@ -215,6 +220,67 @@ describe('the dashboard content store', () => {
     const { publishing } = useContent.getState()
     expect(publishing.state).toBe('conflict')
     expect(publishing.conflicts).toEqual(['faq'])
+  })
+
+  // Two windows share a document's one draft: each says which version it last saw.
+  it('every save carries the version of the draft it replaces', async () => {
+    const state = serverState()
+    state.docs.faq = { ...state.docs.faq!, draft: FAQ('Drafted yesterday'), draftBase: 'sha-faq-0', draftRev: 'rev-0' }
+    mocked.adminContentState.mockResolvedValue(state)
+    await useContent.getState().load()
+    // The server keeps the first base, and answers each save with the draft's new version.
+    const keptBase = (rev: string) => ({ ...savedDraft('faq', rev), draft: { ...savedDraft('faq', rev).draft, baseSha: 'sha-faq-0' } })
+    mocked.adminSaveDraft.mockResolvedValueOnce(keptBase('rev-1')).mockResolvedValueOnce(keptBase('rev-2'))
+    useContent.getState().edit('faq', FAQ('One'))
+    await vi.advanceTimersByTimeAsync(800)
+    expect(mocked.adminSaveDraft).toHaveBeenLastCalledWith('faq', FAQ('One'), 'sha-faq-0', 'rev-0')
+    useContent.getState().edit('faq', FAQ('Two'))
+    await vi.advanceTimersByTimeAsync(800)
+    expect(mocked.adminSaveDraft).toHaveBeenLastCalledWith('faq', FAQ('Two'), 'sha-faq-0', 'rev-1')
+  })
+
+  it('publish says which drafts it builds on', async () => {
+    mocked.adminSaveDraft.mockResolvedValue(savedDraft('faq', 'rev-9'))
+    mocked.adminPublish.mockResolvedValue({ commit: 'commit-1', shas: { faq: 'sha-faq-2' } })
+    mocked.adminDeployStatus.mockResolvedValue({ state: 'pending' })
+    useContent.getState().edit('faq', FAQ('Going out'))
+    await useContent.getState().publish(['faq'])
+    expect(mocked.adminPublish).toHaveBeenCalledWith(['faq'], [], { faq: 'rev-9' })
+  })
+
+  it('a save refused because another window saved keeps the edits and says so', async () => {
+    mocked.adminSaveDraft.mockRejectedValue(new ApiError(409, 'FAQ changed in another window. Reload the page to see the latest.'))
+    useContent.getState().edit('faq', FAQ('Mine'))
+    await vi.advanceTimersByTimeAsync(800)
+    const faq = useContent.getState().docs.faq!
+    expect(faq.save).toBe('error')
+    expect(faq.saveMessage).toBe('FAQ changed in another window. Reload the page to see the latest.')
+    expect(faq.working).toEqual(FAQ('Mine'))
+  })
+
+  it('a refusal that names no conflict is reported, not asked about', async () => {
+    const message = 'FAQ changed in another window. Reload the page to see the latest.'
+    mocked.adminPublish.mockRejectedValue(new ApiError(409, message, { error: message, conflicts: [] }))
+    useContent.getState().edit('faq', FAQ('Mine'))
+    await useContent.getState().publish(['faq'])
+    expect(useContent.getState().publishing).toMatchObject({ state: 'failed', message })
+  })
+
+  // So the dialog can say what "Keep mine" would undo of the newer version.
+  it('a conflict brings the newer version, without touching what is on screen', async () => {
+    mocked.adminPublish.mockRejectedValue(
+      new ApiError(409, 'FAQ changed since you began editing.', { error: 'FAQ changed since you began editing.', conflicts: ['faq'] }),
+    )
+    useContent.getState().edit('faq', FAQ('Mine'))
+    const newer = serverState()
+    newer.docs.faq = { ...newer.docs.faq!, published: FAQ('Theirs'), sha: 'sha-faq-2' }
+    mocked.adminContentState.mockResolvedValue(newer)
+    await useContent.getState().publish(['faq'])
+    const { publishing, docs } = useContent.getState()
+    expect(publishing.state).toBe('conflict')
+    expect(publishing.theirs?.faq).toEqual(FAQ('Theirs'))
+    expect(docs.faq?.working).toEqual(FAQ('Mine'))
+    expect(docs.faq?.published).toEqual(FAQ())
   })
 
   it('a successful publish polls until live', async () => {
@@ -257,7 +323,7 @@ describe('the dashboard content store', () => {
     expect(docs.faq?.published).toEqual(FAQ('Someone else, after you'))
 
     await vi.advanceTimersByTimeAsync(400)
-    expect(mocked.adminSaveDraft).toHaveBeenLastCalledWith('faq', FAQ('Still typing'), 'sha-faq-2')
+    expect(mocked.adminSaveDraft).toHaveBeenLastCalledWith('faq', FAQ('Still typing'), 'sha-faq-2', null)
   })
 
   it('a failed deploy is reported and the drafts are kept', async () => {

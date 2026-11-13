@@ -316,6 +316,57 @@ describe('the content API', () => {
     expect(publish.body.error).toBe('GitHub is busy right now. Please try again in a few minutes.')
   })
 
+  // Two windows on one document share its one draft. Each says which version of
+  // the draft it last saw, so neither quietly replaces what the other saved.
+  const ANOTHER_WINDOW = 'FAQ changed in another window. Reload the page to see the latest.'
+  const save = (data: unknown, rev: string | null) =>
+    call({ method: 'PUT', query: { action: 'draft' }, body: { doc: 'faq', data, rev } })
+
+  it('a save from a window that missed a newer save is refused', async () => {
+    const a = await save(FAQ('Window A.'), null)
+    expect(a.status).toBe(200)
+    // Window B opened before A saved: as far as it knows there is no draft.
+    const b = await save(FAQ('Window B.'), null)
+    expect(b.status).toBe(409)
+    expect(b.body.error).toBe(ANOTHER_WINDOW)
+    expect((await contentStore().drafts())[0].data).toEqual(FAQ('Window A.'))
+    // A knows its own save, and carries on.
+    expect((await save(FAQ('Window A, again.'), a.body.draft.rev)).status).toBe(200)
+  })
+
+  it('state names the version of each draft, which a reload starts from', async () => {
+    const a = await save(FAQ('Window A.'), null)
+    expect(a.body.draft.rev).toMatch(/^[0-9a-f]{40}$/)
+    const state = await call({ query: { action: 'state' } })
+    expect(state.body.docs.faq.draftRev).toBe(a.body.draft.rev)
+    expect(state.body.docs.stores.draftRev).toBeNull()
+  })
+
+  it('publish from a window that missed a newer save is refused, and nothing is committed', async () => {
+    const a = await save(FAQ('Window A.'), null)
+    const b = await save(FAQ('Window B.'), a.body.draft.rev)
+    const stale = await call({ method: 'POST', query: { action: 'publish' }, body: { docs: ['faq'], revs: { faq: a.body.draft.rev } } })
+    expect(stale.status).toBe(409)
+    expect(stale.body.error).toBe(ANOTHER_WINDOW)
+    expect(stale.body.conflicts).toEqual([])
+    expect(publishedText('src/content/faq.json')).toBe(asFile(FAQ()))
+
+    const fresh = await call({ method: 'POST', query: { action: 'publish' }, body: { docs: ['faq'], revs: { faq: b.body.draft.rev } } })
+    expect(fresh.status).toBe(200)
+    expect(publishedText('src/content/faq.json')).toBe(asFile(FAQ('Window B.')))
+  })
+
+  it('a discard from a window that missed a newer save is refused', async () => {
+    const a = await save(FAQ('Window A.'), null)
+    const b = await save(FAQ('Window B.'), a.body.draft.rev)
+    const stale = await call({ method: 'DELETE', query: { action: 'draft', doc: 'faq', rev: a.body.draft.rev } })
+    expect(stale.status).toBe(409)
+    expect(stale.body.error).toBe(ANOTHER_WINDOW)
+    expect(await contentStore().drafts()).toHaveLength(1)
+    expect((await call({ method: 'DELETE', query: { action: 'draft', doc: 'faq', rev: b.body.draft.rev } })).status).toBe(200)
+    expect(await contentStore().drafts()).toHaveLength(0)
+  })
+
   it('publish keeps fields the dashboard does not know', async () => {
     // A developer adds a field by hand, for code that reads it.
     const handEdited = {
