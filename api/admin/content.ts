@@ -32,8 +32,23 @@ import {
  */
 
 const NOT_SET_UP = 'Publishing is not set up yet. Add GITHUB_TOKEN and GITHUB_REPO in Vercel.'
-const TOKEN_REFUSED = 'GitHub refused the publishing token. Ask the developer to renew it.'
 const MAX_DOC_CHARS = 1_000_000
+
+/**
+ * What the team is told when GitHub refuses a call. A token that has lapsed,
+ * one that can read but not write, and GitHub's rate limit each need a
+ * different fix, so they get different messages.
+ */
+function githubMessage(err: GitHubError): string {
+  if (err.status === 401) return 'GitHub refused the publishing token. Ask the developer to renew it.'
+  if (err.status === 429 || (err.status === 403 && /rate limit/i.test(err.message))) {
+    return 'GitHub is busy right now. Please try again in a few minutes.'
+  }
+  if (err.status === 403) {
+    return 'The publishing token can read the site but not change it. Ask the developer to give it Contents: Read and write.'
+  }
+  return 'GitHub did not answer as expected. Please try again in a minute.'
+}
 
 interface Issue {
   path: string
@@ -344,12 +359,10 @@ export default handler(async (req: VercelRequest, res: VercelResponse) => {
     }
   } catch (err) {
     if (err instanceof GitHubError) {
-      throw new HttpError(
-        502,
-        err.status === 401 || err.status === 403
-          ? TOKEN_REFUSED
-          : 'GitHub did not answer as expected. Please try again in a minute.',
-      )
+      // GitHub's own reason is the developer's best clue, and the team's
+      // message has no room for it.
+      console.error('[content] GitHub answered', err.status, err.message)
+      throw new HttpError(502, githubMessage(err))
     }
     throw err
   }

@@ -1,7 +1,7 @@
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 // @ts-expect-error: a plain .mjs dev tool, without types
 import { startFakeGitHub } from '../../scripts/fake-github.mjs'
 import content from '../../api/admin/content'
@@ -264,6 +264,62 @@ describe('the content API', () => {
     expect(publish.status).toBe(502)
     expect(publish.body.error).toBe('GitHub refused the publishing token. Ask the developer to renew it.')
     expect((await contentStore().drafts()).map((d) => d.doc)).toEqual(['faq'])
+  })
+
+  /** Publish the FAQ while GitHub refuses the first write with `status` and `message`. */
+  async function publishRefusedWith(status: number, message: string) {
+    await call({ method: 'PUT', query: { action: 'draft' }, body: { doc: 'faq', data: FAQ('Keep me.') } })
+    // Reads still work: a token that can read but not write gets this far.
+    fake.onRequest((method: string, route: string) =>
+      method === 'POST' && route === 'git/blobs' ? [status, { message }] : undefined,
+    )
+    const logged = vi.spyOn(console, 'error').mockImplementation(() => {})
+    try {
+      const publish = await call({ method: 'POST', query: { action: 'publish' }, body: { docs: ['faq'] } })
+      return { publish, logged: logged.mock.calls }
+    } finally {
+      logged.mockRestore()
+    }
+  }
+
+  it('a GitHub 403 says the token cannot change the site', async () => {
+    const { publish, logged } = await publishRefusedWith(403, 'Resource not accessible by personal access token')
+    expect(publish.status).toBe(502)
+    expect(publish.body.error).toBe(
+      'The publishing token can read the site but not change it. Ask the developer to give it Contents: Read and write.',
+    )
+    // GitHub's own reason reaches the function log, for whoever fixes the token.
+    expect(logged).toContainEqual(['[content] GitHub answered', 403, 'Resource not accessible by personal access token'])
+    expect((await contentStore().drafts()).map((d) => d.doc)).toEqual(['faq'])
+  })
+
+  it('a GitHub rate limit asks to try again later', async () => {
+    const { publish } = await publishRefusedWith(403, 'API rate limit exceeded for user ID 1.')
+    expect(publish.status).toBe(502)
+    expect(publish.body.error).toBe('GitHub is busy right now. Please try again in a few minutes.')
+  })
+
+  it('publish keeps fields the dashboard does not know', async () => {
+    // A developer adds a field by hand, for code that reads it.
+    const handEdited = {
+      ...FAQ(),
+      sections: [{ title: 'About Orchid', items: [{ q: 'Is every perfume orchid based?', a: 'No.', note: 'kept' }] }],
+      note: 'kept',
+    }
+    await commitFiles(env(), { message: 'Developer', files: [{ path: 'src/content/faq.json', content: asFile(handEdited) }] })
+
+    // The dashboard edits the copy it loaded, which carries both fields.
+    const state = (await call({ query: { action: 'state' } })).body.docs.faq
+    const draft = structuredClone(state.published)
+    draft.product[0].a = 'Six to eight hours.'
+    await call({ method: 'PUT', query: { action: 'draft' }, body: { doc: 'faq', data: draft, base: state.sha } })
+    const publish = await call({ method: 'POST', query: { action: 'publish' }, body: { docs: ['faq'] } })
+    expect(publish.status).toBe(200)
+
+    const committed = JSON.parse(publishedText('src/content/faq.json')!)
+    expect(committed.product[0].a).toBe('Six to eight hours.')
+    expect(committed.note).toBe('kept')
+    expect(committed.sections[0].items[0].note).toBe('kept')
   })
 
   it('restore puts back one document', async () => {

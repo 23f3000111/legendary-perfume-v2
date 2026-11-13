@@ -221,8 +221,8 @@ export async function startFakeGitHub({
       if (req.headers.authorization !== `Bearer ${token}`) {
         ;[status, body] = [401, { message: 'Bad credentials' }]
       } else if (m) {
-        if (onRequest) await onRequest(req.method, m[1])
-        ;[status, body] = await route(req.method, m[1], url.searchParams, req)
+        const answer = onRequest ? await onRequest(req.method, m[1]) : undefined
+        ;[status, body] = answer ?? (await route(req.method, m[1], url.searchParams, req))
       }
     } catch (err) {
       ;[status, body] = [500, { message: String(err?.message ?? err) }]
@@ -254,7 +254,9 @@ export async function startFakeGitHub({
     /**
      * Run `fn(method, route)` before every request is answered, `route` being
      * the part after /repos/owner/name/ without the query. Lets a test land a
-     * change at an exact point in someone else's sequence of calls.
+     * change at an exact point in someone else's sequence of calls. When `fn`
+     * returns `[status, body]`, that is the answer and the request goes no
+     * further, so a test can have GitHub refuse one kind of call.
      */
     onRequest: (fn) => {
       onRequest = fn

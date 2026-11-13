@@ -62,6 +62,24 @@ describe('Stores schema', () => {
   })
 })
 
+describe('fields the dashboard has no form for', () => {
+  // A developer can add a field by hand for code that reads it. Publish writes
+  // what the schema returns, so a schema that dropped unknown keys would
+  // quietly delete that field at the team's next publish.
+  it('keeps keys it does not know', () => {
+    const doc = {
+      intro: 'We answer the questions customers ask most.',
+      sections: [{ title: 'About Orchid', items: [{ q: 'Is every perfume orchid based?', a: 'No.', source: 'sheet' }] }],
+      product: [{ q: 'How long does it last?', a: 'Four to seven hours.' }],
+      note: 'x',
+    }
+    expect(FaqDocSchema.parse(doc)).toEqual(doc)
+
+    const stores = { regions: ['Kuala Lumpur'], stores: [store({ extra: 1 })] }
+    expect(StoresDocSchema.parse(stores)).toEqual(stores)
+  })
+})
+
 describe('content helpers', () => {
   it('findDashes reports where a long dash is', () => {
     expect(findDashes({ a: ['ok', 'x — y'], b: 'p–q', c: 'well-known' })).toEqual(['a.1', 'b'])
