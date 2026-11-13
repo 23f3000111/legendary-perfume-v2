@@ -31,6 +31,32 @@ afterEach(async () => {
 })
 
 
+describe('the fake GitHub', () => {
+  // A Windows checkout (core.autocrlf) has CRLF in text files, while git, and
+  // so GitHub, holds LF. Seeded with CRLF, the fake would never match a file
+  // the dashboard writes back, and every byte for byte check would fail.
+  it('holds content files the way git does, with LF line endings', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'fake-github-crlf-'))
+    try {
+      mkdirSync(join(dir, 'src/content'), { recursive: true })
+      writeFileSync(join(dir, 'src/content/faq.json'), '{\r\n  "intro": "one"\r\n}\r\n')
+      mkdirSync(join(dir, 'public/assets'), { recursive: true })
+      const photo = Buffer.from([0x0d, 0x0a, 0xff, 0x0d, 0x0a])
+      writeFileSync(join(dir, 'public/assets/a.webp'), photo)
+      const crlf = await startFakeGitHub({ port: 0, seedDir: dir, token: 'test-token', statusDelayMs: null })
+      try {
+        expect(crlf.files().get('src/content/faq.json').toString('utf8')).toBe('{\n  "intro": "one"\n}\n')
+        // A photo's bytes are left exactly as they are.
+        expect(crlf.files().get('public/assets/a.webp')).toEqual(photo)
+      } finally {
+        await crlf.close()
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  })
+})
+
 describe('the GitHub client', () => {
   it('commitFiles then readFile returns the new text and a new sha', async () => {
     const before = await readFile(cfg, 'src/content/faq.json')

@@ -13,7 +13,9 @@
  *
  * Signs in, edits and previews the FAQ, publishes it and waits for "Live",
  * adds a store with an 8000 px photo, restores the FAQ from History, resolves
- * a conflict, and checks the photo paths in Safari's engine and on a phone.
+ * a conflict, edits and previews a journal article, publishes a new one with
+ * its photo, restores the Journal, and checks the photo paths in Safari's
+ * engine and on a phone.
  * It refuses to run against anything but a local GitHub, so it can never
  * publish to the real repository.
  */
@@ -86,6 +88,7 @@ async function signIn(page) {
 const openTab = (page, name) => page.click(`header nav button:text-is("${name}")`)
 
 const seedFaq = (await ghFile('src/content/faq.json')).toString('utf8')
+const seedJournal = (await ghFile('src/content/journal.json')).toString('utf8')
 const browser = await chromium.launch({ executablePath: CHROME })
 const context = await browser.newContext({ viewport: { width: 1440, height: 900 } })
 const page = await context.newPage()
@@ -194,6 +197,81 @@ try {
   await page.locator('input[type="file"][multiple]').setInputFiles({ name: 'IMG_0001.heic', mimeType: 'image/heic', buffer: Buffer.from('not an image') })
   await page.waitForSelector("text=This photo's format isn't supported. Save it as JPEG or PNG and try again.")
   check('9. a HEIC file gets the format message', true)
+
+  // 11. The Journal: change the first paragraph of an article
+  await openTab(page, 'Journal')
+  await page.waitForSelector('text=Newest first, as the Journal page shows them.')
+  await page.locator('li', { hasText: 'Benefits of Alcohol-Free Perfumes' }).locator('button:text-is("Edit")').click()
+  await page.waitForSelector('text=Address: /journal/alcoholfree')
+  const body = page.locator('section:has(h2:text-is("Article"))')
+  const paragraph = `A paragraph written by the end to end check, ${Date.now()}.`
+  await body.locator('textarea').first().fill(paragraph)
+  await page.waitForSelector('text=Saved as a draft')
+  check('11. a journal paragraph is saved as a draft', true)
+
+  // 12. Preview shows it on the article's own page
+  const [articlePreview] = await Promise.all([context.waitForEvent('page'), page.click('button:text-is("Preview")')])
+  await articlePreview.waitForURL(/\/journal\/alcoholfree\?preview/)
+  await articlePreview.waitForLoadState('networkidle')
+  const articleText = await articlePreview.evaluate(() => document.body.innerText)
+  check(
+    '12. preview shows the new paragraph on /journal/alcoholfree with the ribbon',
+    articleText.includes(paragraph) && /preview, not published/i.test(articleText),
+  )
+  await articlePreview.close()
+
+  // 13. A new article with a 3000 px photo and a heading added below its paragraph, published
+  await page.click('button:text-is("All articles")')
+  await page.click('button:text-is("New article")')
+  await page.waitForSelector('text=Address: /journal/newarticle')
+  await page.getByLabel('Title', { exact: true }).fill('Testing the journal')
+  await page.getByLabel('Category', { exact: true }).fill('Notes')
+  await page.getByLabel('Summary', { exact: true }).fill('A short piece written by the end to end check.')
+  const header = page.locator('div:has(> span:text-is("Header photo"))')
+  const photo = await sharp({ create: { width: 3000, height: 2000, channels: 3, background: { r: 196, g: 160, b: 104 } } })
+    .jpeg()
+    .toBuffer()
+  await header.locator('input[type="file"]').setInputFiles({ name: 'header.jpg', mimeType: 'image/jpeg', buffer: photo })
+  await header.locator('img').waitFor({ timeout: 60000 })
+  await page.getByLabel('Header photo description', { exact: true }).fill('A plain sand coloured card')
+  await body.locator('textarea').first().fill('The first paragraph of the new article.')
+  await body.locator('button:text-is("Add below")').first().click()
+  await body.locator('select').first().selectOption('h2')
+  await body.locator('button:text-is("Add")').first().click()
+  await body.getByLabel('Heading', { exact: true }).fill('A heading added below')
+  await page.waitForSelector('text=Saved as a draft')
+  await page.click('button:text-is("Publish")')
+  await page.waitForSelector('text=Live. The site shows your changes.', { timeout: 30000 })
+  await page.click('button:text-is("OK")')
+  const journal = await ghJson('src/content/journal.json')
+  const fresh = journal.articles.find((a) => a.slug === 'testingthejournal')
+  const tree = await ghTree()
+  const heroFile = fresh?.hero && tree.find((p) => `/${p.replace(/^public\//, '')}` === fresh.hero)
+  const heroSize = heroFile ? await sharp(await ghFile(heroFile)).metadata() : null
+  const allMasters = tree.filter((p) => p.startsWith('public/assets/cms/m/'))
+  check(
+    '13a. the new article is published at its address, the heading after its paragraph',
+    fresh?.body?.[1]?.t === 'h2' && fresh?.hero?.startsWith('/assets/cms/') && journal.articles.some((a) => a.body.some((b) => b.text === paragraph)),
+    `${fresh?.slug} ${fresh?.hero}`,
+  )
+  check(
+    '13b. its 1600 px photo and the photo master are committed',
+    Boolean(heroFile) && Math.max(heroSize?.width ?? 0, heroSize?.height ?? 0) === 1600 && allMasters.length === 2,
+    `${heroSize?.width}x${heroSize?.height}, ${allMasters.length} masters in all`,
+  )
+
+  // 14. History lists it; restoring the Journal puts the seeded version back
+  await openTab(page, 'History')
+  await page.waitForSelector('text=Every published change')
+  check('14a. history lists the Journal publish', /\bJournal\b/.test(await page.locator('main').innerText()))
+  await page.click('button:text-is("Restore Journal")')
+  await until(async () => (await ghFile('src/content/journal.json')).toString('utf8') === seedJournal, 'the restored Journal')
+  const journalLog = await ghLog('src/content/journal.json')
+  check(
+    '14b. restoring the Journal puts the seeded file back byte for byte, as a new commit',
+    journalLog[0].startsWith('Dashboard: restore Journal to '),
+    journalLog.join(' | '),
+  )
 } catch (err) {
   failures++
   console.log(`FAIL  stopped: ${err.message}`)

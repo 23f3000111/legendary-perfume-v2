@@ -146,8 +146,8 @@ The dashboard needs somewhere durable to write.
 ## Content dashboard
 
 The same `/admin` edits the site's content, so the Legendary team can make their
-own changes instead of sending revision PDFs. Stage 1 covers the **FAQ** and the
-**store list**. The Journal, Products, the pages and the hero poster follow, as
+own changes instead of sending revision PDFs. It covers the **FAQ**, the **store
+list** and the **Journal**. Products, the pages and the hero poster follow, as
 set out in `docs/superpowers/specs/2026-11-12-content-dashboard-design.md`.
 
 - **Content lives in `src/content/*.json`.** The site imports it at build time,
@@ -170,7 +170,18 @@ set out in `docs/superpowers/specs/2026-11-12-content-dashboard-design.md`.
   over 4.5 MB. Then `api/admin/media.ts` turns them upright, converts them to
   sRGB and keeps a 3200 px master. It makes a copy at each place's size, named
   by content hash under `public/assets/cms/`, so the year-long cache on
-  `/assets/` is never served an old photo.
+  `/assets/` is never served an old photo. Store photos are 900 px, journal
+  photos 1600 px.
+- **The Journal** is one document, `src/content/journal.json`, holding every
+  article. An article's body is the blocks `Prose` draws (paragraphs, headings,
+  lists, photos, tables, buttons, questions and the rest). Its address,
+  `/journal/<slug>`, is made from its title, letters and digits only, and is
+  fixed once the article is published, since links and search results point at
+  it. The date is stored as the day (`2026-10-22`) and reading time as minutes;
+  the pages write them out ("22 October 2026", "3 min"). Links in the text go
+  through the same tokens the page draws with (`api/_lib/content/markup.ts`),
+  so a link the check passes is the link the page shows, and the page never
+  links to an address outside the site's own, the web, mail or phone.
 
 ### Setting it up
 

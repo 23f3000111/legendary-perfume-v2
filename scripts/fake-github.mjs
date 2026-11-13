@@ -68,12 +68,17 @@ export async function startFakeGitHub({
     return sha
   }
 
+  // The content files are seeded as GitHub holds them. A Windows checkout
+  // (core.autocrlf) has CRLF in text files where git stores LF; photos are
+  // bytes and are left exactly as they are.
   const seed = new Map()
   for (const sub of ['src/content', 'public/assets']) {
     const dir = resolve(seedDir, sub)
     if (!existsSync(dir)) continue
     for (const file of walk(dir)) {
-      seed.set(relative(seedDir, file).split('\\').join('/'), putBlob(readFileSync(file)))
+      const bytes = readFileSync(file)
+      const content = sub === 'src/content' ? Buffer.from(bytes.toString('utf8').replace(/\r\n/g, '\n'), 'utf8') : bytes
+      seed.set(relative(seedDir, file).split('\\').join('/'), putBlob(content))
     }
   }
   const first = putCommit({ tree: putTree(seed), parents: [], message: 'Seed', date: new Date().toISOString() })
