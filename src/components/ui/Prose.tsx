@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { inlineTokens, linkAllowed, ON_SITE } from '../../../api/_lib/content/markup'
 import { asset } from '../../lib/asset'
 import Accordion from './Accordion'
 import { ArrowRight, Sparkle } from './icons'
@@ -51,18 +52,17 @@ export function faqEntries(blocks: Block[]): { q: string; a: string }[] {
  *   **bold**         → emphasis           *italic*           → stress
  *   bare https://…   → auto-linked
  *
- * The bold branch has to sit before the italic one: alternation is ordered, so
- * a lone `\*` first would swallow the opening pair of every `**bold**`.
+ * The tokens come from api/_lib/content/markup.ts, which the content schemas
+ * check links with too, so the page and the check always agree on where a
+ * link is.
  */
-const TOKEN = /\[([^\]]+)\]\(([^)]+)\)|\*\*([^*]+)\*\*|\*([^*]+)\*|(https?:\/\/[^\s)]+)/g
-
 const linkClass = 'link-gold text-gold-deep'
 
 export function RichText({ text }: { text: string }) {
   const nodes: ReactNode[] = []
   let last = 0
   let m: RegExpExecArray | null
-  TOKEN.lastIndex = 0
+  const TOKEN = inlineTokens()
 
   while ((m = TOKEN.exec(text)) !== null) {
     if (m.index > last) nodes.push(text.slice(last, m.index))
@@ -89,8 +89,10 @@ export function RichText({ text }: { text: string }) {
 }
 
 function anchor(label: string, href: string, key: number, extra = '') {
+  // An address no link may go to (a javascript: one, say) stays plain words.
+  if (!linkAllowed(href)) return label
   const cls = `${linkClass} ${extra}`.trim()
-  if (href.startsWith('/') || href.startsWith('#')) {
+  if (ON_SITE.test(href) || href.startsWith('#')) {
     return <Link key={key} to={href} className={cls}>{label}</Link>
   }
   const external = href.startsWith('http')

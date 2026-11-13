@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { linkAllowed, linksIn, ON_SITE } from './markup.js'
 
 /**
  * What each editable document must look like before it can be published.
@@ -101,19 +102,14 @@ export type StoresDoc = z.infer<typeof StoresDocSchema>
 
 // ----------------------------------------------------------------- journal
 
-/** `[label](target)`, the link markup the site's long-form text understands (see Prose). */
-const LINK = /\[([^\]]+)\]\(([^)]+)\)/g
-/**
- * An address on this site. `//example.com` starts with a slash too but leaves
- * the site, and browsers read `/\` the same way, so neither counts.
- */
-const ON_SITE = /^\/(?![/\\])\S*$/
-/** Where else a link can go: a place on the page, or out to the web, mail or phone. */
-const OFF_SITE = /^(#|https?:\/\/|mailto:|tel:)\S*$/
 const LINK_MESSAGE = 'A link needs an address starting with / or https://.'
 
-/** Every link in the text goes somewhere: `product/orchid`, without its slash, would break on every article page. */
-const linksResolve = (s: string) => [...s.matchAll(LINK)].every((m) => ON_SITE.test(m[2]) || OFF_SITE.test(m[2]))
+/**
+ * Every link the page would draw from the text goes somewhere it may: not
+ * `product/orchid` without its slash, which breaks on every article page, and
+ * never a javascript: address. Links are found exactly as the page finds them.
+ */
+const linksResolve = (s: string) => linksIn(s).every(linkAllowed)
 
 /** Long-form text, which may carry links and bold. */
 const rich = (max: number) => text(max).refine(linksResolve, LINK_MESSAGE)

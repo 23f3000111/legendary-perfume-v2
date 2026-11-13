@@ -149,6 +149,13 @@ describe('Journal schema', () => {
     }
   })
 
+  // The page reads italic and bold before links. Checked any other way, this
+  // line passes as one link to /ok..., while the page finds `[x](javascript:...)`.
+  it('a link is read the way the page reads it', () => {
+    const hidden = withBlock({ t: 'p', text: '*z[a*](/ok[x](javascript:alert%281%29)' })
+    expect(firstIssuePath(JournalDocSchema.safeParse(hidden))).toEqual(['articles', 0, 'body', 0, 'text'])
+  })
+
   it('a photo block needs a description', () => {
     const bare = withBlock({ t: 'image', src: '/assets/client/journal-nyonya.webp', alt: '' })
     expect(firstIssuePath(JournalDocSchema.safeParse(bare))).toEqual(['articles', 0, 'body', 0, 'alt'])
