@@ -410,12 +410,20 @@ export interface LibraryPhoto {
   createdAt: string
 }
 
-/** Add a photo to the library. The browser has already shrunk it under the upload limit. */
+/**
+ * Add a photo to the library. The browser has already shrunk it under the upload limit.
+ *
+ * Sent as application/octet-stream whatever the photo is. Vercel's runtime
+ * reads a request body before the function runs and passes it on only for the
+ * types it knows (octet-stream as the raw bytes); sent as image/png, the
+ * function would receive nothing. The server reads the real type from the
+ * bytes themselves.
+ */
 export function adminUploadPhoto(photo: Blob): Promise<{ file: string; url: string; width: number; height: number }> {
   return request('/api/admin/media', {
     ...withCookies,
     method: 'POST',
-    headers: { 'Content-Type': photo.type || 'application/octet-stream' },
+    headers: { 'Content-Type': 'application/octet-stream' },
     body: photo,
   })
 }

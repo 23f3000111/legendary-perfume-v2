@@ -2,12 +2,13 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import sharp from 'sharp'
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 // @ts-expect-error: a plain .mjs dev tool, without types
 import { startFakeGitHub } from '../../scripts/fake-github.mjs'
 import media from '../../api/admin/media'
 import { issueSession } from '../../api/_lib/auth'
 import { commitFiles } from '../../api/_lib/github'
+import { adminUploadPhoto } from '../../src/lib/api'
 import { invoke, type Call } from './http-doubles'
 
 let work: string
@@ -107,6 +108,29 @@ describe('the photo API', () => {
     const res = await upload(Buffer.alloc(4_400_001))
     expect(res.status).toBe(413)
     expect(res.body.error).toBe('That photo is too large to upload.')
+  })
+
+  it("a photo sent by the dashboard's upload call reaches the function on Vercel", async () => {
+    const png = await sharp({ create: { width: 40, height: 30, channels: 4, background: { r: 10, g: 120, b: 90, alpha: 0.5 } } })
+      .png()
+      .toBuffer()
+    // What the dashboard puts on the wire, caught at fetch.
+    let sent: { type: string; bytes: Buffer } | undefined
+    vi.stubGlobal('fetch', async (_url: string, init: RequestInit) => {
+      const headers = init.headers as Record<string, string>
+      sent = { type: headers['Content-Type'], bytes: Buffer.from(await (init.body as Blob).arrayBuffer()) }
+      return new Response('{}', { status: 200, headers: { 'Content-Type': 'application/json' } })
+    })
+    try {
+      await adminUploadPhoto(new Blob([png], { type: 'image/png' }))
+    } finally {
+      vi.unstubAllGlobals()
+    }
+
+    const res = await call({ method: 'POST', raw: sent!.bytes, headers: { 'content-type': sent!.type } })
+    expect(res.status).toBe(200)
+    expect(res.body.file).toMatch(/^m\/[0-9a-f]{20}\.webp$/)
+    expect([res.body.width, res.body.height]).toEqual([40, 30])
   })
 
   it('derive makes a 900 px store photo on white', async () => {
