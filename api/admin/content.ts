@@ -5,7 +5,7 @@ import { DOC_KEYS, DOCS, isDocKey, type DocKey } from '../_lib/content/docs.js'
 import { findDashes, mediaRefs } from '../_lib/content/schema.js'
 import { contentStore, type ContentStore, type Draft } from '../_lib/content/store.js'
 import {
-  commitDate, commitFiles, deployState, fileHistory, githubConfig, GitHubError, listFiles, readFile,
+  blobSha, commitDate, commitFiles, deployState, fileHistory, githubConfig, GitHubError, listFiles, readFile,
   StaleBranchError, type GitHubConfig,
 } from '../_lib/github.js'
 
@@ -13,10 +13,10 @@ import {
  * The content dashboard's documents, for the Legendary team to edit and publish.
  *
  *   GET    ?action=state            every document, published and drafted
- *   PUT    ?action=draft            { doc, data } save as they type
+ *   PUT    ?action=draft            { doc, data, base } save as they type
  *   DELETE ?action=draft&doc=       discard a draft
  *   GET    ?action=preview          drafts and unpublished photos, for ?preview
- *   POST   ?action=publish          { docs, overwrite? } one commit, Vercel deploys it
+ *   POST   ?action=publish          { docs, overwrite? } one commit, Vercel deploys it; answers { commit, shas }
  *   GET    ?action=history&doc=     what changed, newest first
  *   GET    ?action=version&doc=&sha=  a document as it was
  *   POST   ?action=restore          { doc, sha } put one document back, as a new commit
@@ -77,6 +77,13 @@ function shaParam(value: unknown): string {
   return sha
 }
 
+/** A published document's version as the dashboard last read it: a blob sha, or null when it had none. */
+function baseParam(value: unknown): string | null {
+  if (value === null) return null
+  if (typeof value !== 'string' || !/^[0-9a-f]{40}$/.test(value)) throw new HttpError(400, 'Unknown version.')
+  return value
+}
+
 async function published(cfg: GitHubConfig, doc: DocKey): Promise<{ data: unknown; sha: string | null }> {
   const file = await readFile(cfg, DOCS[doc].path)
   return { data: file ? JSON.parse(file.text) : null, sha: file?.sha ?? null }
@@ -116,10 +123,15 @@ async function saveDraft(cfg: GitHubConfig, store: ContentStore, req: VercelRequ
   const data = input.data
   if (!data || typeof data !== 'object') throw new HttpError(400, 'Nothing to save.')
   if (JSON.stringify(data).length > MAX_DOC_CHARS) throw new HttpError(413, 'That is too much to save at once.')
-  // The base is the published version the draft starts from. A later save
-  // keeps it (see store.ts), so only the first save needs to look it up.
+  // The base is the published version the draft starts from. The dashboard
+  // sends the version its copy was loaded from, which may be older than what
+  // GitHub holds now: a second tab may have published, or a developer pushed,
+  // while this one sat open. Reading GitHub here instead would make that newer
+  // change the base and let the publish overwrite it unasked. A later save
+  // keeps the first base (see store.ts).
+  const sent = 'base' in input ? baseParam(input.base) : undefined
   const existing = (await draftsByDoc(store)).get(doc)
-  const baseSha = existing ? existing.baseSha : (await published(cfg, doc)).sha
+  const baseSha = existing ? existing.baseSha : sent !== undefined ? sent : (await published(cfg, doc)).sha
   const draft = await store.saveDraft(doc, data, baseSha)
   return { draft, errors: check(doc, data).issues, warnings: findDashes(data) }
 }
@@ -200,16 +212,20 @@ async function publish(cfg: GitHubConfig, store: ContentStore, req: VercelReques
     }
 
     const { files, photos } = await photosFor(cfg, store, ready)
+    const written = ready.map(({ doc, parsed }) => ({ doc, path: DOCS[doc].path, content: asFile(parsed) }))
     try {
       const commit = await commitFiles(cfg, {
         message: `Dashboard: ${labels(docs)}`,
-        files: [...files, ...ready.map(({ doc, parsed }) => ({ path: DOCS[doc].path, content: asFile(parsed) }))],
+        files: [...files, ...written.map(({ path, content }) => ({ path, content }))],
       })
       // The dashboard holds editing while a publish runs, so nothing typed
       // since the draft was read is lost here.
       for (const { doc } of ready) await store.deleteDraft(doc)
       await store.markPublished(photos)
-      return [200, { commit }]
+      // The version each document is now, so the dashboard's next draft of
+      // it starts from what was just published.
+      const shas = Object.fromEntries(written.map(({ doc, content }) => [doc, blobSha(content)]))
+      return [200, { commit, shas }]
     } catch (err) {
       if (!(err instanceof StaleBranchError)) throw err
       if (attempt > 0) return [409, { error: 'The site changed while publishing. Please try again.', conflicts: [] }]

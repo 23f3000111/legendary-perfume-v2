@@ -32,6 +32,12 @@ export interface EditableDoc {
   sha: string | null
   /** What the editor shows: the draft, or the published copy when there is none. */
   working: unknown
+  /**
+   * The published version `working` began from: the draft's base when there
+   * is a draft, otherwise `sha`. Every save sends it, so a publish stops at the
+   * conflict question when the document changed on GitHub since, even if that
+   * happened before the first save (another tab, a developer's push).
+   */
   draftBase: string | null
   errors: ContentIssue[]
   warnings: string[]
@@ -148,7 +154,7 @@ export const useContent = create<ContentStore>((set, get) => {
             published: d.published,
             sha: d.sha,
             working: d.draft ?? d.published,
-            draftBase: d.draftBase,
+            draftBase: d.draft ? d.draftBase : d.sha,
             errors: d.errors,
             warnings: d.warnings,
             save: d.draft ? 'saved' : 'idle',
@@ -180,10 +186,10 @@ export const useContent = create<ContentStore>((set, get) => {
         if (sameContent(working, entry.published)) {
           // Back to what is published: there is nothing to keep a draft of.
           await adminDiscardDraft(doc)
-          patchDoc(doc, { save: 'saved', draftBase: null, errors: [], warnings: [] })
+          patchDoc(doc, { save: 'saved', draftBase: entry.sha, errors: [], warnings: [] })
           return
         }
-        const res = await adminSaveDraft(doc, working)
+        const res = await adminSaveDraft(doc, working, entry.draftBase)
         const now = get().docs[doc]
         patchDoc(doc, {
           // A newer edit may have arrived while this one was saving.
@@ -209,7 +215,7 @@ export const useContent = create<ContentStore>((set, get) => {
       try {
         await adminDiscardDraft(doc)
         const entry = get().docs[doc]
-        if (entry) patchDoc(doc, { working: entry.published, save: 'idle', draftBase: null, errors: [], warnings: [] })
+        if (entry) patchDoc(doc, { working: entry.published, save: 'idle', draftBase: entry.sha, errors: [], warnings: [] })
       } catch (err) {
         patchDoc(doc, { saveMessage: messageOf(err, 'Could not discard. Check the connection.') })
       }
@@ -227,9 +233,14 @@ export const useContent = create<ContentStore>((set, get) => {
         return
       }
       try {
-        const { commit } = await adminPublish(docs, overwrite)
-        // The server cleared these drafts: what was edited is what is published.
-        for (const doc of docs) patchDoc(doc, { published: get().docs[doc]!.working, draftBase: null, save: 'idle' })
+        const { commit, shas } = await adminPublish(docs, overwrite)
+        // The server cleared these drafts: what was edited is what is published,
+        // at the version the server reports, which the next draft starts from.
+        for (const doc of docs) {
+          const entry = get().docs[doc]!
+          const sha = shas?.[doc] ?? entry.sha
+          patchDoc(doc, { published: entry.working, sha, draftBase: sha, save: 'idle' })
+        }
         set({ publishing: { state: 'deploying', commit, docs } })
         watchDeploy(commit, docs)
       } catch (err) {

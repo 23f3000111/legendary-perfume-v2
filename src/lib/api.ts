@@ -372,19 +372,31 @@ export function adminContentState(): Promise<ContentState> {
   return request<ContentState>(contentApi('action=state'), withCookies)
 }
 
+/**
+ * Save a draft. `base` is the published version (blob sha) the editor's copy
+ * began from, so a publish can tell when someone else changed the document
+ * in the meantime. A draft that already exists keeps the base it began with.
+ */
 export function adminSaveDraft(
   doc: DocKey,
   data: unknown,
+  base: string | null,
 ): Promise<{ draft: { baseSha: string | null; updatedAt: string }; errors: ContentIssue[]; warnings: string[] }> {
-  return request(contentApi('action=draft'), { ...withCookies, method: 'PUT', body: JSON.stringify({ doc, data }) })
+  return request(contentApi('action=draft'), { ...withCookies, method: 'PUT', body: JSON.stringify({ doc, data, base }) })
 }
 
 export function adminDiscardDraft(doc: DocKey): Promise<{ ok: true }> {
   return request(contentApi(`action=draft&doc=${doc}`), { ...withCookies, method: 'DELETE' })
 }
 
-/** One commit with every listed document. A 409's `detail.conflicts` names the ones changed meanwhile. */
-export function adminPublish(docs: DocKey[], overwrite: DocKey[] = []): Promise<{ commit: string }> {
+/**
+ * One commit with every listed document. A 409's `detail.conflicts` names the ones changed meanwhile.
+ * `shas` is each published document's new version.
+ */
+export function adminPublish(
+  docs: DocKey[],
+  overwrite: DocKey[] = [],
+): Promise<{ commit: string; shas: Partial<Record<DocKey, string>> }> {
   return request(contentApi('action=publish'), { ...withCookies, method: 'POST', body: JSON.stringify({ docs, overwrite }) })
 }
 

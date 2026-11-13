@@ -14,7 +14,7 @@ vi.mock('../lib/api', async () => {
 })
 
 import * as api from '../lib/api'
-import { ApiError } from '../lib/api'
+import { ApiError, type ContentState } from '../lib/api'
 import { useContent } from './contentStore'
 
 const mocked = vi.mocked(api)
@@ -25,7 +25,7 @@ const FAQ = (intro = 'Published intro.') => ({
   product: [{ q: 'How long does it last?', a: 'Four to seven hours.' }],
 })
 
-function serverState() {
+function serverState(): ContentState {
   return {
     configured: true,
     branch: 'main',
@@ -62,8 +62,52 @@ describe('the dashboard content store', () => {
     expect(mocked.adminSaveDraft).not.toHaveBeenCalled()
     await vi.advanceTimersByTimeAsync(1)
     expect(mocked.adminSaveDraft).toHaveBeenCalledTimes(1)
-    expect(mocked.adminSaveDraft).toHaveBeenCalledWith('faq', FAQ('Two'))
+    expect(mocked.adminSaveDraft).toHaveBeenCalledWith('faq', FAQ('Two'), 'sha-faq-1')
     expect(useContent.getState().docs.faq?.save).toBe('saved')
+  })
+
+  it('a draft continuing a saved one carries that draft’s base', async () => {
+    const state = serverState()
+    state.docs.faq = { ...state.docs.faq!, draft: FAQ('Drafted yesterday'), draftBase: 'sha-faq-0' }
+    mocked.adminContentState.mockResolvedValue(state)
+    await useContent.getState().load()
+    useContent.getState().edit('faq', FAQ('Drafted yesterday, and today'))
+    await vi.advanceTimersByTimeAsync(800)
+    expect(mocked.adminSaveDraft).toHaveBeenCalledWith('faq', FAQ('Drafted yesterday, and today'), 'sha-faq-0')
+  })
+
+  it('after a discard the next draft starts from the published version', async () => {
+    const state = serverState()
+    state.docs.faq = { ...state.docs.faq!, draft: FAQ('Drafted yesterday'), draftBase: 'sha-faq-0' }
+    mocked.adminContentState.mockResolvedValue(state)
+    await useContent.getState().load()
+    await useContent.getState().discard('faq')
+    useContent.getState().edit('faq', FAQ('A fresh start'))
+    await vi.advanceTimersByTimeAsync(800)
+    expect(mocked.adminSaveDraft).toHaveBeenCalledWith('faq', FAQ('A fresh start'), 'sha-faq-1')
+  })
+
+  it('after editing back to the published text the next draft starts from the published version', async () => {
+    const state = serverState()
+    state.docs.faq = { ...state.docs.faq!, draft: FAQ('Drafted yesterday'), draftBase: 'sha-faq-0' }
+    mocked.adminContentState.mockResolvedValue(state)
+    await useContent.getState().load()
+    useContent.getState().edit('faq', FAQ())
+    await vi.advanceTimersByTimeAsync(800)
+    expect(mocked.adminDiscardDraft).toHaveBeenCalledWith('faq')
+    useContent.getState().edit('faq', FAQ('A fresh start'))
+    await vi.advanceTimersByTimeAsync(800)
+    expect(mocked.adminSaveDraft).toHaveBeenCalledWith('faq', FAQ('A fresh start'), 'sha-faq-1')
+  })
+
+  it('after a publish the next draft starts from the version just published', async () => {
+    mocked.adminPublish.mockResolvedValue({ commit: 'commit-1', shas: { faq: 'sha-faq-2' } })
+    mocked.adminDeployStatus.mockResolvedValue({ state: 'pending' })
+    useContent.getState().edit('faq', FAQ('First change'))
+    await useContent.getState().publish(['faq'])
+    useContent.getState().edit('faq', FAQ('Second change'))
+    await vi.advanceTimersByTimeAsync(800)
+    expect(mocked.adminSaveDraft).toHaveBeenLastCalledWith('faq', FAQ('Second change'), 'sha-faq-2')
   })
 
   it('an edit back to the published text discards the draft instead of saving it', async () => {
@@ -97,7 +141,7 @@ describe('the dashboard content store', () => {
   })
 
   it('a successful publish polls until live', async () => {
-    mocked.adminPublish.mockResolvedValue({ commit: 'commit-1' })
+    mocked.adminPublish.mockResolvedValue({ commit: 'commit-1', shas: { faq: 'sha-faq-2' } })
     mocked.adminDeployStatus.mockResolvedValueOnce({ state: 'pending' }).mockResolvedValueOnce({ state: 'success' })
 
     useContent.getState().edit('faq', FAQ('Going live'))
@@ -117,7 +161,7 @@ describe('the dashboard content store', () => {
   })
 
   it('a failed deploy is reported and the drafts are kept', async () => {
-    mocked.adminPublish.mockResolvedValue({ commit: 'commit-2' })
+    mocked.adminPublish.mockResolvedValue({ commit: 'commit-2', shas: { faq: 'sha-faq-2' } })
     mocked.adminDeployStatus.mockResolvedValue({ state: 'failure' })
     useContent.getState().edit('faq', FAQ('Not live yet'))
     await useContent.getState().publish(['faq'])
@@ -129,7 +173,7 @@ describe('the dashboard content store', () => {
   })
 
   it('stops waiting after five minutes', async () => {
-    mocked.adminPublish.mockResolvedValue({ commit: 'commit-3' })
+    mocked.adminPublish.mockResolvedValue({ commit: 'commit-3', shas: { faq: 'sha-faq-2' } })
     mocked.adminDeployStatus.mockResolvedValue({ state: 'pending' })
     useContent.getState().edit('faq', FAQ('Slow'))
     await useContent.getState().publish(['faq'])

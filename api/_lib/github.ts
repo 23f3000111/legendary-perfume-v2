@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import { optionalEnv } from './http.js'
 
 /**
@@ -49,6 +50,12 @@ export class StaleBranchError extends Error {
 }
 
 const encodePath = (path: string) => path.split('/').map(encodeURIComponent).join('/')
+
+/** Git's id for a file's content, the `sha` the contents API reports for it. */
+export function blobSha(content: string | Buffer): string {
+  const bytes = typeof content === 'string' ? Buffer.from(content, 'utf8') : content
+  return createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex')
+}
 
 async function call<T>(cfg: GitHubConfig, method: string, route: string, body?: unknown): Promise<T> {
   const res = await fetch(`${cfg.apiUrl}/repos/${cfg.repo}/${route}`, {

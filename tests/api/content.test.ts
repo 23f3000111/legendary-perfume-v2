@@ -158,6 +158,31 @@ describe('the content API', () => {
     expect(publishedText('src/content/faq.json')).toBe(asFile(FAQ('Mine.')))
   })
 
+  it('a draft typed into the copy the dashboard loaded conflicts with a change made since', async () => {
+    // The dashboard opens the FAQ; a developer changes it before the first autosave.
+    const loaded = (await call({ query: { action: 'state' } })).body.docs.faq.sha
+    await commitFiles(env(), { message: 'Developer', files: [{ path: 'src/content/faq.json', content: asFile(FAQ('Theirs.')) }] })
+    await call({ method: 'PUT', query: { action: 'draft' }, body: { doc: 'faq', data: FAQ('Mine, typed into the older copy.'), base: loaded } })
+
+    const refused = await call({ method: 'POST', query: { action: 'publish' }, body: { docs: ['faq'] } })
+    expect(refused.status).toBe(409)
+    expect(refused.body.conflicts).toEqual(['faq'])
+    expect(publishedText('src/content/faq.json')).toBe(asFile(FAQ('Theirs.')))
+  })
+
+  it('a draft whose base is not a version is refused', async () => {
+    const res = await call({ method: 'PUT', query: { action: 'draft' }, body: { doc: 'faq', data: FAQ('Mine.'), base: 'yesterday' } })
+    expect(res.status).toBe(400)
+    expect(await contentStore().drafts()).toEqual([])
+  })
+
+  it('publish answers with the version of each document it wrote', async () => {
+    await call({ method: 'PUT', query: { action: 'draft' }, body: { doc: 'faq', data: FAQ('Updated intro.') } })
+    const publish = await call({ method: 'POST', query: { action: 'publish' }, body: { docs: ['faq'] } })
+    const state = await call({ query: { action: 'state' } })
+    expect(publish.body.shas).toEqual({ faq: state.body.docs.faq.sha })
+  })
+
   it('publish carries a new photo and its master', async () => {
     const store = contentStore()
     await store.putMedia({ file: 'm/master1.webp', bytes: Buffer.from([9, 9, 9]), width: 3200, height: 2400, kind: 'master', source: null })
