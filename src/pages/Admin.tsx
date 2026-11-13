@@ -11,11 +11,12 @@ import Seo from '../components/Seo'
 import { Check, ArrowRight, ArrowUpRight, ShieldCheck, Truck, Bag, Sparkle } from '../components/ui/icons'
 import FaqEditor from '../admin/FaqEditor'
 import History from '../admin/History'
+import JournalEditor from '../admin/JournalEditor'
 import PhotoLibrary from '../admin/PhotoLibrary'
 import StoresEditor from '../admin/StoresEditor'
 import { useContent } from '../admin/contentStore'
 
-type Tab = 'overview' | 'products' | 'orders' | 'faq' | 'stores' | 'photos' | 'history'
+type Tab = 'overview' | 'products' | 'orders' | 'faq' | 'stores' | 'journal' | 'photos' | 'history'
 
 /**
  * The house dashboard.
@@ -96,6 +97,7 @@ export default function Admin() {
             {tab === 'orders' && <Orders />}
             {tab === 'faq' && <FaqEditor />}
             {tab === 'stores' && <StoresEditor />}
+            {tab === 'journal' && <JournalEditor />}
             {tab === 'photos' && <PhotoLibrary />}
             {tab === 'history' && <History />}
           </main>
@@ -194,19 +196,20 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'orders', label: 'Orders' },
   { key: 'faq', label: 'FAQ' },
   { key: 'stores', label: 'Stores' },
+  { key: 'journal', label: 'Journal' },
   { key: 'photos', label: 'Photos' },
   { key: 'history', label: 'History' },
 ]
 
 /** Which tab edits which document, for the Overview's list of unpublished work. */
-const DOC_TABS: Record<string, Tab> = { faq: 'faq', stores: 'stores' }
+const DOC_TABS: Record<string, Tab> = { faq: 'faq', stores: 'stores', journal: 'journal' }
 
 function UnpublishedChanges({ onOpen }: { onOpen: (t: Tab) => void }) {
   const content = useContent()
   if (content.status === 'unconfigured') {
     return (
       <p className="rounded-sm border border-gold/40 bg-gold/5 px-5 py-3 text-xs leading-relaxed text-gold-deep">
-        Publishing is not set up yet, so the FAQ, Stores and Photos tabs cannot save. Add{' '}
+        Publishing is not set up yet, so the FAQ, Stores and Journal tabs cannot save. Add{' '}
         <code>GITHUB_TOKEN</code> and <code>GITHUB_REPO</code> in Vercel and redeploy.
       </p>
     )

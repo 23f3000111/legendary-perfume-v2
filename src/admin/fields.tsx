@@ -74,6 +74,68 @@ export function TextArea({ rows = 3, ...props }: FieldProps & { rows?: number })
   )
 }
 
+/** A whole number, such as minutes. An emptied box reads as 0, which the schema then asks to fill. */
+export function NumberField({
+  label, value, onChange, min, max, error, hint, disabled,
+}: {
+  label: string
+  value: number
+  onChange: (value: number) => void
+  min?: number
+  max?: number
+  error?: string
+  hint?: string
+  disabled?: boolean
+}) {
+  const id = useId()
+  return (
+    <div>
+      <label htmlFor={id} className="eyebrow text-smoke">{label}</label>
+      <input
+        id={id}
+        type="number"
+        inputMode="numeric"
+        step={1}
+        min={min}
+        max={max}
+        value={value ? String(value) : ''}
+        onChange={(e) => onChange(e.target.value === '' ? 0 : Number(e.target.value))}
+        disabled={disabled}
+        className={`${field} ${error ? 'border-[#A4352C]' : ''}`}
+      />
+      {error && <p className={`mt-1 text-xs ${danger}`}>{error}</p>}
+      {hint && !error && <p className="mt-1 text-xs text-smoke">{hint}</p>}
+    </div>
+  )
+}
+
+/** A day, as YYYY-MM-DD, with the browser's own date picker. */
+export function DateField({
+  label, value, onChange, error, disabled,
+}: {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  error?: string
+  disabled?: boolean
+}) {
+  const id = useId()
+  return (
+    <div>
+      <label htmlFor={id} className="eyebrow text-smoke">{label}</label>
+      <input
+        id={id}
+        type="date"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        disabled={disabled}
+        className={`${field} ${error ? 'border-[#A4352C]' : ''}`}
+      />
+      {error && <p className={`mt-1 text-xs ${danger}`}>{error}</p>}
+    </div>
+  )
+}
+
 /**
  * One item per line, such as opening hours or a bulleted list. Blank lines are
  * left out of what is saved, but the box keeps what is typed, so pressing
