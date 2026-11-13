@@ -237,6 +237,29 @@ describe('the dashboard content store', () => {
     expect(mocked.adminContentState).toHaveBeenCalledTimes(2)
   })
 
+  it('a deploy going live keeps typing that is not saved yet, with the version it began from', async () => {
+    mocked.adminPublish.mockResolvedValue({ commit: 'commit-1', shas: { faq: 'sha-faq-2' } })
+    mocked.adminDeployStatus.mockResolvedValue({ state: 'success' })
+    useContent.getState().edit('faq', FAQ('Published now'))
+    await useContent.getState().publish(['faq'])
+    // By the time it is live, someone else has pushed a newer FAQ as well.
+    const live = serverState()
+    live.docs.faq = { ...live.docs.faq!, published: FAQ('Someone else, after you'), sha: 'sha-faq-3' }
+    mocked.adminContentState.mockResolvedValue(live)
+
+    // Still typing when the deploy goes live: the poll lands at 5 s, the autosave is due at 5.4 s.
+    await vi.advanceTimersByTimeAsync(4600)
+    useContent.getState().edit('faq', FAQ('Still typing'))
+    await vi.advanceTimersByTimeAsync(400)
+    const { publishing, docs } = useContent.getState()
+    expect(publishing.state).toBe('live')
+    expect(docs.faq?.working).toEqual(FAQ('Still typing'))
+    expect(docs.faq?.published).toEqual(FAQ('Someone else, after you'))
+
+    await vi.advanceTimersByTimeAsync(400)
+    expect(mocked.adminSaveDraft).toHaveBeenLastCalledWith('faq', FAQ('Still typing'), 'sha-faq-2')
+  })
+
   it('a failed deploy is reported and the drafts are kept', async () => {
     mocked.adminPublish.mockResolvedValue({ commit: 'commit-2', shas: { faq: 'sha-faq-2' } })
     mocked.adminDeployStatus.mockResolvedValue({ state: 'failure' })

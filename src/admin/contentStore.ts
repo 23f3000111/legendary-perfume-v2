@@ -100,6 +100,10 @@ let poll: ReturnType<typeof setTimeout> | undefined
 
 const messageOf = (err: unknown, fallback: string) => (err instanceof ApiError ? err.message : fallback)
 
+/** Whether a document holds edits the server does not have yet. */
+const unsaved = (doc: DocKey, entry: EditableDoc) =>
+  timers.has(doc) || saving.has(doc) || entry.save === 'error' || entry.save === 'signed-out'
+
 export const useContent = create<ContentStore>((set, get) => {
   const patchDoc = (doc: DocKey, patch: Partial<EditableDoc>) =>
     set((s) => (s.docs[doc] ? { docs: { ...s.docs, [doc]: { ...s.docs[doc]!, ...patch } } } : s))
@@ -178,9 +182,10 @@ export const useContent = create<ContentStore>((set, get) => {
           set({ status: 'unconfigured', docs: {}, durable: state.durable })
           return
         }
+        const local = get().docs
         const docs: Partial<Record<DocKey, EditableDoc>> = {}
         for (const [key, d] of Object.entries(state.docs) as [DocKey, NonNullable<(typeof state.docs)[DocKey]>][]) {
-          docs[key] = {
+          const fresh: EditableDoc = {
             label: d.label,
             published: d.published,
             sha: d.sha,
@@ -190,6 +195,13 @@ export const useContent = create<ContentStore>((set, get) => {
             warnings: d.warnings,
             save: d.draft ? 'saved' : 'idle',
           }
+          // A reload (once a publish is live, for one) must not wipe what is
+          // still being typed: work not on the server yet stays on screen with
+          // the version it began from, and only what GitHub holds is refreshed.
+          const mine = local[key]
+          docs[key] = mine && unsaved(key, mine)
+            ? { ...fresh, working: mine.working, draftBase: mine.draftBase, errors: mine.errors, warnings: mine.warnings, save: mine.save, saveMessage: mine.saveMessage }
+            : fresh
         }
         set({ status: 'ready', docs, durable: state.durable, error: undefined })
       } catch (err) {
