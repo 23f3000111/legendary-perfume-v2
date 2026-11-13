@@ -5,8 +5,8 @@ import { DOC_KEYS, DOCS, isDocKey, type DocKey } from '../_lib/content/docs.js'
 import { findDashes, mediaRefs } from '../_lib/content/schema.js'
 import { contentStore, type ContentStore, type Draft } from '../_lib/content/store.js'
 import {
-  blobSha, commitDate, commitFiles, deployState, fileHistory, githubConfig, GitHubError, listFiles, readFile,
-  StaleBranchError, type GitHubConfig,
+  blobSha, branchHead, commitDate, commitFiles, deployState, fileHistory, githubConfig, GitHubError, listFiles,
+  readFile, StaleBranchError, type GitHubConfig,
 } from '../_lib/github.js'
 
 /**
@@ -201,10 +201,13 @@ async function publish(cfg: GitHubConfig, store: ContentStore, req: VercelReques
   }
 
   // A branch that moves mid-publish gets one more try, conflict check included.
+  // Each try checks the documents at one head and commits on that same head,
+  // so a push landing between the check and the commit is never built over.
   for (let attempt = 0; ; attempt++) {
+    const head = await branchHead(cfg)
     const conflicts: DocKey[] = []
     for (const { doc, draft } of ready) {
-      const current = await readFile(cfg, DOCS[doc].path)
+      const current = await readFile(cfg, DOCS[doc].path, head.commit)
       if ((current?.sha ?? null) !== draft.baseSha && !overwrite.has(doc)) conflicts.push(doc)
     }
     if (conflicts.length) {
@@ -217,6 +220,7 @@ async function publish(cfg: GitHubConfig, store: ContentStore, req: VercelReques
       const commit = await commitFiles(cfg, {
         message: `Dashboard: ${labels(docs)}`,
         files: [...files, ...written.map(({ path, content }) => ({ path, content }))],
+        parent: head,
       })
       // The dashboard holds editing while a publish runs, so nothing typed
       // since the draft was read is lost here.

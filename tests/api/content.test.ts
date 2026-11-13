@@ -170,6 +170,30 @@ describe('the content API', () => {
     expect(publishedText('src/content/faq.json')).toBe(asFile(FAQ('Theirs.')))
   })
 
+  it('a push landing just after publish checked the FAQ is not built over', async () => {
+    await call({ method: 'PUT', query: { action: 'draft' }, body: { doc: 'faq', data: FAQ('Mine.') } })
+    // Publish reads the FAQ to check for a conflict; a developer's push lands on
+    // the very next call, before anything is written.
+    let checked = false
+    let pushed = false
+    fake.onRequest(async (method: string, route: string) => {
+      if (method === 'GET' && route === 'contents/src/content/faq.json') {
+        checked = true
+        return
+      }
+      if (checked && !pushed) {
+        pushed = true
+        await commitFiles(env(), { message: 'Developer', files: [{ path: 'src/content/faq.json', content: asFile(FAQ('Theirs.')) }] })
+      }
+    })
+
+    const res = await call({ method: 'POST', query: { action: 'publish' }, body: { docs: ['faq'] } })
+    expect(pushed).toBe(true)
+    expect(res.status).toBe(409)
+    expect(res.body.conflicts).toEqual(['faq'])
+    expect(publishedText('src/content/faq.json')).toBe(asFile(FAQ('Theirs.')))
+  })
+
   it('a draft whose base is not a version is refused', async () => {
     const res = await call({ method: 'PUT', query: { action: 'draft' }, body: { doc: 'faq', data: FAQ('Mine.'), base: 'yesterday' } })
     expect(res.status).toBe(400)

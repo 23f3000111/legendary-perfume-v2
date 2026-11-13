@@ -50,6 +50,7 @@ export async function startFakeGitHub({
   const refs = new Map() // branch -> commit sha
   const statuses = new Map() // commit sha -> state
   let beforeRefUpdate = null
+  let onRequest = null
 
   const putBlob = (bytes) => {
     const sha = blobSha(bytes)
@@ -220,6 +221,7 @@ export async function startFakeGitHub({
       if (req.headers.authorization !== `Bearer ${token}`) {
         ;[status, body] = [401, { message: 'Bad credentials' }]
       } else if (m) {
+        if (onRequest) await onRequest(req.method, m[1])
         ;[status, body] = await route(req.method, m[1], url.searchParams, req)
       }
     } catch (err) {
@@ -248,6 +250,14 @@ export async function startFakeGitHub({
     /** Run `fn` once, just before the next ref update is applied. */
     onBeforeRefUpdate: (fn) => {
       beforeRefUpdate = fn
+    },
+    /**
+     * Run `fn(method, route)` before every request is answered, `route` being
+     * the part after /repos/owner/name/ without the query. Lets a test land a
+     * change at an exact point in someone else's sequence of calls.
+     */
+    onRequest: (fn) => {
+      onRequest = fn
     },
   }
 }

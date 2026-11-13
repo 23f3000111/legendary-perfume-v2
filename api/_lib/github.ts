@@ -129,12 +129,23 @@ export async function listFiles(cfg: GitHubConfig, prefix: string): Promise<Set<
   return new Set((await headTree(cfg)).map((e) => e.path).filter((p) => p.startsWith(prefix)))
 }
 
-/** One commit holding every file, on top of the branch head. Returns its sha. */
+/**
+ * One commit holding every file, on top of the branch head. Returns its sha.
+ *
+ * `parent` builds on a head the caller already read and checked, rather than
+ * whatever the head is by now: if the branch moved since, the ref update is
+ * not a fast forward and fails as StaleBranchError instead of quietly
+ * replacing what landed in between.
+ */
 export async function commitFiles(
   cfg: GitHubConfig,
-  input: { message: string; files: { path: string; content: string | Buffer }[] },
+  input: {
+    message: string
+    files: { path: string; content: string | Buffer }[]
+    parent?: { commit: string; tree: string }
+  },
 ): Promise<string> {
-  const head = await branchHead(cfg)
+  const head = input.parent ?? (await branchHead(cfg))
   const entries = []
   for (const file of input.files) {
     const blob = await call<{ sha: string }>(
