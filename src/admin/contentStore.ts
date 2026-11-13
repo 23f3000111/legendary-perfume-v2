@@ -90,6 +90,12 @@ export function sameContent(a: unknown, b: unknown): boolean {
 }
 
 const timers = new Map<DocKey, ReturnType<typeof setTimeout>>()
+/**
+ * The save on its way for each document. Saves of one document go one at a
+ * time, so the server receives them in the order they were made, and a
+ * publish or a discard waits for the save before it rather than overtaking it.
+ */
+const saving = new Map<DocKey, Promise<void>>()
 let poll: ReturnType<typeof setTimeout> | undefined
 
 const messageOf = (err: unknown, fallback: string) => (err instanceof ApiError ? err.message : fallback)
@@ -97,6 +103,31 @@ const messageOf = (err: unknown, fallback: string) => (err instanceof ApiError ?
 export const useContent = create<ContentStore>((set, get) => {
   const patchDoc = (doc: DocKey, patch: Partial<EditableDoc>) =>
     set((s) => (s.docs[doc] ? { docs: { ...s.docs, [doc]: { ...s.docs[doc]!, ...patch } } } : s))
+
+  /** Save one document's working copy now. Never rejects: problems land in its `save` state. */
+  const saveNow = async (doc: DocKey, entry: EditableDoc): Promise<void> => {
+    const working = entry.working
+    patchDoc(doc, { save: 'saving' })
+    // A newer edit may arrive while this one is saving; it is then still to save.
+    const settled = () => (get().docs[doc]?.working === working ? 'saved' : 'idle')
+    try {
+      if (sameContent(working, entry.published)) {
+        // Back to what is published: there is nothing to keep a draft of.
+        await adminDiscardDraft(doc)
+        patchDoc(doc, { save: settled(), draftBase: entry.sha, errors: [], warnings: [] })
+        return
+      }
+      const res = await adminSaveDraft(doc, working, entry.draftBase)
+      patchDoc(doc, { save: settled(), draftBase: res.draft.baseSha, errors: res.errors, warnings: res.warnings })
+    } catch (err) {
+      patchDoc(
+        doc,
+        err instanceof ApiError && err.status === 401
+          ? { save: 'signed-out', saveMessage: 'Your session ended. Sign in again in a new tab; nothing here is lost.' }
+          : { save: 'error', saveMessage: messageOf(err, 'Not saved yet. Check the connection.') },
+      )
+    }
+  }
 
   const watchDeploy = (commit: string, docs: DocKey[]) => {
     if (poll) clearTimeout(poll)
@@ -178,40 +209,24 @@ export const useContent = create<ContentStore>((set, get) => {
       const pending = timers.get(doc)
       if (pending) clearTimeout(pending)
       timers.delete(doc)
+      // Checked again after every wait: another flush may have started a save
+      // in the meantime, and this one must wait for that too.
+      while (saving.has(doc)) await saving.get(doc)
       const entry = get().docs[doc]
       if (!entry || (entry.save !== 'idle' && entry.save !== 'error')) return
-      const working = entry.working
-      patchDoc(doc, { save: 'saving' })
-      try {
-        if (sameContent(working, entry.published)) {
-          // Back to what is published: there is nothing to keep a draft of.
-          await adminDiscardDraft(doc)
-          patchDoc(doc, { save: 'saved', draftBase: entry.sha, errors: [], warnings: [] })
-          return
-        }
-        const res = await adminSaveDraft(doc, working, entry.draftBase)
-        const now = get().docs[doc]
-        patchDoc(doc, {
-          // A newer edit may have arrived while this one was saving.
-          save: now && now.working === working ? 'saved' : 'idle',
-          draftBase: res.draft.baseSha,
-          errors: res.errors,
-          warnings: res.warnings,
-        })
-      } catch (err) {
-        patchDoc(
-          doc,
-          err instanceof ApiError && err.status === 401
-            ? { save: 'signed-out', saveMessage: 'Your session ended. Sign in again in a new tab; nothing here is lost.' }
-            : { save: 'error', saveMessage: messageOf(err, 'Not saved yet. Check the connection.') },
-        )
-      }
+      const job: Promise<void> = saveNow(doc, entry).finally(() => {
+        if (saving.get(doc) === job) saving.delete(doc)
+      })
+      saving.set(doc, job)
+      await job
     },
 
     async discard(doc) {
       const pending = timers.get(doc)
       if (pending) clearTimeout(pending)
       timers.delete(doc)
+      // A save still on its way would put the draft back after it is gone.
+      while (saving.has(doc)) await saving.get(doc)
       try {
         await adminDiscardDraft(doc)
         const entry = get().docs[doc]

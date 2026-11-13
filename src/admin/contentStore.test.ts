@@ -120,6 +120,83 @@ describe('the dashboard content store', () => {
     expect(useContent.getState().dirty()).toEqual([])
   })
 
+  /** Make the next draft save hang until the returned function is called. */
+  function holdNextSave(): () => void {
+    let release!: () => void
+    mocked.adminSaveDraft.mockImplementationOnce(
+      (doc) => new Promise((resolve) => {
+        release = () => resolve(savedDraft(doc))
+      }),
+    )
+    return () => release()
+  }
+
+  it('publish waits for an autosave already on its way', async () => {
+    const release = holdNextSave()
+    mocked.adminPublish.mockResolvedValue({ commit: 'commit-1', shas: { faq: 'sha-faq-2' } })
+    mocked.adminDeployStatus.mockResolvedValue({ state: 'pending' })
+    useContent.getState().edit('faq', FAQ('Typed just before Publish'))
+    await vi.advanceTimersByTimeAsync(800)
+    expect(mocked.adminSaveDraft).toHaveBeenCalledTimes(1)
+
+    const publishing = useContent.getState().publish(['faq'])
+    await vi.advanceTimersByTimeAsync(0)
+    expect(mocked.adminPublish).not.toHaveBeenCalled()
+    release()
+    await publishing
+    expect(mocked.adminPublish).toHaveBeenCalledTimes(1)
+    expect(mocked.adminSaveDraft).toHaveBeenCalledTimes(1)
+  })
+
+  it('a newer edit is saved after the save on its way, never beside it', async () => {
+    const release = holdNextSave()
+    useContent.getState().edit('faq', FAQ('One'))
+    await vi.advanceTimersByTimeAsync(800)
+    useContent.getState().edit('faq', FAQ('Two'))
+    await vi.advanceTimersByTimeAsync(800)
+    expect(mocked.adminSaveDraft).toHaveBeenCalledTimes(1)
+
+    release()
+    await vi.waitFor(() => expect(mocked.adminSaveDraft).toHaveBeenCalledTimes(2))
+    expect(mocked.adminSaveDraft.mock.calls[1][1]).toEqual(FAQ('Two'))
+    await vi.waitFor(() => expect(useContent.getState().docs.faq?.save).toBe('saved'))
+  })
+
+  it('an edit typed while the draft is being dropped is still saved', async () => {
+    const { edit } = useContent.getState()
+    edit('faq', FAQ('Changed'))
+    await vi.advanceTimersByTimeAsync(800)
+    let release!: () => void
+    mocked.adminDiscardDraft.mockImplementationOnce(
+      () => new Promise((resolve) => {
+        release = () => resolve({ ok: true })
+      }),
+    )
+    edit('faq', FAQ())
+    await vi.advanceTimersByTimeAsync(800)
+    expect(mocked.adminDiscardDraft).toHaveBeenCalledTimes(1)
+
+    edit('faq', FAQ('Changed again'))
+    release()
+    await vi.advanceTimersByTimeAsync(800)
+    await vi.waitFor(() => expect(mocked.adminSaveDraft).toHaveBeenCalledTimes(2))
+    expect(mocked.adminSaveDraft.mock.calls[1][1]).toEqual(FAQ('Changed again'))
+  })
+
+  it('a discard waits for an autosave already on its way', async () => {
+    const release = holdNextSave()
+    useContent.getState().edit('faq', FAQ('About to be thrown away'))
+    await vi.advanceTimersByTimeAsync(800)
+
+    const discarding = useContent.getState().discard('faq')
+    await vi.advanceTimersByTimeAsync(0)
+    expect(mocked.adminDiscardDraft).not.toHaveBeenCalled()
+    release()
+    await discarding
+    expect(mocked.adminDiscardDraft).toHaveBeenCalledWith('faq')
+    expect(useContent.getState().docs.faq?.working).toEqual(FAQ())
+  })
+
   it('a 401 on autosave keeps the edits', async () => {
     mocked.adminSaveDraft.mockRejectedValue(new ApiError(401, 'Please sign in again.'))
     useContent.getState().edit('faq', FAQ('Edited while signed out'))
