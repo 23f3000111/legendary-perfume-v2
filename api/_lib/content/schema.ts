@@ -27,8 +27,11 @@ const optionalText = (max: number) => z.string().trim().max(max, `Keep this unde
  */
 const object = <T extends z.ZodRawShape>(shape: T) => z.object(shape).passthrough()
 
-/** A photo the site already serves: the delivery's, or one from the dashboard. */
-const SITE_PHOTO = /^\/assets\/[\w./-]+\.(webp|jpg|png)$/
+/**
+ * A photo the site already serves: the delivery's, one from the dashboard, or
+ * one of the older journal photos in public/Journal_Images.
+ */
+const SITE_PHOTO = /^\/(assets|Journal_Images)\/[\w./-]+\.(webp|jpg|png)$/
 
 // --------------------------------------------------------------------- FAQ
 
@@ -95,6 +98,129 @@ export const StoresDocSchema = object({
 })
 
 export type StoresDoc = z.infer<typeof StoresDocSchema>
+
+// ----------------------------------------------------------------- journal
+
+/** `[label](target)`, the link markup the site's long-form text understands (see Prose). */
+const LINK = /\[([^\]]+)\]\(([^)]+)\)/g
+/** Where a link can go: a page on the site, a place on the page, or out to the web, mail or phone. */
+const LINK_TARGET = /^(\/|#|https?:\/\/|mailto:|tel:)\S*$/
+const LINK_MESSAGE = 'A link needs an address starting with / or https://.'
+
+/** Every link in the text goes somewhere: `product/orchid`, without its slash, would break on every article page. */
+const linksResolve = (s: string) => [...s.matchAll(LINK)].every((m) => LINK_TARGET.test(m[2]))
+
+/** Long-form text, which may carry links and bold. */
+const rich = (max: number) => text(max).refine(linksResolve, LINK_MESSAGE)
+const optionalRich = (max: number) => optionalText(max).refine(linksResolve, LINK_MESSAGE)
+
+/** A calendar day written YYYY-MM-DD that exists: no 30 February. */
+function isRealDay(s: string): boolean {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s)
+  if (!m) return false
+  const [y, month, d] = [Number(m[1]), Number(m[2]), Number(m[3])]
+  const day = new Date(Date.UTC(y, month - 1, d))
+  return day.getUTCFullYear() === y && day.getUTCMonth() === month - 1 && day.getUTCDate() === d
+}
+
+const photo = z.string().trim().regex(SITE_PHOTO, 'Choose a photo.')
+
+const lines = z.array(rich(1000)).min(1, 'Add at least one line.')
+
+/**
+ * The blocks an article's body is built from: the ones the five articles use,
+ * as src/components/ui/Prose.tsx draws them. Prose's `duo` is left out on
+ * purpose, since no article uses it and the dashboard publishes only what it
+ * can edit. Keys are declared in the order the articles file writes them.
+ */
+export const BlockSchema = z.discriminatedUnion('t', [
+  object({ t: z.literal('p'), text: rich(3000) }),
+  object({ t: z.literal('lead'), text: rich(3000) }),
+  object({ t: z.literal('h2'), text: text(160) }),
+  object({ t: z.literal('h3'), text: text(160) }),
+  object({ t: z.literal('ul'), items: lines }),
+  object({ t: z.literal('ol'), items: lines }),
+  object({ t: z.literal('quote'), text: rich(1000), cite: optionalText(200).optional() }),
+  object({ t: z.literal('tip'), text: rich(3000) }),
+  object({
+    t: z.literal('image'),
+    src: photo,
+    alt: text(300),
+    caption: optionalText(300).optional(),
+    /** An upright photo, shown narrower than the column. */
+    narrow: z.boolean().optional(),
+  }),
+  object({
+    t: z.literal('table'),
+    head: z.array(text(80)).min(1, 'Add at least one column.').max(6, 'Up to six columns.'),
+    rows: z.array(z.array(optionalRich(600))).min(1, 'Add at least one row.').max(50, 'Up to fifty rows.'),
+  }),
+  object({
+    t: z.literal('cta'),
+    label: text(60),
+    to: z.string().trim().regex(/^\/\S*$/, 'Use an address on this site, starting with /.'),
+  }),
+  object({
+    t: z.literal('faq'),
+    items: z
+      .array(object({ q: text(200), a: rich(2000) }))
+      .min(1, 'Add at least one question.')
+      .max(30, 'Up to thirty questions.'),
+  }),
+  object({ t: z.literal('refs'), items: lines }),
+])
+
+export type JournalBlock = z.infer<typeof BlockSchema>
+
+const minutes = 'Between 1 and 60 minutes.'
+
+export const ArticleSchema = object({
+  /** The address, /journal/<slug>: made from the title, and fixed once published. */
+  slug: z.string().trim().regex(/^[a-z0-9]{1,40}$/, 'Use lowercase letters and numbers only.'),
+  title: text(140),
+  /** A shorter title for the Journal page and the links between articles. */
+  cardTitle: text(80).optional(),
+  category: text(40),
+  /** The day it was published, YYYY-MM-DD. The pages write it out as "22 October 2026". */
+  published: z.string().trim().refine(isRealDay, 'Choose a date.'),
+  /** Reading time, shown as "5 min". */
+  minutes: z.number({ invalid_type_error: minutes }).int(minutes).min(1, minutes).max(60, minutes),
+  /** The summary on the Journal page and under the title. */
+  excerpt: text(400),
+  /** The header photo. */
+  hero: photo,
+  /** The Journal page's picture, where the header photo crops badly in a card. */
+  cardImage: photo.optional(),
+  /** What the header photo shows, for anyone who cannot see it. */
+  heroAlt: text(300),
+  body: z.array(BlockSchema).min(1, 'Write at least one paragraph.'),
+}).superRefine((article, ctx) => {
+  // A table row short of a cell would shift every cell after the gap.
+  article.body.forEach((block, j) => {
+    if (block.t !== 'table') return
+    block.rows.forEach((row, r) => {
+      if (row.length !== block.head.length) {
+        ctx.addIssue({ code: 'custom', path: ['body', j, 'rows', r], message: 'Every row needs a cell for each column.' })
+      }
+    })
+  })
+})
+
+export const JournalDocSchema = object({
+  /** Every article, newest first as the file is kept; the pages sort by date anyway. */
+  articles: z.array(ArticleSchema).min(1, 'Keep at least one article.'),
+}).superRefine((doc, ctx) => {
+  const slugs = new Set<string>()
+  doc.articles.forEach((a, i) => {
+    if (slugs.has(a.slug)) {
+      ctx.addIssue({ code: 'custom', path: ['articles', i, 'slug'], message: 'Another article already uses this address.' })
+    }
+    slugs.add(a.slug)
+  })
+})
+
+export type JournalDoc = z.infer<typeof JournalDocSchema>
+export type JournalArticle = JournalDoc['articles'][number]
 
 // ----------------------------------------------------------------- helpers
 

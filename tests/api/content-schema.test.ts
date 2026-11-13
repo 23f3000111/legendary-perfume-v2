@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { FaqDocSchema, StoresDocSchema, findDashes, mediaRefs } from '../../api/_lib/content/schema'
+import { FaqDocSchema, JournalDocSchema, StoresDocSchema, findDashes, mediaRefs } from '../../api/_lib/content/schema'
 
 const faq = () => ({
   intro: 'We answer the questions customers ask most.',
@@ -59,6 +59,94 @@ describe('Stores schema', () => {
     expect(firstIssuePath(StoresDocSchema.safeParse(bad))).toEqual(['stores', 0, 'image'])
     const dashboardPhoto = { regions: ['Kuala Lumpur'], stores: [store({ image: '/assets/cms/0123456789abcdef0123.webp' })] }
     expect(StoresDocSchema.safeParse(dashboardPhoto).success).toBe(true)
+  })
+})
+
+const article = (over: Record<string, unknown> = {}) => ({
+  slug: 'nyonya',
+  title: 'Nyonya Collection: From Heritage to Legendary Perfume',
+  category: 'Heritage',
+  published: '2025-12-31',
+  minutes: 5,
+  excerpt: 'Inside the Peranakan culture that shaped the Nyonya Collection.',
+  hero: '/assets/client/collection-nyonya.webp',
+  heroAlt: 'The three Nyonya Collection bottles beside their patterned boxes',
+  body: [{ t: 'p', text: 'Malaysia is a land rich in culture, stories and traditions.' }],
+  ...over,
+})
+
+const journal = (...articles: Record<string, unknown>[]) => ({ articles })
+
+/** A journal whose one article has this one block. */
+const withBlock = (block: Record<string, unknown>) => journal(article({ body: [block] }))
+
+describe('Journal schema', () => {
+  it('accepts a minimal article', () => {
+    expect(JournalDocSchema.safeParse(journal(article())).success).toBe(true)
+  })
+
+  // The Journal page leads with the newest article and has nothing to show without one.
+  it('the journal keeps at least one article', () => {
+    expect(firstIssuePath(JournalDocSchema.safeParse(journal()))).toEqual(['articles'])
+  })
+
+  it('an article needs a header photo with a description', () => {
+    expect(firstIssuePath(JournalDocSchema.safeParse(journal(article({ hero: '' }))))).toEqual(['articles', 0, 'hero'])
+    expect(firstIssuePath(JournalDocSchema.safeParse(journal(article({ heroAlt: '  ' }))))).toEqual([
+      'articles', 0, 'heroAlt',
+    ])
+  })
+
+  it('an article needs a reading time and something to read', () => {
+    expect(firstIssuePath(JournalDocSchema.safeParse(journal(article({ minutes: 0 }))))).toEqual(['articles', 0, 'minutes'])
+    expect(firstIssuePath(JournalDocSchema.safeParse(journal(article({ minutes: 2.5 }))))).toEqual([
+      'articles', 0, 'minutes',
+    ])
+    expect(firstIssuePath(JournalDocSchema.safeParse(journal(article({ body: [] }))))).toEqual(['articles', 0, 'body'])
+  })
+
+  it('an article address has letters and numbers only, and is its own', () => {
+    expect(firstIssuePath(JournalDocSchema.safeParse(journal(article({ slug: 'eleven-years' }))))).toEqual([
+      'articles', 0, 'slug',
+    ])
+    const twice = journal(article(), article({ title: 'Another piece on the same address' }))
+    expect(firstIssuePath(JournalDocSchema.safeParse(twice))).toEqual(['articles', 1, 'slug'])
+  })
+
+  it('an article date must be a real day', () => {
+    expect(firstIssuePath(JournalDocSchema.safeParse(journal(article({ published: '2026-02-30' }))))).toEqual([
+      'articles', 0, 'published',
+    ])
+    expect(firstIssuePath(JournalDocSchema.safeParse(journal(article({ published: '31 December 2025' }))))).toEqual([
+      'articles', 0, 'published',
+    ])
+  })
+
+  it('a link needs an address the site can follow', () => {
+    const relative = withBlock({ t: 'p', text: 'See [Orchid](product/orchid).' })
+    expect(firstIssuePath(JournalDocSchema.safeParse(relative))).toEqual(['articles', 0, 'body', 0, 'text'])
+    expect(JournalDocSchema.safeParse(withBlock({ t: 'p', text: 'See [Orchid](/product/orchid).' })).success).toBe(true)
+    expect(JournalDocSchema.safeParse(withBlock({ t: 'p', text: 'See [the study](https://example.com).' })).success).toBe(true)
+  })
+
+  it('every table row has a cell for each column', () => {
+    const uneven = withBlock({ t: 'table', head: ['Location', 'What to expect'], rows: [['a', 'b'], ['c']] })
+    expect(firstIssuePath(JournalDocSchema.safeParse(uneven))).toEqual(['articles', 0, 'body', 0, 'rows', 1])
+  })
+
+  it('a button goes to a page on this site', () => {
+    const away = withBlock({ t: 'cta', label: 'Read more', to: 'https://example.com' })
+    expect(firstIssuePath(JournalDocSchema.safeParse(away))).toEqual(['articles', 0, 'body', 0, 'to'])
+  })
+
+  it('a photo block needs a description', () => {
+    const bare = withBlock({ t: 'image', src: '/assets/client/journal-nyonya.webp', alt: '' })
+    expect(firstIssuePath(JournalDocSchema.safeParse(bare))).toEqual(['articles', 0, 'body', 0, 'alt'])
+  })
+
+  it('an older journal photo path is accepted', () => {
+    const older = journal(article({ hero: '/Journal_Images/gift-guide-orchid.webp' }))
+    expect(JournalDocSchema.safeParse(older).success).toBe(true)
   })
 })
 

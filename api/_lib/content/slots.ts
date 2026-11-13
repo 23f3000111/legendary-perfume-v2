@@ -11,6 +11,8 @@
  */
 export const SLOT_KINDS = {
   store: { label: 'Store photo', maxSide: 900, alpha: false },
+  /** A journal article's header or body photo. Upright ones are shown narrower, not made smaller. */
+  journal: { label: 'Journal photo', maxSide: 1600, alpha: false },
 } as const
 
 export type SlotKind = keyof typeof SLOT_KINDS
