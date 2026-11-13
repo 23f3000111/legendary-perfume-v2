@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from 'react-dom/server'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it } from 'vitest'
-import { RichText } from './Prose'
+import Prose, { RichText } from './Prose'
 
 const html = (text: string) =>
   renderToStaticMarkup(
@@ -24,5 +24,20 @@ describe('RichText', () => {
     const away = html('See [the study](https://example.com).')
     expect(away).toContain('href="https://example.com"')
     expect(away).toContain('target="_blank"')
+  })
+
+  // A button's address is checked at the dashboard, at publish and at build,
+  // but a preview draws drafts the checks have not passed yet.
+  it('a button whose address leaves the site is not drawn', () => {
+    const page = (to: string) =>
+      renderToStaticMarkup(
+        <MemoryRouter>
+          <Prose blocks={[{ t: 'cta', label: 'Go there', to }]} />
+        </MemoryRouter>,
+      )
+    expect(page('javascript:alert(1)')).not.toContain('javascript:')
+    expect(page('javascript:alert(1)')).not.toContain('<a')
+    expect(page('//example.com')).not.toContain('<a')
+    expect(page('/stores')).toContain('href="/stores"')
   })
 })

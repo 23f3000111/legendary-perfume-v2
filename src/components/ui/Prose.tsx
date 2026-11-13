@@ -241,6 +241,9 @@ function BlockView({ block: b, first }: { block: Block; first: boolean }) {
       )
 
     case 'cta':
+      // A button stays on the site. A preview draws drafts the checks have not
+      // passed yet, so an address that leaves it draws no button at all.
+      if (!ON_SITE.test(b.to)) return null
       return (
         <div className={first ? '' : 'mt-8'}>
           <Link to={b.to} className="btn-solid group gap-2">
