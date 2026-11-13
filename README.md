@@ -163,7 +163,11 @@ set out in `docs/superpowers/specs/2026-11-12-content-dashboard-design.md`.
   dashboard watches Vercel's status on the commit until it says Live.
 - **Conflicts.** A draft remembers the version it began from. If the document
   changed on GitHub since then (a developer's push, a second tab), publishing
-  stops and asks which version to keep. The ref update is never forced.
+  stops and asks which version to keep. The ref update is never forced. Two
+  windows on one document share its one draft, and the draft has a version of
+  its own (a hash of what it holds): a save, discard or publish from a window
+  that missed the other window's save is refused with "changed in another
+  window", so neither quietly replaces the other.
 - **History** lists every content commit. Restore puts back one document, as a
   new commit.
 - **Photos** are shrunk in the browser first, because Vercel refuses any request
@@ -181,7 +185,10 @@ set out in `docs/superpowers/specs/2026-11-12-content-dashboard-design.md`.
   the pages write them out ("22 October 2026", "3 min"). Links in the text go
   through the same tokens the page draws with (`api/_lib/content/markup.ts`),
   so a link the check passes is the link the page shows, and the page never
-  links to an address outside the site's own, the web, mail or phone.
+  links to an address outside the site's own, the web, mail or phone. Since
+  every article is in one document, the publish bar, and the Discard, conflict
+  and restore questions, name the articles each would add, change, take off
+  the site or bring back.
 
 ### Setting it up
 
