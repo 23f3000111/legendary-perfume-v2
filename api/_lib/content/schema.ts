@@ -103,12 +103,17 @@ export type StoresDoc = z.infer<typeof StoresDocSchema>
 
 /** `[label](target)`, the link markup the site's long-form text understands (see Prose). */
 const LINK = /\[([^\]]+)\]\(([^)]+)\)/g
-/** Where a link can go: a page on the site, a place on the page, or out to the web, mail or phone. */
-const LINK_TARGET = /^(\/|#|https?:\/\/|mailto:|tel:)\S*$/
+/**
+ * An address on this site. `//example.com` starts with a slash too but leaves
+ * the site, and browsers read `/\` the same way, so neither counts.
+ */
+const ON_SITE = /^\/(?![/\\])\S*$/
+/** Where else a link can go: a place on the page, or out to the web, mail or phone. */
+const OFF_SITE = /^(#|https?:\/\/|mailto:|tel:)\S*$/
 const LINK_MESSAGE = 'A link needs an address starting with / or https://.'
 
 /** Every link in the text goes somewhere: `product/orchid`, without its slash, would break on every article page. */
-const linksResolve = (s: string) => [...s.matchAll(LINK)].every((m) => LINK_TARGET.test(m[2]))
+const linksResolve = (s: string) => [...s.matchAll(LINK)].every((m) => ON_SITE.test(m[2]) || OFF_SITE.test(m[2]))
 
 /** Long-form text, which may carry links and bold. */
 const rich = (max: number) => text(max).refine(linksResolve, LINK_MESSAGE)
@@ -158,7 +163,7 @@ export const BlockSchema = z.discriminatedUnion('t', [
   object({
     t: z.literal('cta'),
     label: text(60),
-    to: z.string().trim().regex(/^\/\S*$/, 'Use an address on this site, starting with /.'),
+    to: z.string().trim().regex(ON_SITE, 'Use an address on this site, starting with /.'),
   }),
   object({
     t: z.literal('faq'),

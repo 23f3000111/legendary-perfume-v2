@@ -139,6 +139,16 @@ describe('Journal schema', () => {
     expect(firstIssuePath(JournalDocSchema.safeParse(away))).toEqual(['articles', 0, 'body', 0, 'to'])
   })
 
+  // `//example.com` starts with a slash but leaves the site, and browsers read `/\` the same way.
+  it('an address on this site cannot lead off it', () => {
+    for (const away of ['//example.com', '/\\example.com']) {
+      const link = withBlock({ t: 'p', text: `See [this](${away}).` })
+      expect(firstIssuePath(JournalDocSchema.safeParse(link))).toEqual(['articles', 0, 'body', 0, 'text'])
+      const button = withBlock({ t: 'cta', label: 'Read more', to: away })
+      expect(firstIssuePath(JournalDocSchema.safeParse(button))).toEqual(['articles', 0, 'body', 0, 'to'])
+    }
+  })
+
   it('a photo block needs a description', () => {
     const bare = withBlock({ t: 'image', src: '/assets/client/journal-nyonya.webp', alt: '' })
     expect(firstIssuePath(JournalDocSchema.safeParse(bare))).toEqual(['articles', 0, 'body', 0, 'alt'])
