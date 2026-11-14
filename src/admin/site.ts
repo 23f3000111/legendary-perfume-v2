@@ -1,4 +1,4 @@
-import type { CollectionEntry } from '../../api/_lib/content/schema'
+import type { CollectionEntry, PartnersDoc, ReviewEntry } from '../../api/_lib/content/schema'
 import { titleList } from './changes'
 import { newId } from './text'
 
@@ -52,4 +52,36 @@ export function collectionInUse(
   const pin = places.find((p) => p.collectionId === collection.id)
   if (pin) return `The Scented Memory map's ${pin.place} pin opens ${collection.name}.`
   return null
+}
+
+/** A review with `stars`. Five, the default every review the client sent had, is left out of the data. */
+export function setStars(review: ReviewEntry, stars: number): ReviewEntry {
+  const { rating: _old, ...rest } = review
+  return stars === 5 ? rest : { ...rest, rating: stars }
+}
+
+/** The partner rows with one logo moved to the end of row `to`; nothing else changes. */
+export function moveLogo(
+  rows: PartnersDoc['rows'],
+  from: { row: number; index: number },
+  to: number,
+): PartnersDoc['rows'] {
+  const logo = rows[from.row]?.logos[from.index]
+  if (!logo || from.row === to || !rows[to]) return rows
+  return rows.map((r, i) => {
+    if (i === from.row) return { ...r, logos: r.logos.filter((_, j) => j !== from.index) }
+    if (i === to) return { ...r, logos: [...r.logos, logo] }
+    return r
+  })
+}
+
+/**
+ * The black and white print beside a logo the site already has, which
+ * scripts/prepare-assets.py writes as <name>-mono.png next to <name>.png.
+ * Null for anything else, a black and white print itself included.
+ */
+export function siteMono(path: string): string | null {
+  const m = /^(\/assets\/client\/(?:partner|seller)-[\w-]+)\.png$/.exec(path)
+  if (!m || m[1].endsWith('-mono')) return null
+  return `${m[1]}-mono.png`
 }

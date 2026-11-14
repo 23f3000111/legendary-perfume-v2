@@ -221,6 +221,10 @@ const DOC_TABS: Record<string, Tab> = {
   products: 'products',
   site: 'site',
   collections: 'site',
+  reviews: 'site',
+  journey: 'site',
+  partners: 'site',
+  sellers: 'site',
   places: 'site',
 }
 

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { ApiError, adminLibrary, adminUploadPhoto, apiUrl, type LibraryPhoto } from '../lib/api'
 import { asset } from '../lib/asset'
+import { SLOT_KINDS, type SlotKind } from '../../api/_lib/content/slots'
+import { siteMono } from './site'
 import { shrinkForUpload } from './shrink'
 import { danger, panel, small } from './styles'
 
@@ -156,9 +158,20 @@ export default function PhotoLibrary() {
 
 export type LibraryChoice = { master: string } | { site: string }
 
-/** Pick a photo for one place: from the library, or one the site already shows. */
-export function LibraryPicker({ onPick, onClose }: { onPick: (choice: LibraryChoice) => void; onClose: () => void }) {
+/**
+ * Pick a photo for one place: from the library, or one the site already shows.
+ * A logo needs its black and white print as well, so for a logo the site's own
+ * photos are narrowed to its logos, each of which has that print beside it.
+ */
+export function LibraryPicker({
+  onPick, onClose, kind,
+}: {
+  onPick: (choice: LibraryChoice) => void
+  onClose: () => void
+  kind?: SlotKind
+}) {
   const { library, error } = useLibrary()
+  const logosOnly = Boolean(kind && SLOT_KINDS[kind].mono)
   return (
     <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-5">
       <div className="flex max-h-[85vh] w-full max-w-4xl flex-col rounded-sm border border-line bg-ivory shadow-xl">
@@ -184,7 +197,7 @@ export function LibraryPicker({ onPick, onClose }: { onPick: (choice: LibraryCho
               </ul>
               <p className="eyebrow mt-8 text-smoke">Already on the site</p>
               <ul className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-6">
-                {library.site.map((path) => (
+                {library.site.filter((path) => !logosOnly || siteMono(path)).map((path) => (
                   <li key={path}>
                     <button type="button" onClick={() => onPick({ site: path })} className="block w-full transition hover:opacity-80">
                       <img src={asset(path)} alt="" loading="lazy" className={thumb} />

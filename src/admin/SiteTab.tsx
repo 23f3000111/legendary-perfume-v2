@@ -2,14 +2,17 @@ import type { DocKey } from '../../api/_lib/content/keys'
 import CollectionsEditor from './CollectionsEditor'
 import { useContent } from './contentStore'
 import { ContentGate } from './fields'
+import JourneyEditor from './JourneyEditor'
+import LogosEditor from './LogosEditor'
 import PlacesEditor from './PlacesEditor'
+import ReviewsEditor from './ReviewsEditor'
 import SiteDetailsEditor from './SiteDetailsEditor'
 
 /**
  * The Site tab: the house's details and the lists that appear across the
  * site, one screen each, every one with its own publish bar.
  */
-export const SITE_SCREENS = ['site', 'collections', 'places'] as const satisfies readonly DocKey[]
+export const SITE_SCREENS = ['site', 'collections', 'reviews', 'journey', 'partners', 'sellers', 'places'] as const satisfies readonly DocKey[]
 
 export type SiteScreen = (typeof SITE_SCREENS)[number]
 
@@ -48,6 +51,10 @@ function Screens({ screen, onScreen }: { screen: SiteScreen; onScreen: (next: Si
       </nav>
       {screen === 'site' && <SiteDetailsEditor />}
       {screen === 'collections' && <CollectionsEditor />}
+      {screen === 'reviews' && <ReviewsEditor />}
+      {screen === 'journey' && <JourneyEditor />}
+      {screen === 'partners' && <LogosEditor wall="partners" />}
+      {screen === 'sellers' && <LogosEditor wall="sellers" />}
       {screen === 'places' && <PlacesEditor />}
     </div>
   )

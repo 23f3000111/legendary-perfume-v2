@@ -3,6 +3,7 @@ import { SLOT_KINDS, type SlotKind } from '../../api/_lib/content/slots'
 import { adminDerivePhoto, apiUrl } from '../lib/api'
 import { asset } from '../lib/asset'
 import { coarsePointer, LibraryPicker, messageOf, uploadToLibrary, type LibraryChoice } from './PhotoLibrary'
+import { siteMono } from './site'
 import { danger, small } from './styles'
 
 /**
@@ -17,7 +18,8 @@ export default function PhotoField({
 }: {
   kind: SlotKind
   value?: string
-  onChange: (path: string | undefined) => void
+  /** The photo's path; for a logo, its black and white print's path too. */
+  onChange: (path: string | undefined, mono?: string) => void
   label?: string
   disabled?: boolean
   /** Told when a photo starts and stops being uploaded or fitted, so the form can hold still meanwhile. */
@@ -47,8 +49,8 @@ export default function PhotoField({
       alive.current = false
     }
   }, [])
-  const done = (path: string | undefined) => {
-    if (alive.current) latest.current.onChange(path)
+  const done = (path: string | undefined, mono?: string) => {
+    if (alive.current) latest.current.onChange(path, mono)
   }
 
   const run = async (work: () => Promise<void>) => {
@@ -65,8 +67,8 @@ export default function PhotoField({
   }
   const place = async (master: string) => {
     setBusy('Fitting the photo…')
-    const { path } = await adminDerivePhoto(master, kind, { white: offerWhite && onWhite })
-    done(path)
+    const { path, mono } = await adminDerivePhoto(master, kind, { white: offerWhite && onWhite })
+    done(path, mono)
   }
   const upload = (file: File) =>
     run(async () => {
@@ -78,7 +80,8 @@ export default function PhotoField({
     setPicking(false)
     void run(async () => {
       if ('master' in choice) await place(choice.master)
-      else done(choice.site)
+      // A logo the site has already has its black and white print beside it.
+      else done(choice.site, SLOT_KINDS[kind].mono ? siteMono(choice.site) ?? undefined : undefined)
     })
   }
   const locked = disabled || Boolean(busy)
@@ -130,7 +133,7 @@ export default function PhotoField({
           if (file) void upload(file)
         }}
       />
-      {picking && <LibraryPicker onPick={pick} onClose={() => setPicking(false)} />}
+      {picking && <LibraryPicker kind={kind} onPick={pick} onClose={() => setPicking(false)} />}
     </div>
   )
 }
