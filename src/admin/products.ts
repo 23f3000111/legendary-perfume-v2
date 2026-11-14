@@ -67,7 +67,9 @@ export function renameProduct(
   taken: Set<string>,
 ): ProductEntry {
   if (publishedIds.has(product.id)) return { ...product, name }
-  return { ...product, name, id: newId(name || 'new product', taken) }
+  // Never a published product's address either, even one removed in this
+  // draft: the price table's settings and old links still point at it.
+  return { ...product, name, id: newId(name || 'new product', new Set([...taken, ...publishedIds])) }
 }
 
 /**

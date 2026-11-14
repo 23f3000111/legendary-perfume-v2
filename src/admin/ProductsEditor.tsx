@@ -65,12 +65,12 @@ function Editor({ open, onOpen }: { open: string | null; onOpen: (id: string | n
   }
 
   const create = () => {
-    const fresh = blankProduct(new Set(data.products.map((p) => p.id)), collections[0])
+    const fresh = blankProduct(new Set([...data.products.map((p) => p.id), ...publishedIds]), collections[0])
     setProducts([...data.products, fresh])
     onOpen(fresh.id)
   }
   const duplicate = (i: number) => {
-    const copy = duplicateProduct(data.products[i], new Set(data.products.map((p) => p.id)))
+    const copy = duplicateProduct(data.products[i], new Set([...data.products.map((p) => p.id), ...publishedIds]))
     setProducts(insertAt(data.products, i + 1, copy))
     onOpen(copy.id)
   }

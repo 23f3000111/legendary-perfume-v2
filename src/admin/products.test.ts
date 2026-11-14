@@ -22,6 +22,13 @@ describe('products in the dashboard', () => {
     expect(named).toMatchObject({ name: 'Saffron Dusk', id: 'saffrondusk' })
   })
 
+  // The price table's settings key on the address: a new product given a
+  // published one's would come up with that product's price, stock or hidden.
+  it('renaming a new product never takes a published address', () => {
+    const fresh = blankProduct(new Set(), signature)
+    expect(renameProduct(fresh, 'Love', new Set(['love', 'orchid']), new Set()).id).toBe('love2')
+  })
+
   // Overrides, links and search results key on a published product's address.
   it('renameProduct keeps a published address', () => {
     const orchid = getProduct('orchid')!

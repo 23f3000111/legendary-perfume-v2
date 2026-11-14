@@ -3,8 +3,9 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { requireAdmin } from '../_lib/auth.js'
 import { handler, HttpError, json } from '../_lib/http.js'
 import { DOC_KEYS, DOCS, isDocKey, type DocKey } from '../_lib/content/docs.js'
-import { findDashes, mediaRefs } from '../_lib/content/schema.js'
+import { findDashes, mediaRefs, type ProductsDoc } from '../_lib/content/schema.js'
 import { contentStore, type ContentStore, type Draft } from '../_lib/content/store.js'
+import { overrideStore } from '../_lib/overrides.js'
 import {
   blobSha, branchHead, commitDate, commitFiles, deployState, fileHistory, githubConfig, GitHubError, listFiles,
   readFile, StaleBranchError, type GitHubConfig,
@@ -274,9 +275,12 @@ async function publish(cfg: GitHubConfig, store: ContentStore, req: VercelReques
   // so a push landing between the check and the commit is never built over.
   for (let attempt = 0; ; attempt++) {
     const head = await branchHead(cfg)
+    // Each document as it stands at that head, before this publish.
+    const before = new Map<DocKey, string | null>()
     const conflicts: DocKey[] = []
     for (const { doc, draft } of ready) {
       const current = await readFile(cfg, DOCS[doc].path, head.commit)
+      before.set(doc, current?.text ?? null)
       if ((current?.sha ?? null) !== draft.baseSha && !overwrite.has(doc)) conflicts.push(doc)
     }
     if (conflicts.length) {
@@ -300,6 +304,8 @@ async function publish(cfg: GitHubConfig, store: ContentStore, req: VercelReques
       // since the draft was read is lost here.
       for (const { doc } of ready) await store.deleteDraft(doc)
       await store.markPublished(photos)
+      const products = ready.find((r) => r.doc === 'products')
+      if (products) await clearLeftoverSettings(before.get('products') ?? null, (products.parsed as ProductsDoc).products)
       // The version each document is now, so the dashboard's next draft of
       // it starts from what was just published.
       const shas = Object.fromEntries(written.map(({ doc, content }) => [doc, blobSha(content)]))
@@ -308,6 +314,28 @@ async function publish(cfg: GitHubConfig, store: ContentStore, req: VercelReques
       if (!(err instanceof StaleBranchError)) throw err
       if (attempt > 0) return [409, { error: 'The site changed while publishing. Please try again.', conflicts: [] }]
     }
+  }
+}
+
+/**
+ * The price table's live settings (price, stock, bestseller, hidden) key on a
+ * product's address, and nothing clears them when a product is removed. A new
+ * product that comes to use an address one had before would inherit them, and
+ * show hidden, sold out or at the old price instead of the price entered. An
+ * address new in this publish cannot be live yet, so whatever settings it has
+ * are left over, and they are cleared. A failure here does not undo the
+ * publish; it is logged for the developer.
+ */
+async function clearLeftoverSettings(beforeText: string | null, products: ProductsDoc['products']): Promise<void> {
+  const had = new Set(((beforeText ? JSON.parse(beforeText) : { products: [] }) as ProductsDoc).products.map((p) => p.id))
+  const fresh = products.map((p) => p.id).filter((id) => !had.has(id))
+  if (fresh.length === 0) return
+  try {
+    const settings = overrideStore()
+    const now = await settings.all()
+    for (const id of fresh) if (now[id]) await settings.clear(id)
+  } catch (err) {
+    console.error('[content] could not clear leftover price table settings for', fresh, err)
   }
 }
 

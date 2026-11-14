@@ -8,6 +8,7 @@ import content from '../../api/admin/content'
 import { issueSession } from '../../api/_lib/auth'
 import { contentStore } from '../../api/_lib/content/store'
 import { commitFiles } from '../../api/_lib/github'
+import { overrideStore } from '../../api/_lib/overrides'
 import { invoke, type Call } from './http-doubles'
 
 const FAQ = (intro = 'We answer what customers ask.') => ({
@@ -421,6 +422,21 @@ describe('the content API', () => {
       collection: 'Signature',
     })
     expect(JSON.parse(publishedText('src/content/products.json')!).products[1].id).toBe('newscent')
+  })
+
+  // The price table's live settings key on a product's address. One left
+  // behind by a product removed earlier must not carry over to a new product
+  // that comes to use the same address: it would show hidden, sold out or at
+  // the old price instead of the price entered.
+  it('a new product starts without the price table settings an old product left at its address', async () => {
+    await overrideStore().set('newscent', { hidden: true, price: 300, inStock: false })
+    await overrideStore().set('orchid', { inStock: false })
+    const publish = await publishProducts({ products: [SCENT('orchid'), SCENT('newscent', { name: 'New Scent', price: 95, compareAt: 120 })] })
+    expect(publish.status).toBe(200)
+    const settings = await overrideStore().all()
+    expect(settings.newscent).toBeUndefined()
+    // A product already on the site keeps what the table says about it.
+    expect(settings.orchid?.inStock).toBe(false)
   })
 
   it('the catalogue follows a renamed product', async () => {
