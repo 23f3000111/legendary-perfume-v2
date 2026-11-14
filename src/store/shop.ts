@@ -62,8 +62,18 @@ export function cartDetails(items: CartLine[]): CartDetail[] {
     .filter((x): x is CartDetail => x !== null)
 }
 
+/**
+ * The lines of a saved bag whose products the shop still has. A bag is kept in
+ * the browser, so it can hold a product the team has since removed; checkout
+ * refuses an id it does not know, so such a line is neither counted nor sent,
+ * and the rest of the bag can still be bought.
+ */
+export function orderLines(items: CartLine[]): CartLine[] {
+  return items.filter((line) => products.some((p) => p.id === line.id))
+}
+
 export function cartCount(items: CartLine[]): number {
-  return items.reduce((n, i) => n + i.qty, 0)
+  return orderLines(items).reduce((n, i) => n + i.qty, 0)
 }
 
 export function cartSubtotal(items: CartLine[]): number {

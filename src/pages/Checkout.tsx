@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js'
-import { useShop, cartDetails, cartSubtotal } from '../store/shop'
+import { useShop, cartDetails, cartSubtotal, orderLines } from '../store/shop'
 import { asset } from '../lib/asset'
 import { formatRM } from '../lib/format'
 import { ApiError, startCheckout, type CheckoutSession } from '../lib/api'
@@ -98,7 +98,7 @@ export default function Checkout() {
     setOpening(true)
     try {
       const opened = await startCheckout({
-        items: items.map((i) => ({ id: i.id, qty: i.qty })),
+        items: orderLines(items).map((i) => ({ id: i.id, qty: i.qty })),
         customer: { name: form.name.trim(), email: form.email.trim(), phone: form.phone.trim() },
         shipping: {
           line1: form.line1.trim(),
