@@ -133,6 +133,64 @@ describe('the photo API', () => {
     expect([res.body.width, res.body.height]).toEqual([40, 30])
   })
 
+  /** A JPEG `width` by `height`, white, with a red square `side` across in the middle. */
+  async function onWhite(width: number, height: number, side: number): Promise<Buffer> {
+    const red = await sharp({ create: { width: side, height: side, channels: 3, background: { r: 200, g: 20, b: 30 } } })
+      .png()
+      .toBuffer()
+    return sharp({ create: { width, height, channels: 3, background: { r: 255, g: 255, b: 255 } } })
+      .composite([{ input: red, left: Math.round((width - side) / 2), top: Math.round((height - side) / 2) }])
+      .jpeg({ quality: 95 })
+      .toBuffer()
+  }
+
+  /** The red, green, blue and alpha of one pixel. */
+  async function pixel(image: Buffer, x: number, y: number): Promise<number[]> {
+    const { data, info } = await sharp(image).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+    const at = (y * info.width + x) * 4
+    return [...data.subarray(at, at + 4)]
+  }
+
+  it('a lifestyle photo is framed square at 1400 px', async () => {
+    const master = (await upload(await onWhite(3000, 2000, 800))).body.file
+    const res = await call({ method: 'POST', query: { derive: master, kind: 'productLife' } })
+    expect(res.status).toBe(200)
+    expect([res.body.width, res.body.height]).toEqual([1400, 1400])
+  })
+
+  // The client sends some pack shots on white, like the first MAN photo.
+  it('white is knocked out of a pack shot sent on white', async () => {
+    const master = (await upload(await onWhite(1200, 800, 400))).body.file
+    const res = await call({ method: 'POST', query: { derive: master, kind: 'productPack', white: '1' } })
+    expect(res.status).toBe(200)
+    const slot = await fetchFile(res.body.path.slice('/assets/cms/'.length))
+    expect((await sharp(slot).metadata()).hasAlpha).toBe(true)
+    // Cut down to the pack itself: the white page around it is gone.
+    expect(res.body.width).toBeLessThan(450)
+    expect(res.body.height).toBeLessThan(450)
+    const centre = await pixel(slot, Math.floor(res.body.width / 2), Math.floor(res.body.height / 2))
+    expect(centre[3]).toBe(255)
+    expect(centre[0]).toBeGreaterThan(150)
+  })
+
+  it('a cut-out that already has transparency is left as it is', async () => {
+    const cutout = await sharp({
+      create: { width: 600, height: 400, channels: 4, background: { r: 255, g: 255, b: 255, alpha: 0.5 } },
+    }).png().toBuffer()
+    const master = (await upload(cutout)).body.file
+    const res = await call({ method: 'POST', query: { derive: master, kind: 'productPack', white: '1' } })
+    expect(res.status).toBe(200)
+    expect([res.body.width, res.body.height]).toEqual([600, 400])
+    expect((await pixel(await fetchFile(res.body.path.slice('/assets/cms/'.length)), 10, 10))[3]).toBeGreaterThan(100)
+  })
+
+  it('only a see-through kind takes white=1', async () => {
+    const master = (await upload(await onWhite(800, 600, 200))).body.file
+    const res = await call({ method: 'POST', query: { derive: master, kind: 'store', white: '1' } })
+    expect(res.status).toBe(400)
+    expect(res.body.error).toBe('That kind of photo keeps its background.')
+  })
+
   it('derive makes a 900 px store photo on white', async () => {
     const transparent = await sharp({
       create: { width: 2000, height: 1500, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },

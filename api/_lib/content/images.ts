@@ -44,15 +44,37 @@ export async function makeMaster(bytes: Buffer): Promise<{ data: Buffer; width: 
 export async function makeSlot(
   master: Buffer,
   kind: SlotKind,
+  opts: { white?: boolean } = {},
 ): Promise<{ data: Buffer; width: number; height: number }> {
   const spec = SLOT_KINDS[kind]
-  let image = sharp(master)
+  // A cut-out sent on white has its white made see-through first, unless it
+  // already carries real transparency, which is then the cut the sender made.
+  const input = opts.white && spec.alpha && (await sharp(master).stats()).isOpaque ? await whiteToClear(master) : master
+  let image = sharp(input)
   if (!spec.alpha) image = image.flatten({ background: '#ffffff' })
-  const { data, info } = await image
-    .resize({ width: spec.maxSide, height: spec.maxSide, fit: 'inside', withoutEnlargement: true })
-    .webp({ quality: 82 })
-    .toBuffer({ resolveWithObject: true })
+  if (spec.square) {
+    // Framed square, as the shop's tiles are, around what draws the eye; never enlarged.
+    const { width = spec.maxSide, height = spec.maxSide } = await sharp(input).metadata()
+    const side = Math.min(spec.maxSide, width, height)
+    image = image.resize({ width: side, height: side, fit: 'cover', position: sharp.strategy.attention })
+  } else {
+    image = image.resize({ width: spec.maxSide, height: spec.maxSide, fit: 'inside', withoutEnlargement: true })
+  }
+  const { data, info } = await image.webp({ quality: 82, alphaQuality: 90 }).toBuffer({ resolveWithObject: true })
   return { data, width: info.width, height: info.height }
+}
+
+/**
+ * A flat near-white background made transparent, and the transparent edges cut
+ * away: every pixel above 238 in red, green and blue, as `opaque_to_alpha` in
+ * scripts/prepare-assets.py does for the delivery's pack shots.
+ */
+async function whiteToClear(master: Buffer): Promise<Buffer> {
+  const { data, info } = await sharp(master).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+  for (let i = 0; i < data.length; i += 4) {
+    if (data[i] > 238 && data[i + 1] > 238 && data[i + 2] > 238) data[i + 3] = 0
+  }
+  return sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } }).trim().png().toBuffer()
 }
 
 /**

@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { requireAdmin } from '../_lib/auth.js'
 import { handler, HttpError, json, nodeBody } from '../_lib/http.js'
 import { hashName, makeMaster, makeSlot, sniff } from '../_lib/content/images.js'
-import { isSlotKind } from '../_lib/content/slots.js'
+import { isSlotKind, SLOT_KINDS } from '../_lib/content/slots.js'
 import { contentStore } from '../_lib/content/store.js'
 import { githubConfig, listFiles, readBinary } from '../_lib/github.js'
 
@@ -10,7 +10,8 @@ import { githubConfig, listFiles, readBinary } from '../_lib/github.js'
  * The dashboard's photo library.
  *
  *   POST  (the photo's bytes)          add a photo; it is kept large, as a master
- *   POST  ?derive=<file>&kind=<kind>   a copy of a master sized for one place
+ *   POST  ?derive=<file>&kind=<kind>   a copy of a master sized for one place;
+ *                                      &white=1 makes a cut-out's white background see-through
  *   GET   ?file=<file>                 a stored photo, for the dashboard and previews
  *   GET                                the library, and the photos the site already has
  *
@@ -68,6 +69,9 @@ export default handler(async (req: VercelRequest, res: VercelResponse) => {
     const kind = first(req.query.kind)
     if (typeof derive !== 'string' || !MASTER.test(derive)) throw new HttpError(400, 'Unknown photo.')
     if (!isSlotKind(kind)) throw new HttpError(400, 'Unknown place for a photo.')
+    // Making white see-through is for cut-outs; a photograph keeps its background.
+    const white = first(req.query.white) === '1'
+    if (white && !SLOT_KINDS[kind].alpha) throw new HttpError(400, 'That kind of photo keeps its background.')
     let master = (await store.getMedia(derive))?.bytes
     if (!master) {
       // Published and cleared from the store since: the repository has it.
@@ -75,7 +79,7 @@ export default handler(async (req: VercelRequest, res: VercelResponse) => {
       master = (cfg && (await readBinary(cfg, `public/assets/cms/${derive}`))) || undefined
     }
     if (!master) throw new HttpError(404, 'That photo is no longer in the library. Upload it again.')
-    const slot = await makeSlot(master, kind)
+    const slot = await makeSlot(master, kind, { white })
     const file = `${hashName(slot.data)}.webp`
     await store.putMedia({ file, bytes: slot.data, width: slot.width, height: slot.height, kind, source: derive })
     json(res, 200, { path: `/assets/cms/${file}`, width: slot.width, height: slot.height })

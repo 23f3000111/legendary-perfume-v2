@@ -223,6 +223,110 @@ export const JournalDocSchema = object({
 export type JournalDoc = z.infer<typeof JournalDocSchema>
 export type JournalArticle = JournalDoc['articles'][number]
 
+// ---------------------------------------------------------------- products
+
+export const MOODS = ['Serene', 'Bold', 'Romantic', 'Playful'] as const
+export const AUDIENCES = ['For Her', 'For Him', 'Unisex'] as const
+export const ACCENTS = ['gold', 'rose', 'jade', 'amber', 'plum', 'teal', 'graphite'] as const
+
+const RINGGIT = 'Use a whole number of ringgit, from 1 to 10000.'
+/** A price the server can charge: whole ringgit, as the catalogue and checkout keep them. */
+const ringgit = z.number({ invalid_type_error: RINGGIT }).int(RINGGIT).min(1, RINGGIT).max(10000, RINGGIT)
+
+const noteList = z.array(text(30)).min(1, 'Add at least one note.').max(8, 'Up to eight notes.')
+
+/** Top, heart and base notes, as the composition band shows them. */
+export const ScentNotesSchema = object({ top: noteList, heart: noteList, base: noteList })
+
+/** One fragrance in a set, with its own notes, occasion chart and botanical. */
+export const ProductVariantSchema = object({
+  name: text(40),
+  family: text(40).optional(),
+  notes: ScentNotesSchema,
+  radar: photo,
+  bloom: photo.optional(),
+})
+
+const slug = z.string().trim().regex(/^[a-z0-9-]{1,40}$/, 'Use lowercase letters and numbers only.')
+
+/**
+ * A product, as the shop, its page and the server's price list read it.
+ * Keys are declared in the order products.json writes them.
+ */
+export const ProductSchema = object({
+  /** The address, /product/<id>, and the key product overrides use: fixed once published. */
+  id: slug,
+  name: text(60),
+  subtitle: text(80),
+  collection: text(40),
+  collectionId: slug,
+  family: text(40),
+  audience: z.enum(AUDIENCES, { errorMap: () => ({ message: 'Choose who it is for.' }) }),
+  moods: z
+    .array(z.enum(MOODS, { errorMap: () => ({ message: 'Choose a mood from the list.' }) }))
+    .min(1, 'Choose at least one mood.')
+    .max(4, 'Choose each mood once.')
+    .refine((moods) => new Set(moods).size === moods.length, 'Choose each mood once.'),
+  /** What a new product costs. A published product's price is changed in the price table. */
+  price: ringgit,
+  compareAt: ringgit.optional(),
+  size: text(60),
+  /** The lifestyle shot, the resting state of every product tile. */
+  image: photo,
+  /** The transparent pack cut-out, shown on hover. */
+  hoverImage: photo,
+  /** The box shot, third in the gallery. */
+  box: photo,
+  /** The flat-lay for the "What's included" block. */
+  included: photo,
+  includedItems: z
+    .array(object({ label: text(60), detail: text(160) }))
+    .min(1, 'Add at least one item.')
+    .max(8, 'Up to eight items.'),
+  /** The occasion chart. */
+  radar: photo,
+  /** The cut-out botanical that dresses the composition band. */
+  bloom: photo.optional(),
+  /** A set's fragrances, each with its own composition band. */
+  variants: z.array(ProductVariantSchema).min(1, 'Add at least one fragrance.').max(6, 'Up to six fragrances.').optional(),
+  accent: z.enum(ACCENTS, { errorMap: () => ({ message: 'Choose a colour.' }) }),
+  /** The composition band's wash, where it differs from the accent's. */
+  compositionTint: z.string().trim().regex(/^#[0-9a-fA-F]{6}$/, 'Use a colour written like #D1E5ED.').optional(),
+  badges: z.array(text(30)).max(4, 'Up to four badges.'),
+  bestseller: z.boolean().optional(),
+  /** Counts towards the Gifts & Sets filter. */
+  gift: z.boolean().optional(),
+  story: text(600),
+  description: text(1500),
+  goodToKnow: text(400).optional(),
+  care: text(600).optional(),
+  notes: ScentNotesSchema,
+  /** Links the scent to a place on the Scented Memory map. */
+  place: text(60).optional(),
+}).superRefine((product, ctx) => {
+  if (product.compareAt !== undefined && product.compareAt <= product.price) {
+    ctx.addIssue({ code: 'custom', path: ['compareAt'], message: 'The was price must be more than the price.' })
+  }
+})
+
+export const ProductsDocSchema = object({
+  /** Every product, in the order the shop shows them. */
+  products: z.array(ProductSchema).min(1, 'Keep at least one product.'),
+}).superRefine((doc, ctx) => {
+  const ids = new Set<string>()
+  doc.products.forEach((p, i) => {
+    if (ids.has(p.id)) {
+      ctx.addIssue({ code: 'custom', path: ['products', i, 'id'], message: 'Another product already uses this address.' })
+    }
+    ids.add(p.id)
+  })
+})
+
+export type ProductsDoc = z.infer<typeof ProductsDocSchema>
+export type ProductEntry = ProductsDoc['products'][number]
+export type ProductVariant = z.infer<typeof ProductVariantSchema>
+export type ScentNotesEntry = z.infer<typeof ScentNotesSchema>
+
 // ----------------------------------------------------------------- helpers
 
 function eachString(value: unknown, path: string[], visit: (s: string, path: string[]) => void): void {

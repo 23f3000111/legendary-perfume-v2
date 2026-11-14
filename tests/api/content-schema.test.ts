@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { FaqDocSchema, JournalDocSchema, StoresDocSchema, findDashes, mediaRefs } from '../../api/_lib/content/schema'
+import { FaqDocSchema, JournalDocSchema, ProductsDocSchema, StoresDocSchema, findDashes, mediaRefs } from '../../api/_lib/content/schema'
 
 const faq = () => ({
   intro: 'We answer the questions customers ask most.',
@@ -164,6 +164,82 @@ describe('Journal schema', () => {
   it('an older journal photo path is accepted', () => {
     const older = journal(article({ hero: '/Journal_Images/gift-guide-orchid.webp' }))
     expect(JournalDocSchema.safeParse(older).success).toBe(true)
+  })
+})
+
+const product = (over: Record<string, unknown> = {}) => ({
+  id: 'orchid',
+  name: 'Orchid',
+  subtitle: 'Exotic Orchid for an Extraordinary Soul',
+  collection: 'Signature',
+  collectionId: 'signature',
+  family: 'Floral Fruity',
+  audience: 'For Her',
+  moods: ['Serene'],
+  price: 188,
+  compareAt: 238,
+  size: '30ml Eau de Parfum',
+  image: '/assets/client/p-orchid-life.webp',
+  hoverImage: '/assets/client/p-orchid-pack.webp',
+  box: '/assets/client/p-orchid-box.webp',
+  included: '/assets/client/p-orchid-included.webp',
+  includedItems: [{ label: 'Orchid', detail: '30ml eau de parfum' }],
+  radar: '/assets/client/p-orchid-radar.webp',
+  accent: 'gold',
+  badges: ['Signature Scent'],
+  story: 'Orchid is the definitive signature of Legendary.',
+  description: 'Opening with a crisp burst of zesty citrus, it unfolds into a serene floral haven.',
+  notes: { top: ['Orange'], heart: ['Jasmine'], base: ['Vetiver'] },
+  ...over,
+})
+
+const shelf = (...products: Record<string, unknown>[]) => ({ products })
+
+describe('Products schema', () => {
+  it('accepts a minimal product', () => {
+    const result = ProductsDocSchema.safeParse(shelf(product()))
+    expect(result.success ? [] : result.error.issues).toEqual([])
+  })
+
+  it('a price is whole ringgit', () => {
+    expect(firstIssuePath(ProductsDocSchema.safeParse(shelf(product({ price: 188.5 }))))).toEqual(['products', 0, 'price'])
+    expect(firstIssuePath(ProductsDocSchema.safeParse(shelf(product({ price: 0, compareAt: undefined }))))).toEqual([
+      'products', 0, 'price',
+    ])
+  })
+
+  it('the was price is above the price', () => {
+    expect(firstIssuePath(ProductsDocSchema.safeParse(shelf(product({ compareAt: 150 }))))).toEqual(['products', 0, 'compareAt'])
+  })
+
+  it('product addresses are their own', () => {
+    expect(firstIssuePath(ProductsDocSchema.safeParse(shelf(product(), product({ name: 'Another' }))))).toEqual([
+      'products', 1, 'id',
+    ])
+  })
+
+  it('a product needs a mood and its notes', () => {
+    expect(firstIssuePath(ProductsDocSchema.safeParse(shelf(product({ moods: [] }))))).toEqual(['products', 0, 'moods'])
+    const bare = product({ notes: { top: [], heart: ['Jasmine'], base: ['Vetiver'] } })
+    expect(firstIssuePath(ProductsDocSchema.safeParse(shelf(bare)))).toEqual(['products', 0, 'notes', 'top'])
+  })
+
+  it('each fragrance in a set needs its own chart', () => {
+    const set = product({
+      variants: [{ name: 'Hope', notes: { top: ['Pear'], heart: ['Jasmine'], base: ['Amber'] }, radar: '' }],
+    })
+    expect(firstIssuePath(ProductsDocSchema.safeParse(shelf(set)))).toEqual(['products', 0, 'variants', 0, 'radar'])
+  })
+
+  it('a composition colour is a colour', () => {
+    expect(firstIssuePath(ProductsDocSchema.safeParse(shelf(product({ compositionTint: 'blue' }))))).toEqual([
+      'products', 0, 'compositionTint',
+    ])
+    expect(ProductsDocSchema.safeParse(shelf(product({ compositionTint: '#D1E5ED' }))).success).toBe(true)
+  })
+
+  it('the shop keeps at least one product', () => {
+    expect(firstIssuePath(ProductsDocSchema.safeParse(shelf()))).toEqual(['products'])
   })
 })
 
