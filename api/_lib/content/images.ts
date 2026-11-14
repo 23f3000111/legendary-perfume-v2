@@ -49,14 +49,19 @@ export async function makeSlot(
   const spec = SLOT_KINDS[kind]
   // A cut-out sent on white has its white made see-through first, unless it
   // already carries real transparency, which is then the cut the sender made.
-  const input = opts.white && spec.alpha && (await sharp(master).stats()).isOpaque ? await whiteToClear(master) : master
+  const input = opts.white && spec.alpha && (await sharp(master).stats()).isOpaque ? await groundToClear(master) : master
   let image = sharp(input)
   if (!spec.alpha) image = image.flatten({ background: '#ffffff' })
-  if (spec.square) {
+  if (spec.square === 'cover') {
     // Framed square, as the shop's tiles are, around what draws the eye; never enlarged.
     const { width = spec.maxSide, height = spec.maxSide } = await sharp(input).metadata()
     const side = Math.min(spec.maxSide, width, height)
     image = image.resize({ width: side, height: side, fit: 'cover', position: sharp.strategy.attention })
+  } else if (spec.square === 'contain') {
+    // The whole photo, fitted inside a square on white: nothing at its sides is lost.
+    const { width = spec.maxSide, height = spec.maxSide } = await sharp(input).metadata()
+    const side = Math.min(spec.maxSide, Math.max(width, height))
+    image = image.resize({ width: side, height: side, fit: 'contain', background: '#ffffff' })
   } else {
     image = image.resize({ width: spec.maxSide, height: spec.maxSide, fit: 'inside', withoutEnlargement: true })
   }
@@ -65,16 +70,43 @@ export async function makeSlot(
 }
 
 /**
- * A flat near-white background made transparent, and the transparent edges cut
- * away: every pixel above 238 in red, green and blue, as `opaque_to_alpha` in
- * scripts/prepare-assets.py does for the delivery's pack shots.
+ * The white around a cut-out made transparent, and the transparent edges cut
+ * away, as `ground_to_alpha` in scripts/prepare-assets.py does for the
+ * delivery's pack shots and flat-lays. Only the white that touches the edge of
+ * the photo goes: a fill starts at each near-white corner and spreads through
+ * pixels within 26 (the sum of the red, green and blue differences) of that
+ * corner's colour, so it stops at the pack's outline. A blanket "white becomes
+ * transparent" pass would punch holes through the house's ivory boxes.
  */
-async function whiteToClear(master: Buffer): Promise<Buffer> {
+async function groundToClear(master: Buffer): Promise<Buffer> {
   const { data, info } = await sharp(master).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
-  for (let i = 0; i < data.length; i += 4) {
-    if (data[i] > 238 && data[i + 1] > 238 && data[i + 2] > 238) data[i + 3] = 0
+  const { width, height } = info
+  const seen = new Uint8Array(width * height)
+  const queue = new Int32Array(width * height)
+  for (const start of [0, width - 1, (height - 1) * width, height * width - 1]) {
+    const s = start * 4
+    // A corner that is not near-white is part of the photo: leave it.
+    if (seen[start] || data[s] + data[s + 1] + data[s + 2] < 690) continue
+    const [r, g, b] = [data[s], data[s + 1], data[s + 2]]
+    const near = (p: number) => {
+      const i = p * 4
+      return Math.abs(data[i] - r) + Math.abs(data[i + 1] - g) + Math.abs(data[i + 2] - b) <= 26
+    }
+    let head = 0
+    let tail = 0
+    queue[tail++] = start
+    seen[start] = 1
+    while (head < tail) {
+      const p = queue[head++]
+      data[p * 4 + 3] = 0
+      const x = p % width
+      if (x > 0 && !seen[p - 1] && near(p - 1)) { seen[p - 1] = 1; queue[tail++] = p - 1 }
+      if (x < width - 1 && !seen[p + 1] && near(p + 1)) { seen[p + 1] = 1; queue[tail++] = p + 1 }
+      if (p >= width && !seen[p - width] && near(p - width)) { seen[p - width] = 1; queue[tail++] = p - width }
+      if (p < (height - 1) * width && !seen[p + width] && near(p + width)) { seen[p + width] = 1; queue[tail++] = p + width }
+    }
   }
-  return sharp(data, { raw: { width: info.width, height: info.height, channels: 4 } }).trim().png().toBuffer()
+  return sharp(data, { raw: { width, height, channels: 4 } }).trim().png().toBuffer()
 }
 
 /**

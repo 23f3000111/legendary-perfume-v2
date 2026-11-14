@@ -173,6 +173,44 @@ describe('the photo API', () => {
     expect(centre[0]).toBeGreaterThan(150)
   })
 
+  // The house's boxes are ivory and gold. Only the white around the pack goes,
+  // as the asset script's flood from the corners does; the box keeps its inside.
+  it('a white box inside its outline keeps its inside when the white is made see-through', async () => {
+    const inside = await sharp({ create: { width: 392, height: 292, channels: 3, background: { r: 252, g: 250, b: 244 } } })
+      .png()
+      .toBuffer()
+    const box = await sharp({ create: { width: 400, height: 300, channels: 3, background: { r: 120, g: 110, b: 100 } } })
+      .composite([{ input: inside, left: 4, top: 4 }])
+      .png()
+      .toBuffer()
+    const onPage = await sharp({ create: { width: 1000, height: 800, channels: 3, background: { r: 255, g: 255, b: 255 } } })
+      .composite([{ input: box, left: 300, top: 250 }])
+      .png()
+      .toBuffer()
+    const master = (await upload(onPage)).body.file
+    const res = await call({ method: 'POST', query: { derive: master, kind: 'productPack', white: '1' } })
+    expect(res.status).toBe(200)
+    // Cut down to the box: the page around it is gone...
+    expect(res.body.width).toBeLessThan(450)
+    expect(res.body.height).toBeLessThan(350)
+    // ...and the box's ivory inside is still there.
+    const slot = await fetchFile(res.body.path.slice('/assets/cms/'.length))
+    expect((await pixel(slot, Math.floor(res.body.width / 2), Math.floor(res.body.height / 2)))[3]).toBe(255)
+  })
+
+  // Revision 12: the client found a box shot cut off at its sides.
+  it('a box shot is framed square without losing its sides', async () => {
+    const wide = await sharp({ create: { width: 3000, height: 2000, channels: 3, background: { r: 200, g: 20, b: 30 } } })
+      .jpeg()
+      .toBuffer()
+    const master = (await upload(wide)).body.file
+    const res = await call({ method: 'POST', query: { derive: master, kind: 'productBox' } })
+    expect([res.body.width, res.body.height]).toEqual([1400, 1400])
+    const slot = await fetchFile(res.body.path.slice('/assets/cms/'.length))
+    expect((await pixel(slot, 3, 700))[0]).toBeGreaterThan(150)
+    expect(await pixel(slot, 700, 3)).toEqual([255, 255, 255, 255])
+  })
+
   it('a cut-out that already has transparency is left as it is', async () => {
     const cutout = await sharp({
       create: { width: 600, height: 400, channels: 4, background: { r: 255, g: 255, b: 255, alpha: 0.5 } },

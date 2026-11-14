@@ -7,7 +7,8 @@
  * dashboard and one from the delivery look alike on the page. `alpha: false`
  * means the place shows a photograph, so any transparency is laid on white;
  * `alpha: true` keeps it, for cut-outs. `square` frames the photo square, as
- * the shop's product tiles are.
+ * the shop's product tiles are: `cover` fills the square, `contain` fits the
+ * whole photo inside it on white, so a box shot never loses its sides.
  *
  * No imports, so the dashboard can read these without the image code.
  */
@@ -15,7 +16,7 @@ export interface SlotSpec {
   label: string
   maxSide: number
   alpha: boolean
-  square?: boolean
+  square?: 'cover' | 'contain'
 }
 
 const KINDS = {
@@ -23,9 +24,9 @@ const KINDS = {
   /** A journal article's header or body photo. Upright ones are shown narrower, not made smaller. */
   journal: { label: 'Journal photo', maxSide: 1600, alpha: false },
   /** The lifestyle shot, the resting state of every product tile. */
-  productLife: { label: 'Lifestyle photo', maxSide: 1400, alpha: false, square: true },
-  /** The box shot, third in the product page's gallery. */
-  productBox: { label: 'Box shot', maxSide: 1400, alpha: false, square: true },
+  productLife: { label: 'Lifestyle photo', maxSide: 1400, alpha: false, square: 'cover' },
+  /** The box shot, third in the product page's gallery. Revision 12: the client found one cut off at its sides. */
+  productBox: { label: 'Box shot', maxSide: 1400, alpha: false, square: 'contain' },
   /** The transparent pack cut-out shown when a tile is hovered. */
   productPack: { label: 'Pack cut-out', maxSide: 1400, alpha: true },
   productIncluded: { label: "What's included flat-lay", maxSide: 1600, alpha: true },
