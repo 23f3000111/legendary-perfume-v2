@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { getProduct, relatedProducts } from '../data/products'
+import { galleryOf, getProduct, relatedProducts } from '../data/products'
 import { faq } from '../data/faq'
 import { accent } from '../lib/accents'
+import { asset } from '../lib/asset'
 import { formatRM, discountPct } from '../lib/format'
 import { useShop } from '../store/shop'
 import { live, useStock } from '../store/stock'
@@ -78,8 +79,8 @@ export default function Product() {
         family: v.family,
         label: `${product.name} ${v.name}`,
         notes: v.notes,
-        radar: v.radar,
-        bloom: v.bloom,
+        radar: asset(v.radar),
+        bloom: v.bloom ? asset(v.bloom) : undefined,
       }))
     : [{
         key: product.id,
@@ -87,9 +88,11 @@ export default function Product() {
         family: undefined as string | undefined,
         label: product.name,
         notes: product.notes,
-        radar: product.radar,
-        bloom: product.bloom,
+        radar: asset(product.radar),
+        bloom: product.bloom ? asset(product.bloom) : undefined,
       }]
+  // The lifestyle shot, the pack cut-out and the box shot, as root paths.
+  const gallery = galleryOf(product)
 
   const onAdd = () => {
     if (!now.inStock) return
@@ -112,7 +115,7 @@ export default function Product() {
     sku: product.id,
     brand: { '@type': 'Brand', name: SITE.name },
     category: `${product.collection} Collection`,
-    image: product.gallery.map((g) => absolute(g)),
+    image: gallery.map((g) => absolute(g)),
     audience: { '@type': 'PeopleAudience', suggestedGender: product.audience },
     offers: {
       '@type': 'Offer',
@@ -190,27 +193,27 @@ export default function Product() {
                 </span>
               )}
               <img
-                src={product.gallery[active]}
+                src={asset(gallery[active])}
                 alt={product.name}
                 className={`aspect-square w-full ${
                   // The pack cut-out is transparent, so it is fitted on the
                   // accent wash rather than cropped to fill.
-                  product.gallery[active] === product.hoverImage
+                  gallery[active] === product.hoverImage
                     ? 'object-contain p-8'
                     : 'object-cover'
                 }`}
               />
             </motion.div>
-            {product.gallery.length > 1 && (
+            {gallery.length > 1 && (
               <div className="mt-4 flex gap-3 lg:order-first lg:mt-0 lg:flex-col">
-                {product.gallery.map((g, i) => (
+                {gallery.map((g, i) => (
                   <button
                     key={g}
                     onClick={() => setActive(i)}
                     className={`h-20 w-20 shrink-0 overflow-hidden rounded-sm ring-1 transition ${active === i ? 'ring-gold' : 'ring-line hover:ring-gold/50'}`}
                     style={{ background: `linear-gradient(160deg, ${tone.soft}, rgba(251,248,242,0.6))` }}
                   >
-                    <img src={g} alt="" className={g === product.hoverImage ? 'h-full w-full object-contain p-1.5' : 'h-full w-full object-cover'} />
+                    <img src={asset(g)} alt="" className={g === product.hoverImage ? 'h-full w-full object-contain p-1.5' : 'h-full w-full object-cover'} />
                   </button>
                 ))}
               </div>
@@ -311,7 +314,7 @@ export default function Product() {
               {/* The flat-lay gets the wider half of the panel rather than
                   overhanging its column, so it never touches the border. */}
               <img
-                src={product.included}
+                src={asset(product.included)}
                 alt={`Everything included with ${product.name}`}
                 className="w-full object-contain"
                 loading="lazy"

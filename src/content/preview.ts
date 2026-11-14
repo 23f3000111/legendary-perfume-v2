@@ -30,8 +30,20 @@ export function applyDrafts(
   for (const [key, draft] of Object.entries(drafts)) {
     if (!isDocKey(key) || !target[key] || !draft || typeof draft !== 'object') continue
     const doc = target[key]
-    for (const own of Object.keys(doc)) delete doc[own]
-    Object.assign(doc, draft)
+    const next = draft as Record<string, unknown>
+    // Arrays the site already holds keep their identity: src/data/products.ts
+    // hands out `products`, the array itself, and it must show the draft's
+    // products. Everything else is replaced.
+    const both = (k: string) => Array.isArray(doc[k]) && Array.isArray(next[k])
+    for (const own of Object.keys(doc)) if (!both(own)) delete doc[own]
+    for (const [k, value] of Object.entries(next)) {
+      if (both(k)) {
+        const held = doc[k] as unknown[]
+        held.splice(0, held.length, ...(value as unknown[]))
+      } else {
+        doc[k] = value
+      }
+    }
   }
 }
 

@@ -3,11 +3,13 @@ import { describe, expect, it } from 'vitest'
 import faqJson from './faq.json'
 import storesJson from './stores.json'
 import journalJson from './journal.json'
+import productsJson from './products.json'
 import { faq } from '../data/faq'
 import { storesDoc } from '../data/stores'
 import { articleList, formatDate, journal } from '../data/articles'
+import { products, productsDoc } from '../data/products'
 import { DOCS } from '../../api/_lib/content/docs'
-import { FaqDocSchema, JournalDocSchema, StoresDocSchema } from '../../api/_lib/content/schema'
+import { FaqDocSchema, JournalDocSchema, ProductsDocSchema, StoresDocSchema } from '../../api/_lib/content/schema'
 
 describe('published content', () => {
   it('the published FAQ and stores pass their schemas', () => {
@@ -17,6 +19,11 @@ describe('published content', () => {
 
   it('the published journal passes its schema', () => {
     const result = JournalDocSchema.safeParse(journal)
+    expect(result.success ? [] : result.error.issues).toEqual([])
+  })
+
+  it('the published products pass their schema', () => {
+    const result = ProductsDocSchema.safeParse(productsDoc)
     expect(result.success ? [] : result.error.issues).toEqual([])
   })
 
@@ -37,6 +44,8 @@ describe('published content', () => {
     expect(faq).toBe(faqJson)
     expect(storesDoc).toBe(storesJson)
     expect(journal).toBe(journalJson)
+    expect(productsDoc).toBe(productsJson)
+    expect(products).toBe(productsJson.products)
   })
 })
 

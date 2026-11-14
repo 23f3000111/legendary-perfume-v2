@@ -14,8 +14,11 @@ export default function MalaysiaMap() {
   const [activeId, setActiveId] = useState('kuala-lumpur')
   const [hoveredId, setHoveredId] = useState<string | null>(null)
 
-  const active = scentPlaces.find((p) => p.id === activeId)!
-  const target = placeTarget(active)
+  // A pin whose product has left the shop is left out, rather than failing.
+  const shown = scentPlaces.filter((p) => placeTarget(p) !== null)
+  const active = shown.find((p) => p.id === activeId) ?? shown[0]
+  const target = active ? placeTarget(active) : null
+  if (!active || !target) return null
 
   return (
     <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:gap-14">
@@ -48,7 +51,7 @@ export default function MalaysiaMap() {
         </div>
 
         {/* Pins */}
-        {scentPlaces.map((place) => (
+        {shown.map((place) => (
           <MapPin
             key={place.id}
             place={place}
@@ -127,6 +130,7 @@ function MapPin({
   onHoverChange: (on: boolean) => void
 }) {
   const target = placeTarget(place)
+  if (!target) return null
   const lit = isActive || isHovered
   // Keep the card inside the map: pins on the right half open leftwards, and
   // pins near the top open downwards instead of over the section edge.

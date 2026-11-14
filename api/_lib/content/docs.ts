@@ -1,6 +1,6 @@
 import type { ZodTypeAny } from 'zod'
 import { DOC_KEYS, isDocKey, type DocKey } from './keys.js'
-import { FaqDocSchema, JournalDocSchema, StoresDocSchema } from './schema.js'
+import { FaqDocSchema, JournalDocSchema, ProductsDocSchema, StoresDocSchema } from './schema.js'
 
 /**
  * Every document the dashboard edits: where it lives in the repository, what
@@ -19,6 +19,7 @@ export const DOCS: Record<DocKey, DocSpec> = {
   faq: { path: 'src/content/faq.json', label: 'FAQ', schema: FaqDocSchema },
   stores: { path: 'src/content/stores.json', label: 'Stores', schema: StoresDocSchema },
   journal: { path: 'src/content/journal.json', label: 'Journal', schema: JournalDocSchema },
+  products: { path: 'src/content/products.json', label: 'Products', schema: ProductsDocSchema },
 }
 
 export { DOC_KEYS, isDocKey, type DocKey }

@@ -48,6 +48,34 @@ const JOURNAL = () => ({
   ],
 })
 
+const SCENT = (id: string, over: Record<string, unknown> = {}) => ({
+  id,
+  name: 'Orchid',
+  subtitle: 'Exotic Orchid for an Extraordinary Soul',
+  collection: 'Signature',
+  collectionId: 'signature',
+  family: 'Floral Fruity',
+  audience: 'For Her',
+  moods: ['Serene'],
+  price: 188,
+  compareAt: 238,
+  size: '30ml Eau de Parfum',
+  image: '/assets/client/p-orchid-life.webp',
+  hoverImage: '/assets/client/p-orchid-pack.webp',
+  box: '/assets/client/p-orchid-box.webp',
+  included: '/assets/client/p-orchid-included.webp',
+  includedItems: [{ label: 'Orchid', detail: '30ml eau de parfum' }],
+  radar: '/assets/client/p-orchid-radar.webp',
+  accent: 'gold',
+  badges: ['Signature Scent'],
+  story: 'Orchid is the definitive signature of Legendary.',
+  description: 'Opening with a crisp burst of zesty citrus, it unfolds into a serene floral haven.',
+  notes: { top: ['Orange'], heart: ['Jasmine'], base: ['Vetiver'] },
+  ...over,
+})
+
+const PRODUCTS = () => ({ products: [SCENT('orchid')] })
+
 /** The published format, written out by hand here rather than by the code under test. */
 const asFile = (data: unknown) => JSON.stringify(data, null, 2) + '\n'
 
@@ -76,6 +104,7 @@ beforeEach(async () => {
   writeFileSync(join(seed, 'src/content/faq.json'), asFile(FAQ()))
   writeFileSync(join(seed, 'src/content/stores.json'), asFile(STORES()))
   writeFileSync(join(seed, 'src/content/journal.json'), asFile(JOURNAL()))
+  writeFileSync(join(seed, 'src/content/products.json'), asFile(PRODUCTS()))
   mkdirSync(join(seed, 'public/assets/client'), { recursive: true })
   writeFileSync(join(seed, 'public/assets/client/store-bsas.webp'), Buffer.from([1, 2, 3]))
   // The draft store's files go here, away from the seed.

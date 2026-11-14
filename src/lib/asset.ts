@@ -16,7 +16,18 @@ export function setPreviewMedia(paths: string[]): void {
   previewMedia = new Set(paths)
 }
 
+/**
+ * A public path resolved against the site's base. Idempotent: a path already
+ * under the base, or a full address, comes back as it is, so a photo resolved
+ * twice (a map card's own photo, or a product's) still points at one copy.
+ */
+export function resolveAsset(path: string, base: string): string {
+  if (/^[a-z][a-z0-9+.-]*:/i.test(path)) return path
+  if (base && (path === base || path.startsWith(`${base}/`))) return path
+  return base + (path.startsWith('/') ? path : '/' + path)
+}
+
 export function asset(path: string): string {
   if (previewMedia.has(path)) return apiUrl(`/api/admin/media?file=${path.slice('/assets/cms/'.length)}`)
-  return BASE + (path.startsWith('/') ? path : '/' + path)
+  return resolveAsset(path, BASE)
 }

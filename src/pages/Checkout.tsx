@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Elements, PaymentElement, useElements, useStripe } from '@stripe/react-stripe-js'
 import { useShop, cartDetails, cartSubtotal } from '../store/shop'
+import { asset } from '../lib/asset'
 import { formatRM } from '../lib/format'
 import { ApiError, startCheckout, type CheckoutSession } from '../lib/api'
 import { getStripe, stripeAppearance, stripeConfigured, stripeTestMode } from '../lib/stripe'
@@ -211,7 +212,7 @@ export default function Checkout() {
                 {details.map(({ product, qty, lineTotal }) => (
                   <li key={product.id} className="flex gap-3 py-3">
                     <div className="relative h-16 w-14 shrink-0 overflow-hidden rounded-sm bg-sand">
-                      <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+                      <img src={asset(product.image)} alt={product.name} className="h-full w-full object-cover" />
                       <span className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-ink text-[0.62rem] text-ivory">{qty}</span>
                     </div>
                     <div className="flex flex-1 justify-between">

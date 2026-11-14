@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { products } from '../data/products'
 import { collections } from '../data/collections'
+import { asset } from '../lib/asset'
 import { formatRM } from '../lib/format'
 import { isListed, useStock } from '../store/stock'
 import { Search, Close } from './ui/icons'
@@ -31,7 +32,6 @@ function haystack(p: (typeof products)[number]): string {
     .toLowerCase()
 }
 
-const INDEX = products.map((p) => ({ product: p, text: haystack(p) }))
 
 export default function SearchOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [query, setQuery] = useState('')
@@ -66,16 +66,20 @@ export default function SearchOverlay({ open, onClose }: { open: boolean; onClos
   // What the dashboard has taken off the shop is not found here either.
   const hidden = useStock((s) => s.hidden)
 
+  // Built each time search opens, from the products as they are then, so a
+  // preview's draft products are found too.
+  const index = useMemo(() => (open ? products.map((p) => ({ product: p, text: haystack(p) })) : []), [open])
+
   const results = useMemo(() => {
     if (q.length < 2) return []
     const words = q.split(/\s+/)
-    return INDEX
+    return index
       .filter(({ product, text }) => isListed(product, hidden) && words.every((w) => text.includes(w)))
       // A name match is what someone usually meant, so it sorts first.
       .sort((a, b) => Number(b.product.name.toLowerCase().includes(q)) - Number(a.product.name.toLowerCase().includes(q)))
       .slice(0, 6)
       .map(({ product }) => product)
-  }, [q, hidden])
+  }, [q, hidden, index])
 
   const matchingCollections = useMemo(
     () => (q.length < 2 ? [] : collections.filter((c) => c.name.toLowerCase().includes(q))),
@@ -148,7 +152,7 @@ export default function SearchOverlay({ open, onClose }: { open: boolean; onClos
                           onClick={onClose}
                           className="flex items-center gap-4 rounded-sm p-2 transition hover:bg-porcelain"
                         >
-                          <img src={p.image} alt="" className="h-14 w-14 shrink-0 rounded-sm object-cover" />
+                          <img src={asset(p.image)} alt="" className="h-14 w-14 shrink-0 rounded-sm object-cover" />
                           <span className="min-w-0">
                             <span className="block truncate text-ink">{p.name}</span>
                             <span className="block truncate text-xs text-smoke">

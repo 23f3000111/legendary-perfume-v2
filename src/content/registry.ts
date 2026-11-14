@@ -2,6 +2,7 @@ import type { DocKey } from '../../api/_lib/content/keys'
 import faq from './faq.json'
 import stores from './stores.json'
 import journal from './journal.json'
+import products from './products.json'
 
 /**
  * Every document the dashboard edits, as the site holds it: the very objects
@@ -13,4 +14,5 @@ export const CONTENT: Record<DocKey, Record<string, unknown>> = {
   faq: faq as Record<string, unknown>,
   stores: stores as Record<string, unknown>,
   journal: journal as Record<string, unknown>,
+  products: products as Record<string, unknown>,
 }

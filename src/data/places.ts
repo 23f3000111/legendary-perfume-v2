@@ -99,9 +99,14 @@ export const scentPlaces: ScentPlace[] = [
   },
 ]
 
-/** Resolves what a pin should show: a single scent, or a whole collection. */
+/**
+ * Resolves what a pin should show: a single scent, or a whole collection.
+ * Null when the pin's product is no longer in the shop, so the map leaves that
+ * pin out instead of failing.
+ */
 export function placeTarget(place: ScentPlace) {
-  const product = getProduct(place.productId)!
+  const product = getProduct(place.productId)
+  if (!product) return null
   const inCollection = place.collectionId ? productsByCollection(place.collectionId) : []
   const boutiques = place.storeIds
     .map((id) => storesDoc.stores.find((s) => s.id === id))
@@ -109,7 +114,8 @@ export function placeTarget(place: ScentPlace) {
 
   return {
     product,
-    image: place.cardImage ?? product.image,
+    // A place's own card photo is resolved already; a product's is a root path.
+    image: place.cardImage ?? asset(product.image),
     href: place.collectionId ? `/shop?collection=${place.collectionId}` : `/product/${product.id}`,
     title: place.scentLabel ?? product.name,
     meta: place.familyLabel ?? `${product.family} · RM ${product.price}`,

@@ -7,7 +7,10 @@ import { Kicker } from '../components/ui/SplitText'
 import { ArrowRight, ShieldCheck } from '../components/ui/icons'
 
 export default function Signature() {
-  const orchid = getProduct('orchid')!
+  // The dashboard will not remove Orchid, but a hand edit could: without it
+  // the section stays away rather than taking the home page down.
+  const orchid = getProduct('orchid')
+  if (!orchid) return null
 
   return (
     <section className="relative overflow-hidden bg-ivory py-24 md:py-32">

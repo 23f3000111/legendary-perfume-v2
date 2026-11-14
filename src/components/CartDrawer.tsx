@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useShop, cartDetails, cartSubtotal } from '../store/shop'
 import { useUI } from '../store/ui'
+import { asset } from '../lib/asset'
 import { formatRM } from '../lib/format'
 import { Close, Plus, Minus, Bag, Sparkle, ArrowRight, Truck } from './ui/icons'
 
@@ -60,7 +61,7 @@ export default function CartDrawer() {
                   {details.map(({ product, qty, lineTotal }) => (
                     <li key={product.id} className="flex gap-4 py-5">
                       <Link to={`/product/${product.id}`} onClick={close} className="h-24 w-20 shrink-0 overflow-hidden bg-porcelain">
-                        <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
+                        <img src={asset(product.image)} alt={product.name} className="h-full w-full object-cover" />
                       </Link>
                       <div className="flex flex-1 flex-col">
                         <div className="flex justify-between gap-2">

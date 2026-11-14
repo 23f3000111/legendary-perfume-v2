@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import type { Product } from '../data/products'
 import { accent } from '../lib/accents'
+import { asset } from '../lib/asset'
 import { formatRM, discountPct } from '../lib/format'
 import { useShop } from '../store/shop'
 import { useUI } from '../store/ui'
@@ -76,13 +77,13 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
               with it; filling the tile puts the two on the same edge. */}
           <div className="relative aspect-square w-full">
             <img
-              src={product.image}
+              src={asset(product.image)}
               alt={product.name}
               loading={index < 4 ? 'eager' : 'lazy'}
               className="absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ease-luxe group-hover:opacity-0"
             />
             <img
-              src={product.hoverImage}
+              src={asset(product.hoverImage)}
               alt=""
               aria-hidden
               loading="lazy"

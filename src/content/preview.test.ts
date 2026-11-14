@@ -4,8 +4,10 @@ import { CONTENT } from './registry'
 import { asset, setPreviewMedia } from '../lib/asset'
 import { faq } from '../data/faq'
 import { articleList, getArticle } from '../data/articles'
+import { getProduct, products } from '../data/products'
 import faqJson from './faq.json'
 import journalJson from './journal.json'
+import productsJson from './products.json'
 
 afterEach(() => setPreviewMedia([]))
 
@@ -72,5 +74,23 @@ describe('preview', () => {
     expect(asset('/assets/cms/m/aaaaaaaaaaaaaaaaaaaa.webp')).toBe('/api/admin/media?file=m/aaaaaaaaaaaaaaaaaaaa.webp')
     expect(asset('/assets/cms/ffffffffffffffffffff.webp')).toBe('/assets/cms/ffffffffffffffffffff.webp')
     expect(asset('/assets/client/store-bsas.webp')).toBe('/assets/client/store-bsas.webp')
+  })
+  // A new product is only in the draft until it is published. The shop, its
+  // page and search read the products array the site already holds, so the
+  // draft is put into that array rather than in place of it.
+  it('a draft applied to the registry is what the shop reads', () => {
+    const saved = structuredClone(productsJson)
+    const held = products
+    const fresh = { ...saved.products[1], id: 'newscent', name: 'New Scent' }
+    try {
+      applyDrafts({ products: { products: [...saved.products, fresh] } }, CONTENT)
+      expect(getProduct('newscent')?.name).toBe('New Scent')
+      expect(products).toBe(held)
+      expect(products).toHaveLength(saved.products.length + 1)
+    } finally {
+      applyDrafts({ products: saved }, CONTENT)
+    }
+    expect(getProduct('newscent')).toBeUndefined()
+    expect(products).toHaveLength(saved.products.length)
   })
 })
