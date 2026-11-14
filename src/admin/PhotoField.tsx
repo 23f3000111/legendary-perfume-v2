@@ -13,7 +13,7 @@ import { danger, small } from './styles'
  * the site already shows is used as it is.
  */
 export default function PhotoField({
-  kind, value, onChange, label, disabled, onBusy,
+  kind, value, onChange, label, disabled, onBusy, white: offerWhite,
 }: {
   kind: SlotKind
   value?: string
@@ -22,10 +22,13 @@ export default function PhotoField({
   disabled?: boolean
   /** Told when a photo starts and stops being uploaded or fitted, so the form can hold still meanwhile. */
   onBusy?: (busy: boolean) => void
+  /** Offer to make a white background see-through, for a cut-out sent on white. */
+  white?: boolean
 }) {
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [picking, setPicking] = useState(false)
+  const [onWhite, setOnWhite] = useState(false)
   const input = useRef<HTMLInputElement>(null)
   const coarse = coarsePointer()
 
@@ -62,7 +65,7 @@ export default function PhotoField({
   }
   const place = async (master: string) => {
     setBusy('Fitting the photo…')
-    const { path } = await adminDerivePhoto(master, kind)
+    const { path } = await adminDerivePhoto(master, kind, { white: offerWhite && onWhite })
     done(path)
   }
   const upload = (file: File) =>
@@ -107,6 +110,12 @@ export default function PhotoField({
           </div>
           {busy && <p className="text-xs text-smoke">{busy}</p>}
           {error && <p className={`text-xs ${danger}`}>{error}</p>}
+          {offerWhite && (
+            <label className="flex items-center gap-2 text-xs text-ink-soft">
+              <input type="checkbox" checked={onWhite} onChange={(e) => setOnWhite(e.target.checked)} disabled={locked} />
+              The photo is on a white background: make the white see-through
+            </label>
+          )}
           <p className="text-xs text-smoke">Shown up to {SLOT_KINDS[kind].maxSide} px across.</p>
         </div>
       </div>

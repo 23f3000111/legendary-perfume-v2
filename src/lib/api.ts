@@ -457,8 +457,14 @@ export function adminUploadPhoto(photo: Blob): Promise<{ file: string; url: stri
 }
 
 /** A copy of a library photo sized for one kind of place; the path goes into the content. */
-export function adminDerivePhoto(file: string, kind: SlotKind): Promise<{ path: string; width: number; height: number }> {
-  return request(`/api/admin/media?derive=${encodeURIComponent(file)}&kind=${kind}`, { ...withCookies, method: 'POST' })
+/** A copy of a library photo sized for one kind of place; `white` makes a cut-out's white background see-through. */
+export function adminDerivePhoto(
+  file: string,
+  kind: SlotKind,
+  opts: { white?: boolean } = {},
+): Promise<{ path: string; width: number; height: number }> {
+  const white = opts.white ? '&white=1' : ''
+  return request(`/api/admin/media?derive=${encodeURIComponent(file)}&kind=${kind}${white}`, { ...withCookies, method: 'POST' })
 }
 
 export function adminLibrary(): Promise<{ photos: LibraryPhoto[]; site: string[] }> {
