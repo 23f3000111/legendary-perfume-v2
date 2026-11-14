@@ -1,5 +1,5 @@
 import type { ProductEntry, ProductsDoc } from '../../api/_lib/content/schema'
-import { collections } from '../data/collections'
+import { collectionName, collections } from '../data/collections'
 import { insertAt, moveItem } from './blocks'
 import { sameContent, useContent } from './contentStore'
 import { ContentGate, errorAt } from './fields'
@@ -115,7 +115,7 @@ function Editor({ open, onOpen }: { open: string | null; onOpen: (id: string | n
                   <p className="truncate text-sm text-ink">{product.name || 'Unnamed product'}</p>
                   <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-smoke">
                     <span>
-                      {product.collection}
+                      {collectionName(product)}
                       {product.price ? ` · RM ${product.price}` : ''}
                     </span>
                     {isNew && <Tag>New</Tag>}

@@ -256,3 +256,30 @@ export function ContentGate({ children }: { children: ReactNode }) {
   }
   return <>{children}</>
 }
+
+/** A labelled select, in the dashboard's field style. */
+export function Select({
+  label, value, options, onChange, error, disabled,
+}: {
+  label: string
+  value: string
+  options: { value: string; label: string }[]
+  onChange: (value: string) => void
+  error?: string
+  disabled?: boolean
+}) {
+  const id = useId()
+  const known = options.some((o) => o.value === value)
+  return (
+    <div>
+      <label htmlFor={id} className="eyebrow text-smoke">{label}</label>
+      <select id={id} value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled} className={field}>
+        {!known && <option value={value}>{value || 'Choose one'}</option>}
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>{o.label}</option>
+        ))}
+      </select>
+      {error && <p className={`mt-1 text-xs ${danger}`}>{error}</p>}
+    </div>
+  )
+}

@@ -13,7 +13,7 @@ import { sameContent } from './contentStore'
 
 interface ListShape {
   /** Where the items are in the document. */
-  key: 'articles' | 'products'
+  key: string
   /** What tells one item from another: its address. */
   id: (item: Record<string, unknown>) => string
   /** What the dashboard calls an item. */
@@ -31,6 +31,21 @@ const LISTS: Partial<Record<DocKey, ListShape>> = {
     id: (p) => String(p.id),
     title: (p) => String(p.name || 'An unnamed product'),
   },
+  collections: {
+    key: 'collections',
+    id: (c) => String(c.id),
+    title: (c) => String(c.name || 'An unnamed collection'),
+  },
+  places: {
+    key: 'places',
+    id: (p) => String(p.id),
+    title: (p) => String(p.place),
+  },
+}
+
+/** Whether a document's changes are named item by item: its items have addresses of their own. */
+export function namesItems(doc: DocKey): boolean {
+  return Boolean(LISTS[doc])
 }
 
 const itemsOf = (shape: ListShape, doc: unknown): Map<string, Record<string, unknown>> => {
@@ -68,7 +83,7 @@ export function restoreChanges(current: unknown, old: unknown, doc: DocKey = 'jo
   return { removed, returned: added }
 }
 
-/** Titles for a sentence: "A", "A and B", "A, B and C". */
+/** Names for a sentence: "A", "A and B", "A, B and C". */
 export function titleList(titles: string[]): string {
   if (titles.length <= 1) return titles.join('')
   return `${titles.slice(0, -1).join(', ')} and ${titles[titles.length - 1]}`

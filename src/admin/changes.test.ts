@@ -65,4 +65,19 @@ describe('what a journal change does to the site', () => {
     const then = shelf(scent('violet', 'Violet'), scent('dream', 'Dream'))
     expect(restoreChanges(now, then, 'products')).toEqual({ removed: ['Saffron Dusk'], returned: ['Dream'] })
   })
+
+  // The collections and the map's pins are lists in one document each as well.
+  it('changeSummary names the collections a publish adds, changes and removes', () => {
+    const c = (id: string, name: string, over: Record<string, unknown> = {}) => ({ id, name, tagline: 'The scents that made us', ...over })
+    const live = { collections: [c('signature', 'Signature'), c('spirit', 'Spirit')] }
+    const working = { collections: [c('signature', 'Signature', { tagline: 'New words' }), c('merdeka', 'Merdeka')] }
+    expect(changeSummary('collections', working, live)).toBe('New: Merdeka. Changed: Signature. Removed: Spirit.')
+  })
+
+  it('changeSummary names the map pins a publish changes', () => {
+    const pin = (id: string, place: string, note: string) => ({ id, place, note })
+    const live = { places: [pin('melaka', 'Melaka', 'Old words.'), pin('genting', 'Genting Highlands', 'Cool air.')] }
+    const working = { places: [pin('melaka', 'Melaka', 'New words.'), pin('genting', 'Genting Highlands', 'Cool air.')] }
+    expect(changeSummary('places', working, live)).toBe('Changed: Melaka.')
+  })
 })

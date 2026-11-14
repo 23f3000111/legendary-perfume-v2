@@ -1,13 +1,13 @@
-import { useId } from 'react'
-import type { ProductEntry } from '../../api/_lib/content/schema'
-import { collections } from '../data/collections'
+import type { CollectionsDoc, ProductEntry } from '../../api/_lib/content/schema'
+import { collections as publishedCollections } from '../data/collections'
 import { moodList } from '../data/products'
 import { accents } from '../lib/accents'
 import { setOptional } from './blocks'
-import { LinesField, ListEditor, NumberField, TextArea, TextField } from './fields'
+import { LinesField, ListEditor, NumberField, Select, TextArea, TextField } from './fields'
 import PhotoField from './PhotoField'
 import { renameProduct } from './products'
-import { danger, field, panel, small } from './styles'
+import { useContent } from './contentStore'
+import { danger, panel, small } from './styles'
 
 type Err = (path: string) => string | undefined
 type Variant = NonNullable<ProductEntry['variants']>[number]
@@ -40,6 +40,9 @@ export default function ProductForm({
   busy: boolean
 }) {
   const set = <K extends keyof ProductEntry>(key: K, value: ProductEntry[K]) => onChange({ ...product, [key]: value })
+  // The collections as the team is editing them, so a new one can take products before it is published.
+  const working = useContent((s) => s.docs.collections?.working) as CollectionsDoc | undefined
+  const collections = working?.collections ?? publishedCollections
   const photo = (key: 'image' | 'hoverImage' | 'box' | 'included' | 'radar') => (path: string | undefined) =>
     set(key, path ?? '')
 
@@ -366,33 +369,6 @@ function Photo({
   return (
     <div>
       <PhotoField kind={kind} label={label} value={value || undefined} onChange={onChange} disabled={busy} white={white} />
-      {error && <p className={`mt-1 text-xs ${danger}`}>{error}</p>}
-    </div>
-  )
-}
-
-/** A labelled select, in the dashboard's field style. */
-function Select({
-  label, value, options, onChange, error, disabled,
-}: {
-  label: string
-  value: string
-  options: { value: string; label: string }[]
-  onChange: (value: string) => void
-  error?: string
-  disabled?: boolean
-}) {
-  const id = useId()
-  const known = options.some((o) => o.value === value)
-  return (
-    <div>
-      <label htmlFor={id} className="eyebrow text-smoke">{label}</label>
-      <select id={id} value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled} className={field}>
-        {!known && <option value={value}>{value || 'Choose one'}</option>}
-        {options.map((o) => (
-          <option key={o.value} value={o.value}>{o.label}</option>
-        ))}
-      </select>
       {error && <p className={`mt-1 text-xs ${danger}`}>{error}</p>}
     </div>
   )

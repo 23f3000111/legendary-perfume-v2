@@ -14,10 +14,11 @@ import History from '../admin/History'
 import JournalEditor from '../admin/JournalEditor'
 import PhotoLibrary from '../admin/PhotoLibrary'
 import ProductsEditor from '../admin/ProductsEditor'
+import SiteTab, { isSiteScreen, type SiteScreen } from '../admin/SiteTab'
 import StoresEditor from '../admin/StoresEditor'
 import { useContent } from '../admin/contentStore'
 
-type Tab = 'overview' | 'products' | 'orders' | 'faq' | 'stores' | 'journal' | 'photos' | 'history'
+type Tab = 'overview' | 'products' | 'orders' | 'faq' | 'stores' | 'journal' | 'site' | 'photos' | 'history'
 
 /**
  * The house dashboard.
@@ -44,6 +45,8 @@ export default function Admin() {
   // unreachable, which is exactly when someone needs to be told why.
   const [unreachable, setUnreachable] = useState(false)
   const [tab, setTab] = useState<Tab>('overview')
+  // Which screen the Site tab shows: the site details, or one of its lists.
+  const [siteScreen, setSiteScreen] = useState<SiteScreen>('site')
 
   useEffect(() => {
     adminSession()
@@ -91,7 +94,12 @@ export default function Admin() {
           <main className="u-container py-8">
             {tab === 'overview' && (
               <div className="space-y-8">
-                <UnpublishedChanges onOpen={setTab} />
+                <UnpublishedChanges
+                  onOpen={(next, doc) => {
+                    if (isSiteScreen(doc)) setSiteScreen(doc)
+                    setTab(next)
+                  }}
+                />
                 <Overview />
               </div>
             )}
@@ -100,6 +108,7 @@ export default function Admin() {
             {tab === 'faq' && <FaqEditor />}
             {tab === 'stores' && <StoresEditor />}
             {tab === 'journal' && <JournalEditor />}
+            {tab === 'site' && <SiteTab screen={siteScreen} onScreen={setSiteScreen} />}
             {tab === 'photos' && <PhotoLibrary />}
             {tab === 'history' && <History />}
           </main>
@@ -199,19 +208,28 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'faq', label: 'FAQ' },
   { key: 'stores', label: 'Stores' },
   { key: 'journal', label: 'Journal' },
+  { key: 'site', label: 'Site' },
   { key: 'photos', label: 'Photos' },
   { key: 'history', label: 'History' },
 ]
 
 /** Which tab edits which document, for the Overview's list of unpublished work. */
-const DOC_TABS: Record<string, Tab> = { faq: 'faq', stores: 'stores', journal: 'journal', products: 'products' }
+const DOC_TABS: Record<string, Tab> = {
+  faq: 'faq',
+  stores: 'stores',
+  journal: 'journal',
+  products: 'products',
+  site: 'site',
+  collections: 'site',
+  places: 'site',
+}
 
-function UnpublishedChanges({ onOpen }: { onOpen: (t: Tab) => void }) {
+function UnpublishedChanges({ onOpen }: { onOpen: (t: Tab, doc: string) => void }) {
   const content = useContent()
   if (content.status === 'unconfigured') {
     return (
       <p className="rounded-sm border border-gold/40 bg-gold/5 px-5 py-3 text-xs leading-relaxed text-gold-deep">
-        Publishing is not set up yet, so the FAQ, Stores and Journal tabs, and product pages, cannot save. Add{' '}
+        Publishing is not set up yet, so nothing on the editing tabs can be saved. Add{' '}
         <code>GITHUB_TOKEN</code> and <code>GITHUB_REPO</code> in Vercel and redeploy.
       </p>
     )
@@ -226,7 +244,7 @@ function UnpublishedChanges({ onOpen }: { onOpen: (t: Tab) => void }) {
         {dirty.map((d) => (
           <li key={d}>
             <button
-              onClick={() => onOpen(DOC_TABS[d] ?? 'overview')}
+              onClick={() => onOpen(DOC_TABS[d] ?? 'overview', d)}
               className="rounded-sm border border-line px-3 py-1.5 text-xs text-ink transition hover:border-gold"
             >
               {content.docs[d]?.label ?? d}

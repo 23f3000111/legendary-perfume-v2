@@ -1,9 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { DocKey } from '../../api/_lib/content/keys'
 import { ApiError, adminHistory, adminVersion, type ContentCommit } from '../lib/api'
-import { restoreChanges, titleList } from './changes'
+import { namesItems, restoreChanges, titleList } from './changes'
 import { useContent } from './contentStore'
 import { danger, panel, small } from './styles'
+
+/** The documents whose names read as plural: "put the Products back as they were". */
+const PLURAL = new Set<DocKey>(['stores', 'products', 'collections', 'reviews', 'partners', 'sellers', 'policies', 'site'])
 
 const when = (iso: string, withTime = true) =>
   new Date(iso).toLocaleString('en-GB', {
@@ -47,10 +50,10 @@ export default function History() {
 
   const put = async (doc: DocKey, commit: ContentCommit) => {
     const label = docs[doc]?.label ?? doc
-    // The Journal holds every article, and Products every product, so a restore
-    // can take some off the site and bring others back. Say which before asking.
+    // The Journal holds every article, Products every product, and so on, so a
+    // restore can take some off the site and bring others back. Say which first.
     let what = ''
-    if (doc === 'journal' || doc === 'products') {
+    if (namesItems(doc)) {
       try {
         const { removed, returned } = restoreChanges(docs[doc]?.published, (await adminVersion(doc, commit.sha)).data, doc)
         if (removed.length) what += ` This takes ${titleList(removed)} off the site.`
@@ -59,8 +62,7 @@ export default function History() {
         // The plain question still stands.
       }
     }
-    // Stores and Products read as plural: "put the Products back as they were".
-    const was = doc === 'stores' || doc === 'products' ? 'they were' : 'it was'
+    const was = PLURAL.has(doc) ? 'they were' : 'it was'
     if (!window.confirm(`Put the ${label} back as ${was} on ${when(commit.date, false)}?${what}`)) return
     void restore(doc, commit.sha)
   }
