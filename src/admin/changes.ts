@@ -41,6 +41,11 @@ const LISTS: Partial<Record<DocKey, ListShape>> = {
     id: (p) => String(p.id),
     title: (p) => String(p.place),
   },
+  policies: {
+    key: 'policies',
+    id: (p) => String(p.slug),
+    title: (p) => String(p.title || p.slug),
+  },
 }
 
 /** Whether a document's changes are named item by item: its items have addresses of their own. */

@@ -80,4 +80,12 @@ describe('what a journal change does to the site', () => {
     const working = { places: [pin('melaka', 'Melaka', 'New words.'), pin('genting', 'Genting Highlands', 'Cool air.')] }
     expect(changeSummary('places', working, live)).toBe('Changed: Melaka.')
   })
+
+  // The four policy pages are one document: a publish says which pages it changes.
+  it('changeSummary names the policy pages a publish changes', () => {
+    const page = (slug: string, title: string, intro: string) => ({ slug, title, intro })
+    const live = { policies: [page('shipping', 'Shipping Policy', 'Old.'), page('returns', 'Return, Refund & Exchange', 'Same.')] }
+    const working = { policies: [page('shipping', 'Shipping Policy', 'New.'), page('returns', 'Return, Refund & Exchange', 'Same.')] }
+    expect(changeSummary('policies', working, live)).toBe('Changed: Shipping Policy.')
+  })
 })
