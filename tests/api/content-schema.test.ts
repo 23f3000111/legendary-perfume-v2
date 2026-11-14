@@ -1,5 +1,19 @@
 import { describe, expect, it } from 'vitest'
-import { FaqDocSchema, JournalDocSchema, ProductsDocSchema, StoresDocSchema, findDashes, mediaRefs } from '../../api/_lib/content/schema'
+import {
+  CollectionsDocSchema,
+  FaqDocSchema,
+  JourneyDocSchema,
+  JournalDocSchema,
+  PartnersDocSchema,
+  PoliciesDocSchema,
+  ProductsDocSchema,
+  ReviewsDocSchema,
+  SellersDocSchema,
+  SiteDocSchema,
+  StoresDocSchema,
+  findDashes,
+  mediaRefs,
+} from '../../api/_lib/content/schema'
 
 const faq = () => ({
   intro: 'We answer the questions customers ask most.',
@@ -240,6 +254,107 @@ describe('Products schema', () => {
 
   it('the shop keeps at least one product', () => {
     expect(firstIssuePath(ProductsDocSchema.safeParse(shelf()))).toEqual(['products'])
+  })
+})
+
+const siteDoc = (over: Record<string, unknown> = {}) => ({
+  whatsapp: '+60 19 383 6633',
+  email: 'noreply@legendary.com.my',
+  instagram: { handle: '@legendaryofficial.my', url: 'https://www.instagram.com/legendaryofficial.my/' },
+  facebook: { handle: 'LegendaryPerfumeMY', url: 'https://www.facebook.com/LegendaryPerfumeMY' },
+  tiktok: 'https://www.tiktok.com/@legendary.my',
+  shopee: 'https://shopee.com.my/legendaryperfume',
+  office: {
+    name: 'Legendary Distribution Sdn Bhd',
+    address: '12E, Pusat Teknologi Sunsuria, 47810 Petaling Jaya, Selangor',
+    mapQuery: 'Legendary Distribution Sdn Bhd, Petaling Jaya',
+    mapEmbed: 'https://www.google.com/maps/embed?pb=!1m18!1m12',
+  },
+  ...over,
+})
+
+const collection = (over: Record<string, unknown> = {}) => ({
+  id: 'signature',
+  name: 'Signature',
+  tagline: 'The scents that made us',
+  description: 'Orchid, Mahsuri, Violet and Man, the defining icons of Legendary.',
+  intro: 'Explore the foundational scents that built our reputation.',
+  accent: 'gold',
+  image: '/assets/client/collection-signature.webp',
+  ...over,
+})
+
+const review = (over: Record<string, unknown> = {}) => ({ quote: 'I like the smell.', author: 'anson.gan', ...over })
+
+const milestone = (over: Record<string, unknown> = {}) => ({
+  year: '2015',
+  title: 'A House is Born',
+  body: 'Founded in this year, the beginning of a journey in fine fragrance.',
+  ...over,
+})
+
+const logo = (over: Record<string, unknown> = {}) => ({
+  name: 'SOGO',
+  logo: '/assets/client/partner-sogo.png',
+  mono: '/assets/client/partner-sogo-mono.png',
+  ...over,
+})
+
+const policy = (slug: string, over: Record<string, unknown> = {}) => ({
+  slug,
+  title: 'Shipping Policy',
+  eyebrow: 'Customer Care',
+  intro: 'How your order reaches you.',
+  updated: 'August 2026',
+  body: [{ t: 'p', text: 'Orders are processed within two business days.' }],
+  ...over,
+})
+
+describe('site details and list schemas', () => {
+  it('site details need a number written with its country code', () => {
+    expect(firstIssuePath(SiteDocSchema.safeParse(siteDoc({ whatsapp: '019-383 6633' })))).toEqual(['whatsapp'])
+    expect(SiteDocSchema.safeParse(siteDoc()).success).toBe(true)
+  })
+
+  it('a social link goes to its own site', () => {
+    const doc = siteDoc({ instagram: { handle: '@legendaryofficial.my', url: 'https://example.com/x' } })
+    expect(firstIssuePath(SiteDocSchema.safeParse(doc))).toEqual(['instagram', 'url'])
+  })
+
+  it('collection addresses are their own', () => {
+    expect(CollectionsDocSchema.safeParse({ collections: [collection()] }).success).toBe(true)
+    const twice = { collections: [collection(), collection({ name: 'Signature Two' })] }
+    expect(firstIssuePath(CollectionsDocSchema.safeParse(twice))).toEqual(['collections', 1, 'id'])
+  })
+
+  it('a review link is a full web address', () => {
+    const fine = review({ product: 'Orchid 30ml', rating: 4, href: 'https://shopee.com.my/listing' })
+    expect(ReviewsDocSchema.safeParse({ reviews: [fine] }).success).toBe(true)
+    expect(firstIssuePath(ReviewsDocSchema.safeParse({ reviews: [review({ href: 'shopee.com.my/x' })] }))).toEqual(['reviews', 0, 'href'])
+    expect(firstIssuePath(ReviewsDocSchema.safeParse({ reviews: [review({ rating: 6 })] }))).toEqual(['reviews', 0, 'rating'])
+  })
+
+  it('a year appears once on the journey', () => {
+    expect(JourneyDocSchema.safeParse({ milestones: [milestone({ photo: '/assets/client/journey-2015.webp' })] }).success).toBe(true)
+    const twice = { milestones: [milestone(), milestone({ title: 'Again' })] }
+    expect(firstIssuePath(JourneyDocSchema.safeParse(twice))).toEqual(['milestones', 1, 'year'])
+  })
+
+  it('a logo row needs a logo', () => {
+    expect(PartnersDocSchema.safeParse({ rows: [{ logos: [logo({ tall: true })] }] }).success).toBe(true)
+    expect(SellersDocSchema.safeParse({ logos: [logo()] }).success).toBe(true)
+    expect(firstIssuePath(PartnersDocSchema.safeParse({ rows: [{ logos: [] }] }))).toEqual(['rows', 0, 'logos'])
+    const { mono: _mono, ...noMono } = logo()
+    expect(firstIssuePath(PartnersDocSchema.safeParse({ rows: [{ logos: [noMono] }] }))).toEqual(['rows', 0, 'logos', 0, 'mono'])
+  })
+
+  it('the four policy pages stay', () => {
+    const four = ['shipping', 'returns', 'terms', 'privacy'].map((slug) => policy(slug))
+    expect(PoliciesDocSchema.safeParse({ policies: four }).success).toBe(true)
+    expect(PoliciesDocSchema.safeParse({ policies: four.slice(0, 3) }).success).toBe(false)
+    const table = { t: 'table', head: ['Service', 'Cost'], rows: [['Delivery']] }
+    const short = { policies: [policy('shipping', { body: [{ t: 'p', text: 'Delivery is free.' }, table] }), ...four.slice(1)] }
+    expect(firstIssuePath(PoliciesDocSchema.safeParse(short))).toEqual(['policies', 0, 'body', 1, 'rows', 0])
   })
 })
 

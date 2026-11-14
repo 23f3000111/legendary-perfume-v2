@@ -173,6 +173,18 @@ export const BlockSchema = z.discriminatedUnion('t', [
 
 export type JournalBlock = z.infer<typeof BlockSchema>
 
+/** A table row short of a cell would shift every cell after the gap. */
+function tablesComplete(body: JournalBlock[], ctx: z.RefinementCtx, at: (string | number)[]): void {
+  body.forEach((block, j) => {
+    if (block.t !== 'table') return
+    block.rows.forEach((row, r) => {
+      if (row.length !== block.head.length) {
+        ctx.addIssue({ code: 'custom', path: [...at, j, 'rows', r], message: 'Every row needs a cell for each column.' })
+      }
+    })
+  })
+}
+
 const minutes = 'Between 1 and 60 minutes.'
 
 export const ArticleSchema = object({
@@ -195,17 +207,7 @@ export const ArticleSchema = object({
   /** What the header photo shows, for anyone who cannot see it. */
   heroAlt: text(300),
   body: z.array(BlockSchema).min(1, 'Write at least one paragraph.'),
-}).superRefine((article, ctx) => {
-  // A table row short of a cell would shift every cell after the gap.
-  article.body.forEach((block, j) => {
-    if (block.t !== 'table') return
-    block.rows.forEach((row, r) => {
-      if (row.length !== block.head.length) {
-        ctx.addIssue({ code: 'custom', path: ['body', j, 'rows', r], message: 'Every row needs a cell for each column.' })
-      }
-    })
-  })
-})
+}).superRefine((article, ctx) => tablesComplete(article.body, ctx, ['body']))
 
 export const JournalDocSchema = object({
   /** Every article, newest first as the file is kept; the pages sort by date anyway. */
@@ -326,6 +328,232 @@ export type ProductsDoc = z.infer<typeof ProductsDocSchema>
 export type ProductEntry = ProductsDoc['products'][number]
 export type ProductVariant = z.infer<typeof ProductVariantSchema>
 export type ScentNotesEntry = z.infer<typeof ScentNotesSchema>
+
+// ------------------------------------------------------------ site details
+
+/** An address on one site: the house's page there. `shown` is how the message writes its start. */
+const linkOn = (host: string, name: string, shown: string) =>
+  z
+    .string()
+    .trim()
+    .regex(new RegExp(`^https://(www\\.)?${host.replace(/\./g, '\\.')}/\\S*$`), `Use the full ${name} address, starting https://${shown}/.`)
+
+/**
+ * The house's contact details and links. Every WhatsApp button, the footer's
+ * social links, the Contact page and the facts search engines are given are
+ * made from these when they render.
+ */
+export const SiteDocSchema = object({
+  /** As the pages show it. Every WhatsApp link is made from its digits. */
+  whatsapp: z.string().trim().regex(/^\+\d[\d ]{6,18}\d$/, 'Write the number with its country code, spaced like +60 19 383 6633.'),
+  /** The house's address, as search engines are given it. */
+  email: z.string().trim().regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Use an email address, like hello@legendary.com.my.'),
+  instagram: object({ handle: text(60), url: linkOn('instagram.com', 'Instagram', 'www.instagram.com') }),
+  facebook: object({ handle: text(60), url: linkOn('facebook.com', 'Facebook', 'www.facebook.com') }),
+  tiktok: linkOn('tiktok.com', 'TikTok', 'www.tiktok.com'),
+  shopee: linkOn('shopee.com.my', 'Shopee', 'shopee.com.my'),
+  /** The registered office on the Contact page, with the client's own pinned map. */
+  office: object({
+    name: text(80),
+    address: text(300),
+    mapQuery: text(300),
+    mapEmbed: z
+      .string()
+      .trim()
+      .regex(
+        /^https:\/\/www\.google\.com\/maps\/embed\?\S+$/,
+        'Paste the map address from Google Maps: Share, then Embed a map. It starts https://www.google.com/maps/embed?',
+      ),
+  }),
+})
+
+export type SiteDoc = z.infer<typeof SiteDocSchema>
+
+/** Each item's `field` is its own: a second one is pointed at. */
+function noRepeats<T>(items: T[], field: keyof T & string, at: string, message: string, ctx: z.RefinementCtx): void {
+  const seen = new Set<unknown>()
+  items.forEach((item, i) => {
+    if (seen.has(item[field])) ctx.addIssue({ code: 'custom', path: [at, i, field], message })
+    seen.add(item[field])
+  })
+}
+
+// ------------------------------------------------------------- collections
+
+export const CollectionSchema = object({
+  /** The address, /shop?collection=<id>: made from the name, and fixed once published. */
+  id: slug,
+  name: text(40),
+  /** Under its name in the menu, and on its card on the Home page. */
+  tagline: text(80),
+  /** Its card on the Home page's collection rail. */
+  description: text(600),
+  /** Under the title when the shop shows this collection. */
+  intro: text(400),
+  accent: z.enum(ACCENTS, { errorMap: () => ({ message: 'Choose a colour.' }) }),
+  /** The square cover. */
+  image: photo,
+  /** The banner behind the shop's title for this collection. */
+  banner: photo.optional(),
+})
+
+export const CollectionsDocSchema = object({
+  /** In the order the menu, the shop and the Home page's rail show them. */
+  collections: z.array(CollectionSchema).min(1, 'Keep at least one collection.'),
+}).superRefine((doc, ctx) => noRepeats(doc.collections, 'id', 'collections', 'Another collection already uses this address.', ctx))
+
+export type CollectionsDoc = z.infer<typeof CollectionsDocSchema>
+export type CollectionEntry = CollectionsDoc['collections'][number]
+
+// ----------------------------------------------------------------- reviews
+
+const STARS = 'Choose from one to five stars.'
+
+export const ReviewSchema = object({
+  quote: text(1000),
+  author: text(60),
+  /** What they bought, shown under the name. */
+  product: text(80).optional(),
+  /** Stars as left on the platform; five when left out. */
+  rating: z.number({ invalid_type_error: STARS }).int(STARS).min(1, STARS).max(5, STARS).optional(),
+  /** The review where it was left, linked from the product line. */
+  href: z
+    .string()
+    .trim()
+    .max(1000, 'Keep this under 1000 characters.')
+    .regex(/^https:\/\/\S+$/, 'Use the full web address, starting https://.')
+    .optional(),
+})
+
+export const ReviewsDocSchema = object({
+  /** The customer wall on the Home page, in order. */
+  reviews: z.array(ReviewSchema).min(1, 'Keep at least one review.'),
+})
+
+export type ReviewsDoc = z.infer<typeof ReviewsDocSchema>
+export type ReviewEntry = ReviewsDoc['reviews'][number]
+
+// ----------------------------------------------------------------- journey
+
+export const MilestoneSchema = object({
+  year: z.string().trim().regex(/^\d{4}$/, 'Write the year, like 2026.'),
+  title: text(60),
+  body: text(400),
+  /** The card's photo. Without one, the card shows the house motif. */
+  photo: photo.optional(),
+})
+
+export const JourneyDocSchema = object({
+  /** The years on the Our Story page, in order. */
+  milestones: z.array(MilestoneSchema).min(1, 'Keep at least one year.'),
+}).superRefine((doc, ctx) => noRepeats(doc.milestones, 'year', 'milestones', 'This year is already on the journey.', ctx))
+
+export type JourneyDoc = z.infer<typeof JourneyDocSchema>
+export type MilestoneEntry = JourneyDoc['milestones'][number]
+
+// ------------------------------------------------------------------- logos
+
+/**
+ * A partner or seller logo. The walls rest in black and white and show each
+ * logo's own colours on hover, so a logo is two prints, made together.
+ */
+export const LogoSchema = object({
+  /** For anyone who cannot see the logo. */
+  name: text(60),
+  /** The logo in its own colours, shown on hover. */
+  logo: photo,
+  /** The black and white print the wall rests in. */
+  mono: photo,
+  /** An upright or square mark, given more height than the wide ones. */
+  tall: z.boolean().optional(),
+})
+
+export const PartnersDocSchema = object({
+  /** The Partnered With wall on the Home page, row by row as a wide screen shows it. */
+  rows: z
+    .array(
+      object({
+        logos: z.array(LogoSchema).min(1, 'Add a logo to this row, or remove the row.').max(10, 'Up to ten logos in a row.'),
+      }),
+    )
+    .min(1, 'Keep at least one row.')
+    .max(6, 'Up to six rows.'),
+})
+
+export const SellersDocSchema = object({
+  /** The Trusted Sellers wall on the Stores page. */
+  logos: z.array(LogoSchema).min(1, 'Keep at least one logo.').max(40, 'Up to forty logos.'),
+})
+
+export type PartnersDoc = z.infer<typeof PartnersDocSchema>
+export type SellersDoc = z.infer<typeof SellersDocSchema>
+export type LogoEntry = z.infer<typeof LogoSchema>
+
+// ------------------------------------------------------------------ places
+
+/**
+ * A pin on the Scented Memory map. Its words and card photo are the team's;
+ * where it sits, the scent it opens and its boutiques stay as they are.
+ */
+export const PlaceSchema = object({
+  id: slug,
+  place: text(40),
+  /** The line above the name, such as "Kedah · The Isles". */
+  region: text(60),
+  /** The words on its card. */
+  note: text(300),
+  /** The scent the pin opens. */
+  productId: slug,
+  /** Set when the pin stands for a whole collection. */
+  collectionId: slug.optional(),
+  /** The card's heading, where it is not the product's name. */
+  scentLabel: text(60).optional(),
+  /** The line under the heading, where it is not the product's family and price. */
+  familyLabel: text(80).optional(),
+  /** The card's photo, where it is not the product's lifestyle shot. */
+  cardImage: photo.optional(),
+  /** The boutiques at this place, by store id. */
+  storeIds: z.array(slug),
+  /** Where the pin sits over the map artwork, as percentages. */
+  x: z.number().min(0).max(100),
+  y: z.number().min(0).max(100),
+})
+
+export const PlacesDocSchema = object({
+  places: z.array(PlaceSchema).min(1, 'Keep at least one place.'),
+})
+
+export type PlacesDoc = z.infer<typeof PlacesDocSchema>
+export type PlaceEntry = PlacesDoc['places'][number]
+
+// ---------------------------------------------------------------- policies
+
+/** The four policy pages, each at its own address: /shipping and the rest. */
+export const POLICY_SLUGS = ['shipping', 'returns', 'terms', 'privacy'] as const
+
+export const PolicySchema = object({
+  slug: z.enum(POLICY_SLUGS, { errorMap: () => ({ message: 'The four policy pages each appear once.' }) }),
+  title: text(80),
+  /** The small line above the title. */
+  eyebrow: text(40),
+  intro: text(400),
+  /** As the page shows it, such as "August 2026". */
+  updated: text(40),
+  body: z.array(BlockSchema).min(1, 'Write at least one paragraph.'),
+}).superRefine((policy, ctx) => tablesComplete(policy.body, ctx, ['body']))
+
+export const PoliciesDocSchema = object({
+  policies: z.array(PolicySchema),
+}).superRefine((doc, ctx) => {
+  const slugs = doc.policies.map((p) => p.slug)
+  const once = POLICY_SLUGS.every((slug) => slugs.filter((s) => s === slug).length === 1)
+  if (!once || slugs.length !== POLICY_SLUGS.length) {
+    ctx.addIssue({ code: 'custom', path: ['policies'], message: 'The four policy pages each appear once.' })
+  }
+})
+
+export type PoliciesDoc = z.infer<typeof PoliciesDocSchema>
+export type PolicyEntry = PoliciesDoc['policies'][number]
 
 // ----------------------------------------------------------------- helpers
 
