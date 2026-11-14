@@ -59,8 +59,8 @@ export function byDate(articles: JournalArticle[]): { article: JournalArticle; i
     .sort((a, b) => b.article.published.localeCompare(a.article.published))
 }
 
-/** How many problems the server found inside the article at `index`. */
-export function issueCount(errors: ContentIssue[], index: number): number {
-  const at = `articles.${index}`
+/** How many problems the server found inside the item at `index` of a list document (articles, or products). */
+export function issueCount(errors: ContentIssue[], index: number, list = 'articles'): number {
+  const at = `${list}.${index}`
   return errors.filter((e) => e.path === at || e.path.startsWith(`${at}.`)).length
 }

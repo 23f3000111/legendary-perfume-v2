@@ -49,4 +49,20 @@ describe('what a journal change does to the site', () => {
     expect(changeSummary('journal', journal(nyonya), journal(nyonya))).toBeNull()
     expect(changeSummary('faq', { intro: 'a' }, { intro: 'b' })).toBeNull()
   })
+  // The products are one document too: a publish, discard or restore acts on
+  // every product in it, so each says which.
+  const scent = (id: string, name: string, over: Record<string, unknown> = {}) => ({ id, name, price: 188, ...over })
+  const shelf = (...products: Record<string, unknown>[]) => ({ products })
+
+  it('changeSummary names the products a publish adds, changes and removes', () => {
+    const live = shelf(scent('violet', 'Violet'), scent('dream', 'Dream'))
+    const working = shelf(scent('violet', 'Violet', { price: 158 }), scent('saffrondusk', 'Saffron Dusk'))
+    expect(changeSummary('products', working, live)).toBe('New: Saffron Dusk. Changed: Violet. Removed: Dream.')
+  })
+
+  it('restoreChanges names the products a restore takes off and brings back', () => {
+    const now = shelf(scent('violet', 'Violet'), scent('saffrondusk', 'Saffron Dusk'))
+    const then = shelf(scent('violet', 'Violet'), scent('dream', 'Dream'))
+    expect(restoreChanges(now, then, 'products')).toEqual({ removed: ['Saffron Dusk'], returned: ['Dream'] })
+  })
 })

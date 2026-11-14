@@ -47,12 +47,12 @@ export default function History() {
 
   const put = async (doc: DocKey, commit: ContentCommit) => {
     const label = docs[doc]?.label ?? doc
-    // The Journal holds every article, so a restore can take some off the site
-    // and bring others back. Say which before asking.
+    // The Journal holds every article, and Products every product, so a restore
+    // can take some off the site and bring others back. Say which before asking.
     let what = ''
-    if (doc === 'journal') {
+    if (doc === 'journal' || doc === 'products') {
       try {
-        const { removed, returned } = restoreChanges(docs[doc]?.published, (await adminVersion(doc, commit.sha)).data)
+        const { removed, returned } = restoreChanges(docs[doc]?.published, (await adminVersion(doc, commit.sha)).data, doc)
         if (removed.length) what += ` This takes ${titleList(removed)} off the site.`
         if (returned.length) what += ` It brings back ${titleList(returned)}.`
       } catch {

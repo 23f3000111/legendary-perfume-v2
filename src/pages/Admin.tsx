@@ -13,6 +13,7 @@ import FaqEditor from '../admin/FaqEditor'
 import History from '../admin/History'
 import JournalEditor from '../admin/JournalEditor'
 import PhotoLibrary from '../admin/PhotoLibrary'
+import ProductsEditor from '../admin/ProductsEditor'
 import StoresEditor from '../admin/StoresEditor'
 import { useContent } from '../admin/contentStore'
 
@@ -93,7 +94,7 @@ export default function Admin() {
                 <Overview />
               </div>
             )}
-            {tab === 'products' && <Products />}
+            {tab === 'products' && <ProductsTab />}
             {tab === 'orders' && <Orders />}
             {tab === 'faq' && <FaqEditor />}
             {tab === 'stores' && <StoresEditor />}
@@ -202,14 +203,14 @@ const TABS: { key: Tab; label: string }[] = [
 ]
 
 /** Which tab edits which document, for the Overview's list of unpublished work. */
-const DOC_TABS: Record<string, Tab> = { faq: 'faq', stores: 'stores', journal: 'journal' }
+const DOC_TABS: Record<string, Tab> = { faq: 'faq', stores: 'stores', journal: 'journal', products: 'products' }
 
 function UnpublishedChanges({ onOpen }: { onOpen: (t: Tab) => void }) {
   const content = useContent()
   if (content.status === 'unconfigured') {
     return (
       <p className="rounded-sm border border-gold/40 bg-gold/5 px-5 py-3 text-xs leading-relaxed text-gold-deep">
-        Publishing is not set up yet, so the FAQ, Stores and Journal tabs cannot save. Add{' '}
+        Publishing is not set up yet, so the FAQ, Stores and Journal tabs, and product pages, cannot save. Add{' '}
         <code>GITHUB_TOKEN</code> and <code>GITHUB_REPO</code> in Vercel and redeploy.
       </p>
     )
@@ -391,7 +392,21 @@ function Note({ children }: { children: React.ReactNode }) {
 
 // ----------------------------------------------------------------- products
 
-function Products() {
+/**
+ * The Products tab: each product's page, words and photos above, the live
+ * prices and stock below. "Edit page" in the price table opens the same form.
+ */
+function ProductsTab() {
+  const [open, setOpen] = useState<string | null>(null)
+  return (
+    <div className="space-y-10">
+      <ProductsEditor open={open} onOpen={setOpen} />
+      {open === null && <Products onEdit={setOpen} />}
+    </div>
+  )
+}
+
+function Products({ onEdit }: { onEdit: (id: string) => void }) {
   const [rows, setRows] = useState<AdminProduct[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busy, setBusy] = useState<string | null>(null)
@@ -477,7 +492,10 @@ function Products() {
                 <td className="px-3 py-3 text-center">
                   <Toggle on={!row.hidden} onChange={(v) => patch(row.id, { hidden: !v })} />
                 </td>
-                <td className="px-3 py-3 text-right">
+                <td className="space-x-3 px-3 py-3 text-right">
+                  <button onClick={() => onEdit(row.id)} className="text-xs text-smoke underline transition hover:text-ink">
+                    Edit page
+                  </button>
                   {row.overridden && (
                     <button
                       onClick={() => patch(row.id, { reset: true })}
