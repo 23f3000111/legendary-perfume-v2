@@ -1,7 +1,19 @@
 import type { ZodTypeAny } from 'zod'
 import { DOC_KEYS, isDocKey, type DocKey } from './keys.js'
 import { catalogueSource } from './catalogue-source.js'
-import { FaqDocSchema, JournalDocSchema, ProductsDocSchema, StoresDocSchema, type ProductsDoc } from './schema.js'
+import {
+  CollectionsDocSchema,
+  FaqDocSchema,
+  JourneyDocSchema,
+  JournalDocSchema,
+  PartnersDocSchema,
+  PlacesDocSchema,
+  ProductsDocSchema,
+  ReviewsDocSchema,
+  SellersDocSchema,
+  StoresDocSchema,
+  type ProductsDoc,
+} from './schema.js'
 
 /**
  * Every document the dashboard edits: where it lives in the repository, what
@@ -31,6 +43,12 @@ export const DOCS: Record<DocKey, DocSpec> = {
     schema: ProductsDocSchema,
     companions: (data) => [{ path: 'api/_catalogue.ts', content: catalogueSource((data as ProductsDoc).products) }],
   },
+  collections: { path: 'src/content/collections.json', label: 'Collections', schema: CollectionsDocSchema },
+  reviews: { path: 'src/content/reviews.json', label: 'Reviews', schema: ReviewsDocSchema },
+  journey: { path: 'src/content/journey.json', label: 'Our Story journey', schema: JourneyDocSchema },
+  partners: { path: 'src/content/partners.json', label: 'Partner logos', schema: PartnersDocSchema },
+  sellers: { path: 'src/content/sellers.json', label: 'Trusted sellers', schema: SellersDocSchema },
+  places: { path: 'src/content/places.json', label: 'Scented Memory map', schema: PlacesDocSchema },
 }
 
 export { DOC_KEYS, isDocKey, type DocKey }

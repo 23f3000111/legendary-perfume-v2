@@ -20,7 +20,8 @@ const audiences = ['All', 'For Her', 'For Him', 'Unisex'] as const
  * Every view used to share one line about olfactory postcards, whichever chip
  * or collection you had pressed. The client wrote a paragraph for each, so the
  * bar now introduces the edit you are actually looking at. Keys are the view
- * the header resolves to; `all` is the fallback.
+ * the header resolves to; `all` is the fallback. Each collection's own
+ * paragraph lives with the collection, in src/content/collections.json.
  */
 const INTROS: Record<string, string> = {
   all: 'Discover our complete realm of fragrances, where rich Malaysian heritage meets haute perfumery. Find your signature scent, personal rituals and timeless gifts.',
@@ -28,10 +29,6 @@ const INTROS: Record<string, string> = {
   gifts: 'Thoughtfully curated trios and boxed collections. Discover a variety of distinct scents in one set, perfect for thoughtful gifting, travel or everyday discovery.',
   her: 'A diverse range of fine perfumes for women. Discover uplifting daytime scents, bold evening blends and memorable gift sets.',
   him: 'A curated edit of fine fragrances for men. Discover crisp, refreshing daytime notes and bold deep woody blends crafted for a lasting impression.',
-  signature: 'Explore the foundational scents that built our reputation. A collection of timeless, versatile eau de parfums made to accompany every moment.',
-  nyonya: 'Celebrating Malaysia’s unique Peranakan roots. Discover storytelling scents crafted with delicate floral, gourmand and aromatic notes.',
-  'three-wishes': 'Pure, gentle and alcohol free. Explore everyday fragrances crafted for effortless wear, delicate layering and ultimate skin comfort.',
-  spirit: 'Infused with fine, light catching shimmers. Discover captivating eau de parfums that give your skin a luminous glow and a lasting, beautiful scent.',
 }
 
 function isGift(p: Product) {
@@ -122,14 +119,15 @@ export default function Shop() {
     : filterParam === 'gifts' ? INTROS.gifts
     : forHer ? INTROS.her
     : forHim ? INTROS.him
-    : (collectionParam !== 'all' ? INTROS[collectionParam] : undefined) ?? INTROS.all
+    : (collectionParam !== 'all' ? activeCollection?.intro : undefined) ?? INTROS.all
 
-  const banner =
-    filterParam === 'bestsellers' ? asset('/assets/client/banner-bestsellers.webp')
-    : filterParam === 'gifts' ? asset('/assets/client/banner-gifts.webp')
-    : forHer ? asset('/assets/client/banner-for-her.webp')
-    : forHim ? asset('/assets/client/banner-for-him.webp')
-    : activeCollection?.banner ?? asset('/assets/client/banner-fragrances.webp')
+  const banner = asset(
+    filterParam === 'bestsellers' ? '/assets/client/banner-bestsellers.webp'
+    : filterParam === 'gifts' ? '/assets/client/banner-gifts.webp'
+    : forHer ? '/assets/client/banner-for-her.webp'
+    : forHim ? '/assets/client/banner-for-him.webp'
+    : activeCollection?.banner ?? '/assets/client/banner-fragrances.webp',
+  )
 
   /* Every filter combination is a distinct URL, and most of them list the same
      fragrances in a different order. Canonicalising each view onto its own

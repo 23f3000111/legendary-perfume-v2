@@ -1,0 +1,44 @@
+{
+  "collections": [
+    {
+      "id": "signature",
+      "name": "Signature",
+      "tagline": "The scents that made us",
+      "description": "Orchid, Mahsuri, Violet and Man, the defining icons of Legendary. A timeless collection bridging the natural wonders of Malaysia with fine perfumery.",
+      "intro": "Explore the foundational scents that built our reputation. A collection of timeless, versatile eau de parfums made to accompany every moment.",
+      "accent": "gold",
+      "image": "/assets/client/collection-signature.webp",
+      "banner": "/assets/client/banner-signature.webp"
+    },
+    {
+      "id": "nyonya",
+      "name": "Nyonya",
+      "tagline": "Peranakan cultural artistry",
+      "description": "Rooted in vibrant Peranakan heritage, this collection reimagines romantic flora, nostalgic delicacies and intricate cultural textiles into fine fragrance.",
+      "intro": "Celebrating Malaysia’s unique Peranakan roots. Discover storytelling scents crafted with delicate floral, gourmand and aromatic notes.",
+      "accent": "rose",
+      "image": "/assets/client/collection-nyonya.webp",
+      "banner": "/assets/client/banner-nyonya.webp"
+    },
+    {
+      "id": "three-wishes",
+      "name": "3 Wishes",
+      "tagline": "Alcohol free, everyday luxury",
+      "description": "A delicate, alcohol free fragrance trio crafted for a gentle, comforting ritual. A soothing daily moment for unwinding in subtle, lasting luxury. Take the three Wishes as a boxed set, one at a time in 15ml, or packed into a travel kit.",
+      "intro": "Pure, gentle and alcohol free. Explore everyday fragrances crafted for effortless wear, delicate layering and ultimate skin comfort.",
+      "accent": "gold",
+      "image": "/assets/client/collection-3-wishes.webp",
+      "banner": "/assets/client/banner-3wishes.webp"
+    },
+    {
+      "id": "spirit",
+      "name": "Spirit",
+      "tagline": "Shimmering fragrance collection",
+      "description": "A vibrant collection infused with luminous shimmer, leaving an enchanting glow and fresh fragrance on your skin. Crafted for those who dare to shine, wherever they go. Spirit I carries Hope, Love and Confidence; Spirit II answers with Passion, Life and Dream.",
+      "intro": "Infused with fine, light catching shimmers. Discover captivating eau de parfums that give your skin a luminous glow and a lasting, beautiful scent.",
+      "accent": "teal",
+      "image": "/assets/client/collection-spirit.webp",
+      "banner": "/assets/client/banner-spirit.webp"
+    }
+  ]
+}

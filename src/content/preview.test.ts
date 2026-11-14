@@ -5,9 +5,13 @@ import { asset, setPreviewMedia } from '../lib/asset'
 import { faq } from '../data/faq'
 import { articleList, getArticle } from '../data/articles'
 import { getProduct, products } from '../data/products'
+import { collectionName, collections } from '../data/collections'
+import { partnersDoc } from '../data/logos'
 import faqJson from './faq.json'
 import journalJson from './journal.json'
 import productsJson from './products.json'
+import collectionsJson from './collections.json'
+import partnersJson from './partners.json'
 
 afterEach(() => setPreviewMedia([]))
 
@@ -92,5 +96,25 @@ describe('preview', () => {
     }
     expect(getProduct('newscent')).toBeUndefined()
     expect(products).toHaveLength(saved.products.length)
+  })
+
+  // A renamed collection shows on every product at once, and a rearranged
+  // logo wall shows as drawn: the pages read these documents when they render.
+  it('drafts applied to the lists are what the pages read', () => {
+    const savedCollections = structuredClone(collectionsJson)
+    const savedPartners = structuredClone(partnersJson)
+    const held = collections
+    const renamed = savedCollections.collections.map((c) => (c.id === 'signature' ? { ...c, name: 'Signature Line' } : c))
+    const twoRows = { rows: [savedPartners.rows[0], { logos: [...savedPartners.rows[1].logos, ...savedPartners.rows[2].logos] }] }
+    try {
+      applyDrafts({ collections: { collections: renamed }, partners: twoRows }, CONTENT)
+      expect(collectionName(getProduct('orchid')!)).toBe('Signature Line')
+      expect(collections).toBe(held)
+      expect(partnersDoc.rows).toHaveLength(2)
+    } finally {
+      applyDrafts({ collections: savedCollections, partners: savedPartners }, CONTENT)
+    }
+    expect(collectionName(getProduct('orchid')!)).toBe('Signature')
+    expect(partnersDoc.rows).toHaveLength(3)
   })
 })

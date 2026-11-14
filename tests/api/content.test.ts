@@ -77,6 +77,11 @@ const SCENT = (id: string, over: Record<string, unknown> = {}) => ({
 
 const PRODUCTS = () => ({ products: [SCENT('orchid')] })
 
+const LOGO = (name: string, logo: string, mono: string) => ({ name, logo, mono })
+const PARTNERS = (...extra: ReturnType<typeof LOGO>[]) => ({
+  rows: [{ logos: [LOGO('SOGO', '/assets/client/partner-sogo.png', '/assets/client/partner-sogo-mono.png'), ...extra] }],
+})
+
 /** The published format, written out by hand here rather than by the code under test. */
 const asFile = (data: unknown) => JSON.stringify(data, null, 2) + '\n'
 
@@ -106,6 +111,7 @@ beforeEach(async () => {
   writeFileSync(join(seed, 'src/content/stores.json'), asFile(STORES()))
   writeFileSync(join(seed, 'src/content/journal.json'), asFile(JOURNAL()))
   writeFileSync(join(seed, 'src/content/products.json'), asFile(PRODUCTS()))
+  writeFileSync(join(seed, 'src/content/partners.json'), asFile(PARTNERS()))
   mkdirSync(join(seed, 'public/assets/client'), { recursive: true })
   writeFileSync(join(seed, 'public/assets/client/store-bsas.webp'), Buffer.from([1, 2, 3]))
   // The draft store's files go here, away from the seed.
@@ -267,6 +273,25 @@ describe('the content API', () => {
     expect(files.get('public/assets/cms/m/master1.webp')).toEqual(Buffer.from([9, 9, 9]))
     expect(publishedText('src/content/stores.json')).toBe(asFile(STORES('/assets/cms/slot1.webp')))
     expect((await store.listMedia()).every((m) => m.published)).toBe(true)
+  })
+
+  // A wall rests in a logo's black and white print and shows its colours on
+  // hover: a logo that went live with only one of them would show broken.
+  it('publishing a new logo carries both its prints', async () => {
+    const store = contentStore()
+    await store.putMedia({ file: 'm/master2.webp', bytes: Buffer.from([5, 5, 5]), width: 1200, height: 400, kind: 'master', source: null })
+    await store.putMedia({ file: 'logo1.webp', bytes: Buffer.from([3, 3]), width: 380, height: 153, kind: 'logo', source: 'm/master2.webp' })
+    await store.putMedia({ file: 'logo1mono.webp', bytes: Buffer.from([4, 4]), width: 380, height: 153, kind: 'logo', source: 'm/master2.webp' })
+    const data = PARTNERS(LOGO('New Partner', '/assets/cms/logo1.webp', '/assets/cms/logo1mono.webp'))
+    await call({ method: 'PUT', query: { action: 'draft' }, body: { doc: 'partners', data } })
+
+    const publish = await call({ method: 'POST', query: { action: 'publish' }, body: { docs: ['partners'] } })
+    expect(publish.status).toBe(200)
+    const files = fake.files()
+    expect(files.get('public/assets/cms/logo1.webp')).toEqual(Buffer.from([3, 3]))
+    expect(files.get('public/assets/cms/logo1mono.webp')).toEqual(Buffer.from([4, 4]))
+    expect(files.get('public/assets/cms/m/master2.webp')).toEqual(Buffer.from([5, 5, 5]))
+    expect(publishedText('src/content/partners.json')).toBe(asFile(data))
   })
 
   it('a photo the store has lost stops the publish', async () => {

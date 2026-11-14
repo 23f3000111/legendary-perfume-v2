@@ -1,18 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { asset } from '../lib/asset'
 import { ChevronLeft, ChevronRight } from './ui/icons'
-
-export interface Milestone {
-  year: string
-  title: string
-  body: string
-  /**
-   * The card's picture. Omitted, the year's own `journey-<year>.webp` is used.
-   * A path names a different image, for a year whose photograph is not part of
-   * that set. `false` falls back to the house motif.
-   */
-  art?: boolean | string
-}
+import type { Milestone } from '../data/journey'
 
 /**
  * The house's years, as an endless rail.
@@ -214,7 +203,7 @@ export default function JourneyCarousel({ milestones }: { milestones: Milestone[
                 sm:h-[24rem] sm:w-[15rem] ${isActive ? 'sm:w-[19rem]' : ''}
               `}
             >
-              {m.art === false ? (
+              {!m.photo ? (
                 /* Nothing supplied for this year, so the house motif over a
                    gold ground rather than a hole in the row. */
                 <div className="relative h-full w-full overflow-hidden bg-gradient-to-br from-[#8a6520] via-gold-deep to-ink">
@@ -223,7 +212,7 @@ export default function JourneyCarousel({ milestones }: { milestones: Milestone[
                 </div>
               ) : (
                 <img
-                  src={asset(typeof m.art === 'string' ? m.art : `/assets/client/journey-${m.year}.webp`)}
+                  src={asset(m.photo)}
                   alt=""
                   loading="lazy"
                   className={`h-full w-full object-cover transition-all duration-700 ease-luxe ${

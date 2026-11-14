@@ -1,37 +1,14 @@
 import { asset } from '../lib/asset'
 import { Link } from 'react-router-dom'
 import PageHeader from '../components/ui/PageHeader'
-import JourneyCarousel, { type Milestone } from '../components/JourneyCarousel'
+import JourneyCarousel from '../components/JourneyCarousel'
+import { journeyDoc } from '../data/journey'
 import Services from '../sections/Services'
 import Reveal, { RevealGroup, RevealItem } from '../components/ui/Reveal'
 import { Kicker } from '../components/ui/SplitText'
 import { ArrowRight, Sparkle, ShieldCheck, Compass, Droplet } from '../components/ui/icons'
 import Seo from '../components/Seo'
 import { SITE } from '../lib/seo'
-
-/**
- * The Journey, rewritten from the client's Our Story copy sheet.
- *
- * Revision 5: every panel takes the client's own title and wording.
- *
- * Revision 8: 2019 was struck out on that sheet and had been removed. The
- * client's newer document asks for it back, with this wording, so it is.
- * 2026 now carries the client's photograph of the counter at Bangunan Sultan
- * Abdul Samad, which is what that year is about; it is the same picture the
- * store locator uses for that counter.
- */
-const timeline: Milestone[] = [
-  { year: '2015', title: 'A House is Born', body: 'Founded in this year, marking the beginning of a captivating journey in fine fragrance, inspired by Malaysia’s blooming orchids.' },
-  { year: '2016', title: 'Into the Department Store', body: 'Marking our retail expansion with an official presence in Parkson, bringing our fine fragrances to department store shoppers nationwide.' },
-  { year: '2017', title: 'Taking Flight to the World', body: 'Debuted in travel retail with Valiram at KLIA Terminal 1, capturing the hearts of global travellers across Asia and beyond.' },
-  { year: '2018', title: 'Expanding Beauty Retail', body: 'Partnered with SaSa Malaysia, establishing a nationwide presence to bring our signature scents closer to beauty enthusiasts everywhere.' },
-  { year: '2019', title: 'Top Selling Brand', body: 'Achieved top selling brand status at Parkson, reflecting strong customer demand.' },
-  { year: '2022', title: 'Soaring to New Heights', body: 'Partnered with AirAsia to take Legendary to the skies, quickly ranking among the top three best selling fragrance brands on board.' },
-  { year: '2023', title: 'Expanding at KLIA2', body: 'Established our presence at KLIA Terminal 2, continuing to expand our reach in the global travel retail market.' },
-  { year: '2024', title: 'Melaka Flagship', body: 'Opened our flagship doors on Jalan Hang Lekir, Melaka, breathing new life into a historic Peranakan shophouse through fine fragrance.' },
-  { year: '2025', title: 'Cultural Revival and Expansion', body: 'Debuted our new counter in Genting Highlands while celebrating the release of the Nyonya Collection, weaving heritage notes into modern fine perfumery.' },
-  { year: '2026', title: 'Heritage Beyond Retail', body: 'Debuted at the historic Bangunan Sultan Abdul Samad, extending the house beyond retail into iconic cultural spaces that celebrate Malaysian identity and storytelling.', art: '/assets/client/store-bsas.webp' },
-]
 
 const visionMission = [
   {
@@ -118,7 +95,7 @@ export default function About() {
             <Kicker>The Journey</Kicker>
             <h2 className="mt-4 font-display text-[clamp(2rem,4vw,3.4rem)]">Twelve years, in scent</h2>
           </div>
-          <JourneyCarousel milestones={timeline} />
+          <JourneyCarousel milestones={journeyDoc.milestones} />
         </div>
       </section>
 

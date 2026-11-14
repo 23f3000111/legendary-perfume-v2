@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { products } from '../data/products'
-import { collections } from '../data/collections'
+import { collectionName, collections } from '../data/collections'
 import { asset } from '../lib/asset'
 import { formatRM } from '../lib/format'
 import { isListed, useStock } from '../store/stock'
@@ -26,7 +26,7 @@ import { Search, Close } from './ui/icons'
 function haystack(p: (typeof products)[number]): string {
   const notes = [...p.notes.top, ...p.notes.heart, ...p.notes.base]
   const variants = p.variants?.flatMap((v) => [v.name, v.family]) ?? []
-  return [p.name, p.subtitle, p.collection, p.family, p.audience, p.size, ...notes, ...variants]
+  return [p.name, p.subtitle, collectionName(p), p.family, p.audience, p.size, ...notes, ...variants]
     .filter(Boolean)
     .join(' ')
     .toLowerCase()
@@ -156,7 +156,7 @@ export default function SearchOverlay({ open, onClose }: { open: boolean; onClos
                           <span className="min-w-0">
                             <span className="block truncate text-ink">{p.name}</span>
                             <span className="block truncate text-xs text-smoke">
-                              {p.collection} · {p.family}
+                              {collectionName(p)} · {p.family}
                             </span>
                           </span>
                           <span className="ml-auto shrink-0 text-sm text-ink">{formatRM(p.price)}</span>

@@ -4,12 +4,34 @@ import faqJson from './faq.json'
 import storesJson from './stores.json'
 import journalJson from './journal.json'
 import productsJson from './products.json'
+import collectionsJson from './collections.json'
+import reviewsJson from './reviews.json'
+import journeyJson from './journey.json'
+import partnersJson from './partners.json'
+import sellersJson from './sellers.json'
+import placesJson from './places.json'
 import { faq } from '../data/faq'
 import { storesDoc } from '../data/stores'
 import { articleList, formatDate, journal } from '../data/articles'
 import { products, productsDoc } from '../data/products'
+import { collections, collectionsDoc, getCollection } from '../data/collections'
+import { reviews, reviewsDoc } from '../data/reviews'
+import { journeyDoc } from '../data/journey'
+import { partnersDoc, sellersDoc } from '../data/logos'
+import { placesDoc, scentPlaces } from '../data/places'
 import { DOCS } from '../../api/_lib/content/docs'
-import { FaqDocSchema, JournalDocSchema, ProductsDocSchema, StoresDocSchema } from '../../api/_lib/content/schema'
+import {
+  CollectionsDocSchema,
+  FaqDocSchema,
+  JourneyDocSchema,
+  JournalDocSchema,
+  PartnersDocSchema,
+  PlacesDocSchema,
+  ProductsDocSchema,
+  ReviewsDocSchema,
+  SellersDocSchema,
+  StoresDocSchema,
+} from '../../api/_lib/content/schema'
 
 describe('published content', () => {
   it('the published FAQ and stores pass their schemas', () => {
@@ -25,6 +47,27 @@ describe('published content', () => {
   it('the published products pass their schema', () => {
     const result = ProductsDocSchema.safeParse(productsDoc)
     expect(result.success ? [] : result.error.issues).toEqual([])
+  })
+
+  it('the published lists pass their schemas', () => {
+    const lists = [
+      [CollectionsDocSchema, collectionsJson],
+      [ReviewsDocSchema, reviewsJson],
+      [JourneyDocSchema, journeyJson],
+      [PartnersDocSchema, partnersJson],
+      [SellersDocSchema, sellersJson],
+      [PlacesDocSchema, placesJson],
+    ] as const
+    for (const [schema, doc] of lists) {
+      const result = schema.safeParse(doc)
+      expect(result.success ? [] : result.error.issues).toEqual([])
+    }
+  })
+
+  // Products keep a copy of their collection's name; the pages show the
+  // collection's own, so the two must agree for nothing on the site to change.
+  it("every product's collection is a collection, under its current name", () => {
+    for (const p of products) expect(getCollection(p.collectionId)?.name, p.id).toBe(p.collection)
   })
 
   // Publish writes what the schema returns. If that differed from the file
@@ -46,6 +89,15 @@ describe('published content', () => {
     expect(journal).toBe(journalJson)
     expect(productsDoc).toBe(productsJson)
     expect(products).toBe(productsJson.products)
+    expect(collectionsDoc).toBe(collectionsJson)
+    expect(collections).toBe(collectionsJson.collections)
+    expect(reviewsDoc).toBe(reviewsJson)
+    expect(reviews).toBe(reviewsJson.reviews)
+    expect(journeyDoc).toBe(journeyJson)
+    expect(partnersDoc).toBe(partnersJson)
+    expect(sellersDoc).toBe(sellersJson)
+    expect(placesDoc).toBe(placesJson)
+    expect(scentPlaces).toBe(placesJson.places)
   })
 })
 

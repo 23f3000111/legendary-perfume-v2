@@ -1,0 +1,87 @@
+{
+  "rows": [
+    {
+      "logos": [
+        {
+          "name": "AirAsia",
+          "logo": "/assets/client/partner-airasia.png",
+          "mono": "/assets/client/partner-airasia-mono.png"
+        },
+        {
+          "name": "Watsons",
+          "logo": "/assets/client/partner-watsons.png",
+          "mono": "/assets/client/partner-watsons-mono.png"
+        },
+        {
+          "name": "SaSa",
+          "logo": "/assets/client/partner-sasa.png",
+          "mono": "/assets/client/partner-sasa-mono.png"
+        },
+        {
+          "name": "Isetan",
+          "logo": "/assets/client/partner-isetan.png",
+          "mono": "/assets/client/partner-isetan-mono.png"
+        },
+        {
+          "name": "Seibu TRX",
+          "logo": "/assets/client/partner-seibu.png",
+          "mono": "/assets/client/partner-seibu-mono.png"
+        },
+        {
+          "name": "Honor",
+          "logo": "/assets/client/partner-honor.png",
+          "mono": "/assets/client/partner-honor-mono.png"
+        }
+      ]
+    },
+    {
+      "logos": [
+        {
+          "name": "Eraman",
+          "logo": "/assets/client/partner-eraman.png",
+          "mono": "/assets/client/partner-eraman-mono.png"
+        },
+        {
+          "name": "Parkson Elite",
+          "logo": "/assets/client/partner-parkson-elite.png",
+          "mono": "/assets/client/partner-parkson-elite-mono.png"
+        },
+        {
+          "name": "SOGO",
+          "logo": "/assets/client/partner-sogo.png",
+          "mono": "/assets/client/partner-sogo-mono.png"
+        },
+        {
+          "name": "Bangunan Sultan Abdul Samad",
+          "logo": "/assets/client/partner-bsas.png",
+          "mono": "/assets/client/partner-bsas-mono.png"
+        },
+        {
+          "name": "Ctrip",
+          "logo": "/assets/client/partner-ctrip.png",
+          "mono": "/assets/client/partner-ctrip-mono.png"
+        }
+      ]
+    },
+    {
+      "logos": [
+        {
+          "name": "Valiram",
+          "logo": "/assets/client/partner-valiram.png",
+          "mono": "/assets/client/partner-valiram-mono.png"
+        },
+        {
+          "name": "SEGi",
+          "logo": "/assets/client/partner-segi.png",
+          "mono": "/assets/client/partner-segi-mono.png"
+        },
+        {
+          "name": "Tourism Malaysia",
+          "logo": "/assets/client/partner-tourism-malaysia.png",
+          "mono": "/assets/client/partner-tourism-malaysia-mono.png",
+          "tall": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "logos": [
+    {
+      "name": "AirAsia",
+      "logo": "/assets/client/seller-airasia.png",
+      "mono": "/assets/client/seller-airasia-mono.png"
+    },
+    {
+      "name": "Beauty Scent",
+      "logo": "/assets/client/seller-beauty-scent.png",
+      "mono": "/assets/client/seller-beauty-scent-mono.png"
+    },
+    {
+      "name": "Colours & Fragrances",
+      "logo": "/assets/client/seller-colours-fragrances.png",
+      "mono": "/assets/client/seller-colours-fragrances-mono.png"
+    },
+    {
+      "name": "Discover Malaysia",
+      "logo": "/assets/client/seller-discover-malaysia.png",
+      "mono": "/assets/client/seller-discover-malaysia-mono.png",
+      "tall": true
+    },
+    {
+      "name": "Eraman",
+      "logo": "/assets/client/seller-eraman.png",
+      "mono": "/assets/client/seller-eraman-mono.png"
+    },
+    {
+      "name": "Parkson",
+      "logo": "/assets/client/seller-parkson.png",
+      "mono": "/assets/client/seller-parkson-mono.png"
+    },
+    {
+      "name": "SaSa",
+      "logo": "/assets/client/seller-sasa.png",
+      "mono": "/assets/client/seller-sasa-mono.png"
+    },
+    {
+      "name": "Seibu",
+      "logo": "/assets/client/seller-seibu.png",
+      "mono": "/assets/client/seller-seibu-mono.png"
+    },
+    {
+      "name": "SOGO",
+      "logo": "/assets/client/seller-sogo.png",
+      "mono": "/assets/client/seller-sogo-mono.png"
+    },
+    {
+      "name": "Star Glory",
+      "logo": "/assets/client/seller-star-glory.png",
+      "mono": "/assets/client/seller-star-glory-mono.png"
+    },
+    {
+      "name": "Watsons",
+      "logo": "/assets/client/seller-watsons.png",
+      "mono": "/assets/client/seller-watsons-mono.png"
+    },
+    {
+      "name": "Zapin",
+      "logo": "/assets/client/seller-zapin.png",
+      "mono": "/assets/client/seller-zapin-mono.png"
+    }
+  ]
+}

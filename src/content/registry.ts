@@ -3,6 +3,12 @@ import faq from './faq.json'
 import stores from './stores.json'
 import journal from './journal.json'
 import products from './products.json'
+import collections from './collections.json'
+import reviews from './reviews.json'
+import journey from './journey.json'
+import partners from './partners.json'
+import sellers from './sellers.json'
+import places from './places.json'
 
 /**
  * Every document the dashboard edits, as the site holds it: the very objects
@@ -15,4 +21,10 @@ export const CONTENT: Record<DocKey, Record<string, unknown>> = {
   stores: stores as Record<string, unknown>,
   journal: journal as Record<string, unknown>,
   products: products as Record<string, unknown>,
+  collections: collections as Record<string, unknown>,
+  reviews: reviews as Record<string, unknown>,
+  journey: journey as Record<string, unknown>,
+  partners: partners as Record<string, unknown>,
+  sellers: sellers as Record<string, unknown>,
+  places: places as Record<string, unknown>,
 }

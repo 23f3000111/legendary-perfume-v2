@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import type { Product } from '../data/products'
+import { collectionName } from '../data/collections'
 import { accent } from '../lib/accents'
 import { asset } from '../lib/asset'
 import { formatRM, discountPct } from '../lib/format'
@@ -114,7 +115,7 @@ export default function ProductCard({ product, index = 0 }: { product: Product; 
         {/* Meta */}
         <div className="pt-4">
           <div className="flex items-center gap-2">
-            <span className="eyebrow" style={{ color: tone.ink }}>{product.collection}</span>
+            <span className="eyebrow" style={{ color: tone.ink }}>{collectionName(product)}</span>
           </div>
           <h3 className="mt-1.5 font-display text-[1.35rem] leading-none text-ink">{product.name}</h3>
           <p className="mt-1 text-[0.82rem] text-smoke">{product.family}</p>

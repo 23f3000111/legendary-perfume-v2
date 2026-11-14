@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { collections } from '../data/collections'
 import { accent } from '../lib/accents'
+import { asset } from '../lib/asset'
 import Particles from '../components/ui/Particles'
 import { Kicker } from '../components/ui/SplitText'
 import { ArrowUpRight, ChevronDown } from '../components/ui/icons'
@@ -134,7 +135,7 @@ function RailCard({ c, side }: { c: (typeof collections)[number]; side: string }
       className="group relative block shrink-0 overflow-hidden rounded-sm"
     >
       <img
-        src={c.image}
+        src={asset(c.image)}
         alt={c.name}
         className="h-full w-full object-cover transition-transform duration-[1200ms] ease-luxe group-hover:scale-105"
       />

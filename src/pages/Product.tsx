@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { galleryOf, getProduct, relatedProducts } from '../data/products'
+import { collectionName } from '../data/collections'
 import { faq } from '../data/faq'
 import { accent } from '../lib/accents'
 import { asset } from '../lib/asset'
@@ -114,7 +115,7 @@ export default function Product() {
     description: product.description,
     sku: product.id,
     brand: { '@type': 'Brand', name: SITE.name },
-    category: `${product.collection} Collection`,
+    category: `${collectionName(product)} Collection`,
     image: gallery.map((g) => absolute(g)),
     audience: { '@type': 'PeopleAudience', suggestedGender: product.audience },
     offers: {
@@ -223,7 +224,7 @@ export default function Product() {
 
         {/* Info */}
         <div>
-          <p className="eyebrow" style={{ color: tone.ink }}>{product.collection} Collection</p>
+          <p className="eyebrow" style={{ color: tone.ink }}>{collectionName(product)} Collection</p>
           <h1 className="mt-2 font-display text-[clamp(2.4rem,5vw,3.6rem)] leading-none">{product.name}</h1>
           <p className="mt-2 font-display text-lg italic text-smoke">{product.subtitle}</p>
 

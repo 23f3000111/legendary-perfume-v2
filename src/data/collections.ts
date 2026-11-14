@@ -1,68 +1,37 @@
-import { asset } from '../lib/asset'
-import type { AccentKey } from './products'
+import data from '../content/collections.json'
+import type { CollectionEntry, CollectionsDoc } from '../../api/_lib/content/schema'
 
-export interface Collection {
-  id: string
-  name: string
-  tagline: string
-  description: string
-  accent: AccentKey
-  /** Family shot of the whole collection, supplied by the client. */
-  image: string
-  /** Wide banner used behind the page title bar. */
-  banner?: string
+export type Collection = CollectionEntry
+
+/**
+ * The collections, in the order the menu, the shop and the Home page's rail
+ * show them: each one's name, tagline, words, colour, square cover and shop
+ * banner.
+ *
+ * They live in src/content/collections.json, which the Legendary team edits in
+ * the dashboard. Photo paths are stored from the site root, and components
+ * call asset() on them when they render. Read `collections` when rendering,
+ * never a copy taken at import, so a preview's drafts show.
+ *
+ * Revision 4 and the Spirit amendment rewrote the 3 Wishes and Spirit copy so
+ * it covers the singles, the travel kit and Spirit II; the file holds those
+ * words as the client last sent them.
+ */
+export const collectionsDoc = data as CollectionsDoc
+export const collections = collectionsDoc.collections
+
+export function getCollection(id: string): Collection | undefined {
+  return collections.find((c) => c.id === id)
 }
 
-const img = (name: string) => asset(`/assets/client/${name}`)
-
-export const collections: Collection[] = [
-  {
-    id: 'signature',
-    name: 'Signature',
-    tagline: 'The scents that made us',
-    description:
-      'Orchid, Mahsuri, Violet and Man, the defining icons of Legendary. A timeless collection bridging the natural wonders of Malaysia with fine perfumery.',
-    accent: 'gold',
-    image: img('collection-signature.webp'),
-    banner: img('banner-signature.webp'),
-  },
-  {
-    id: 'nyonya',
-    name: 'Nyonya',
-    tagline: 'Peranakan cultural artistry',
-    description:
-      'Rooted in vibrant Peranakan heritage, this collection reimagines romantic flora, nostalgic delicacies and intricate cultural textiles into fine fragrance.',
-    accent: 'rose',
-    image: img('collection-nyonya.webp'),
-    banner: img('banner-nyonya.webp'),
-  },
-  {
-    id: 'three-wishes',
-    name: '3 Wishes',
-    tagline: 'Alcohol free, everyday luxury',
-    // Revision 4: the three Wishes are now sold singly and as a travel kit as
-    // well as in the boxed set, so the copy no longer says trio alone.
-    description:
-      'A delicate, alcohol free fragrance trio crafted for a gentle, comforting ritual. A soothing daily moment for unwinding in subtle, lasting luxury. Take the three Wishes as a boxed set, one at a time in 15ml, or packed into a travel kit.',
-    accent: 'gold',
-    image: img('collection-3-wishes.webp'),
-    banner: img('banner-3wishes.webp'),
-  },
-  {
-    id: 'spirit',
-    name: 'Spirit',
-    tagline: 'Shimmering fragrance collection',
-    // Client amendment: Spirit II now sits alongside Spirit I in this
-    // collection, so the copy covers both sets. Revision 4 adds the Spirit II
-    // fragrances as 50ml bottles of their own.
-    description:
-      'A vibrant collection infused with luminous shimmer, leaving an enchanting glow and fresh fragrance on your skin. Crafted for those who dare to shine, wherever they go. Spirit I carries Hope, Love and Confidence; Spirit II answers with Passion, Life and Dream.',
-    accent: 'teal',
-    image: img('collection-spirit.webp'),
-    banner: img('banner-spirit.webp'),
-  },
-]
-
-export function getCollection(id: string) {
-  return collections.find((c) => c.id === id)
+/**
+ * The name a product's collection goes by now.
+ *
+ * Products keep a copy of their collection's name, written when the product
+ * was last saved. The pages show the collection's own, so a collection renamed
+ * in the dashboard is renamed on every card and product page at once. The copy
+ * stands in only if the collection itself is gone.
+ */
+export function collectionName(p: { collection: string; collectionId: string }): string {
+  return getCollection(p.collectionId)?.name ?? p.collection
 }

@@ -243,36 +243,42 @@ type Section =
   | { label: string; to: string }
   | { label: string; children: { label: string; to: string }[] }
 
-const MOBILE_NAV: Section[] = [
-  { label: 'Home', to: '/' },
-  {
-    label: 'Fragrances',
-    children: [
-      { label: 'All Fragrances', to: '/shop' },
-      { label: 'Bestsellers', to: '/shop?filter=bestsellers' },
-      { label: 'For Her', to: '/shop?filter=her' },
-      { label: 'For Him', to: '/shop?filter=him' },
-      { label: 'Gifts & Sets', to: '/shop?filter=gifts' },
-    ],
-  },
-  {
-    label: 'Collections',
-    children: collections.map((c) => ({ label: c.name, to: `/shop?collection=${c.id}` })),
-  },
-  { label: 'Stores', to: '/stores' },
-  { label: 'Our Story', to: '/about' },
-  { label: 'Journal', to: '/journal' },
-  {
-    label: 'Customer Care',
-    children: [
-      { label: 'Track My Order', to: '/track' },
-      { label: 'FAQ', to: '/faq' },
-      { label: 'Shipping Policy', to: '/shipping' },
-      { label: 'Return, Refund & Exchange', to: '/returns' },
-    ],
-  },
-  { label: 'Contact', to: '/contact' },
-]
+/**
+ * Built when the menu renders, not when this module loads, so the collections
+ * it lists are the current ones: a preview's drafts included.
+ */
+function mobileNav(): Section[] {
+  return [
+    { label: 'Home', to: '/' },
+    {
+      label: 'Fragrances',
+      children: [
+        { label: 'All Fragrances', to: '/shop' },
+        { label: 'Bestsellers', to: '/shop?filter=bestsellers' },
+        { label: 'For Her', to: '/shop?filter=her' },
+        { label: 'For Him', to: '/shop?filter=him' },
+        { label: 'Gifts & Sets', to: '/shop?filter=gifts' },
+      ],
+    },
+    {
+      label: 'Collections',
+      children: collections.map((c) => ({ label: c.name, to: `/shop?collection=${c.id}` })),
+    },
+    { label: 'Stores', to: '/stores' },
+    { label: 'Our Story', to: '/about' },
+    { label: 'Journal', to: '/journal' },
+    {
+      label: 'Customer Care',
+      children: [
+        { label: 'Track My Order', to: '/track' },
+        { label: 'FAQ', to: '/faq' },
+        { label: 'Shipping Policy', to: '/shipping' },
+        { label: 'Return, Refund & Exchange', to: '/returns' },
+      ],
+    },
+    { label: 'Contact', to: '/contact' },
+  ]
+}
 
 function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   // One section open at a time, so the list never grows past the screen.
@@ -321,7 +327,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
             </div>
 
             <nav className="flex-1 overflow-y-auto overscroll-contain">
-              {MOBILE_NAV.map((section) => {
+              {mobileNav().map((section) => {
                 const isOpen = expanded === section.label
 
                 if ('to' in section) {

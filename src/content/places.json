@@ -1,0 +1,76 @@
+{
+  "places": [
+    {
+      "id": "langkawi",
+      "place": "Langkawi",
+      "region": "Kedah · The Isles",
+      "note": "Sun warmed apple and island petals, after the legend of the maiden Mahsuri.",
+      "productId": "mahsuri",
+      "storeIds": [
+        "langkawi"
+      ],
+      "x": 7.1,
+      "y": 15.9
+    },
+    {
+      "id": "genting",
+      "place": "Genting Highlands",
+      "region": "Pahang · The Peaks",
+      "note": "Cool mountain air and crisp green citrus from the cloud wrapped highlands.",
+      "productId": "man",
+      "storeIds": [
+        "genting"
+      ],
+      "x": 25,
+      "y": 51.5
+    },
+    {
+      "id": "kuala-lumpur",
+      "place": "Kuala Lumpur",
+      "region": "The Capital",
+      "note": "The wild orchid of the city’s rainforest heart, the scent that began it all.",
+      "productId": "orchid",
+      "storeIds": [
+        "pavilion-kl-5",
+        "klcc-isetan",
+        "pavilion-elite",
+        "klia-t1",
+        "klia-t2"
+      ],
+      "x": 21.7,
+      "y": 61.1
+    },
+    {
+      "id": "melaka",
+      "place": "Melaka",
+      "region": "The Straits",
+      "note": "Peranakan romance built from embroidered flowers and gula melaka, drawn from the old port of Melaka.",
+      "productId": "kebaya-blooms",
+      "collectionId": "nyonya",
+      "scentLabel": "Nyonya Collection",
+      "familyLabel": "Floral | Aromatic | Gourmand",
+      "cardImage": "/assets/client/place-melaka.webp",
+      "storeIds": [
+        "melaka"
+      ],
+      "x": 25.3,
+      "y": 74.4
+    },
+    {
+      "id": "sabah",
+      "place": "Kota Kinabalu",
+      "region": "Sabah · Borneo",
+      "note": "Sea salt, citrus and open sky along the South China Sea coast.",
+      "productId": "spirit",
+      "collectionId": "spirit",
+      "scentLabel": "Spirit",
+      "familyLabel": "Hope · Love · Confidence · Passion · Life · Dream",
+      "cardImage": "/assets/client/place-kota-kinabalu.webp",
+      "storeIds": [
+        "imago-kk"
+      ],
+      "x": 79.8,
+      "y": 27.2
+    }
+  ]
+}

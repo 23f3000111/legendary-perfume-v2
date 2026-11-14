@@ -4,7 +4,7 @@
  * Moving content out of code and into the dashboard's JSON must not change a
  * single word or photo on the site. This visits every route in the built
  * sitemap (so every product and article is included), and records the page's
- * visible text and the address of every image on it.
+ * visible text, the address of every image on it, and where every link goes.
  *
  *   node scripts/parity.mjs <baseUrl> <out.json>      capture
  *   node scripts/parity.mjs --compare <a.json> <b.json>  exit 1 if they differ
@@ -43,6 +43,11 @@ if (process.argv[2] === '--compare') {
     const added = y.images.filter((s) => !x.images.includes(s))
     for (const s of gone) console.log(`  image gone:  ${s}`)
     for (const s of added) console.log(`  image added: ${s}`)
+    const linksGone = (x.links ?? []).filter((s) => !(y.links ?? []).includes(s))
+    const linksAdded = (y.links ?? []).filter((s) => !(x.links ?? []).includes(s))
+    for (const s of linksGone) console.log(`  link gone:   ${s}`)
+    for (const s of linksAdded) console.log(`  link added:  ${s}`)
+    if (!linksGone.length && !linksAdded.length && JSON.stringify(x.links) !== JSON.stringify(y.links)) console.log('  links in another order')
   }
   console.log(differ ? `\n${differ} of ${routes.length} routes differ` : `\nall ${routes.length} routes identical`)
   process.exit(differ ? 1 : 0)
@@ -78,6 +83,9 @@ for (const route of routes) {
   result[route] = await page.evaluate(() => ({
     text: document.body.innerText.replace(/\s+/g, ' ').trim(),
     images: [...document.images].map((img) => img.currentSrc || img.src).sort(),
+    // Where every link goes, in page order: the site details feed the WhatsApp
+    // and social links, which the visible text alone would not show.
+    links: [...document.querySelectorAll('a[href]')].map((a) => a.getAttribute('href')),
   }))
   await page.close()
   process.stdout.write('.')

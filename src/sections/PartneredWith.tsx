@@ -1,54 +1,29 @@
 import { motion } from 'framer-motion'
 import BrandLogo from '../components/ui/BrandLogo'
+import { partnersDoc } from '../data/logos'
 
 /**
- * "Partnered With" — sits directly above the customer reviews.
+ * "Partnered With" sits directly above the customer reviews.
  *
  * Client amendment: the heading was "As Featured In" set as house-type
- * wordmarks. It now reads "Partnered With" and carries the fourteen partner
- * logos supplied in the delivery, knocked out onto transparency at build time
- * so they sit on the porcelain band without white plates behind them.
- */
-/**
+ * wordmarks. It now reads "Partnered With" and carries the partner logos
+ * supplied in the delivery, knocked out onto transparency so they sit on the
+ * porcelain band without white plates behind them.
+ *
  * Revision 4: the client drew the arrangement they wanted, six across, then
  * five, then three, and set the order of the logos within it. That replaces
- * the reverse pyramid of five, four, three and two this section opened with.
- */
-/**
+ * the reverse pyramid of five, four, three and two this section opened with,
+ * and is why src/content/partners.json keeps the logos row by row.
+ *
  * Revision 5: the client circled Tourism Malaysia and asked for it bigger.
  * It is the one square mark in a wall of wide ones, so the shared height cap
  * leaves it reading much smaller than its neighbours. `tall` lifts those out
  * of the common height onto their own.
  */
-const partners: { name: string; file: string; tall?: boolean }[] = [
-  { name: 'AirAsia', file: 'partner-airasia.png' },
-  { name: 'Watsons', file: 'partner-watsons.png' },
-  { name: 'SaSa', file: 'partner-sasa.png' },
-  { name: 'Isetan', file: 'partner-isetan.png' },
-  { name: 'Seibu TRX', file: 'partner-seibu.png' },
-  { name: 'Honor', file: 'partner-honor.png' },
-
-  { name: 'Eraman', file: 'partner-eraman.png' },
-  { name: 'Parkson Elite', file: 'partner-parkson-elite.png' },
-  { name: 'SOGO', file: 'partner-sogo.png' },
-  { name: 'Bangunan Sultan Abdul Samad', file: 'partner-bsas.png' },
-  { name: 'Ctrip', file: 'partner-ctrip.png' },
-
-  { name: 'Valiram', file: 'partner-valiram.png' },
-  { name: 'SEGi', file: 'partner-segi.png' },
-  { name: 'Tourism Malaysia', file: 'partner-tourism-malaysia.png', tall: true },
-]
-
-/** Six, five, three: the client's own layout for the fourteen. */
-const PYRAMID = [6, 5, 3]
-
-const rows = PYRAMID.reduce<(typeof partners)[]>((acc, count) => {
-  const taken = acc.reduce((n, r) => n + r.length, 0)
-  acc.push(partners.slice(taken, taken + count))
-  return acc
-}, [])
 
 export default function PartneredWith() {
+  // Read at render, so a preview's drafts show.
+  const rows = partnersDoc.rows
   return (
     <section className="border-t border-line bg-porcelain py-16 md:py-20">
       <div className="u-container">
@@ -71,10 +46,11 @@ export default function PartneredWith() {
               transition={{ duration: 0.8, delay: i * 0.12, ease: [0.16, 1, 0.3, 1] }}
               className="flex flex-wrap items-center justify-center gap-x-6 gap-y-9 sm:gap-x-10"
             >
-              {row.map((p) => (
+              {row.logos.map((p, j) => (
                 <BrandLogo
-                  key={p.file}
-                  file={p.file}
+                  key={`${j}-${p.logo}`}
+                  logo={p.logo}
+                  mono={p.mono}
                   name={p.name}
                   cellClassName={p.tall ? 'h-[4.5rem] w-[7.5rem] sm:h-20 sm:w-[8.5rem]' : 'h-11 w-[7.5rem] sm:h-12 sm:w-[8.5rem]'}
                   className={p.tall ? 'h-[4.5rem] sm:h-20' : 'h-11 md:h-12'}
