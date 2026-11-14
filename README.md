@@ -147,8 +147,8 @@ The dashboard needs somewhere durable to write.
 
 The same `/admin` edits the site's content, so the Legendary team can make their
 own changes instead of sending revision PDFs. It covers the **FAQ**, the **store
-list** and the **Journal**. Products, the pages and the hero poster follow, as
-set out in `docs/superpowers/specs/2026-11-12-content-dashboard-design.md`.
+list**, the **Journal** and the **products**. The pages and the hero poster
+follow, as set out in `docs/superpowers/specs/2026-11-12-content-dashboard-design.md`.
 
 - **Content lives in `src/content/*.json`.** The site imports it at build time,
   so pages stay as fast as before and Google sees every word. `npm run build`
@@ -176,6 +176,21 @@ set out in `docs/superpowers/specs/2026-11-12-content-dashboard-design.md`.
   by content hash under `public/assets/cms/`, so the year-long cache on
   `/assets/` is never served an old photo. Store photos are 900 px, journal
   photos 1600 px.
+- **The products** are one document, `src/content/products.json`, in shelf
+  order, each written out in full. A new product's address (`/product/<id>`)
+  is made from its name and fixed once published, since overrides, links and
+  orders point at it. Its price is set in the form while it is new; after
+  that, prices change in the price table, at once, through product overrides.
+  `api/_catalogue.ts`, which checkout prices every basket from, is written from
+  the products file by `api/_lib/content/catalogue-source.ts`, both by
+  `npm run catalogue` and in the same commit as every dashboard publish or
+  restore of the products, so a new product can be bought at its price as soon
+  as it is live. Orchid and the products the Scented Memory map pins cannot be
+  removed from the dashboard, and the pages cope if one goes missing anyway.
+  Product photos: lifestyle and box shots framed square at 1400 px, the pack
+  cut-out at 1400 px (a pack shot sent on white can have its white made
+  see-through), the flat-lay at 1600 px, the occasion chart at 1100 px and the
+  botanical at 1000 px.
 - **The Journal** is one document, `src/content/journal.json`, holding every
   article. An article's body is the blocks `Prose` draws (paragraphs, headings,
   lists, photos, tables, buttons, questions and the rest). Its address,

@@ -59,7 +59,9 @@ export default function History() {
         // The plain question still stands.
       }
     }
-    if (!window.confirm(`Put the ${label} back as it was on ${when(commit.date, false)}?${what}`)) return
+    // Stores and Products read as plural: "put the Products back as they were".
+    const was = doc === 'stores' || doc === 'products' ? 'they were' : 'it was'
+    if (!window.confirm(`Put the ${label} back as ${was} on ${when(commit.date, false)}?${what}`)) return
     void restore(doc, commit.sha)
   }
 

@@ -21,6 +21,7 @@
  */
 import { chromium, webkit } from 'playwright-core'
 import sharp from 'sharp'
+import { readFileSync } from 'node:fs'
 
 const site = process.argv[2] ?? 'http://localhost:5180'
 const github = process.argv[3] ?? 'http://127.0.0.1:4010'
@@ -89,6 +90,7 @@ const openTab = (page, name) => page.click(`header nav button:text-is("${name}")
 
 const seedFaq = (await ghFile('src/content/faq.json')).toString('utf8')
 const seedJournal = (await ghFile('src/content/journal.json')).toString('utf8')
+const seedProducts = (await ghFile('src/content/products.json')).toString('utf8')
 const browser = await chromium.launch({ executablePath: CHROME })
 const context = await browser.newContext({ viewport: { width: 1440, height: 900 } })
 const page = await context.newPage()
@@ -317,6 +319,94 @@ try {
     JSON.stringify(stored).includes('Changed in the second window.') && !JSON.stringify(stored).includes('Changed in the first window.'),
   )
   await second.close()
+
+  // 16. A new product with every photo, previewed, then published at its price
+  await openTab(page, 'Products')
+  await page.waitForSelector('text=Products on the shop')
+  await page.click('button:text-is("New product")')
+  await page.waitForSelector('text=Address: /product/newproduct')
+  await page.getByLabel('Name', { exact: true }).fill('E2E Test Scent')
+  await page.getByLabel('Subtitle', { exact: true }).fill('Written by the end to end check')
+  await page.getByLabel('Scent family', { exact: true }).fill('Warm Amber')
+  await page.getByLabel('Size', { exact: true }).fill('30ml Eau de Parfum')
+  await page.getByLabel('Price (RM)', { exact: true }).fill('95')
+  await page.getByLabel('Story', { exact: true }).fill('A product made by the end to end check.')
+  await page.getByLabel('Description', { exact: true }).fill('Saffron and amber over a soft musk.')
+  await page.getByLabel('Item', { exact: true }).first().fill('E2E Test Scent')
+  await page.getByLabel('Detail', { exact: true }).first().fill('30ml eau de parfum')
+  await page.getByLabel('Top notes', { exact: true }).fill('Saffron')
+  await page.getByLabel('Heart notes', { exact: true }).fill('Amber')
+  await page.getByLabel('Base notes', { exact: true }).fill('Musk')
+  const productPhoto = async (label, buffer, name, type, onWhite = false) => {
+    const place = page.locator(`div:has(> span:text-is("${label}"))`).first()
+    if (onWhite) await place.getByLabel('The photo is on a white background: make the white see-through').check()
+    await place.locator('input[type="file"]').setInputFiles({ name, mimeType: type, buffer })
+    await place.locator('img').waitFor({ timeout: 60000 })
+  }
+  const solid = (w, h, background) => sharp({ create: { width: w, height: h, channels: 3, background } }).jpeg().toBuffer()
+  const seeThrough = (w, h) =>
+    sharp({ create: { width: w, height: h, channels: 4, background: { r: 120, g: 60, b: 90, alpha: 0.6 } } }).png().toBuffer()
+  const redSquare = await sharp({ create: { width: 400, height: 400, channels: 3, background: { r: 200, g: 20, b: 30 } } }).png().toBuffer()
+  const packOnWhite = await sharp({ create: { width: 1200, height: 800, channels: 3, background: { r: 255, g: 255, b: 255 } } })
+    .composite([{ input: redSquare, left: 400, top: 200 }])
+    .jpeg({ quality: 95 })
+    .toBuffer()
+  await productPhoto('Lifestyle photo', await solid(3000, 2000, { r: 196, g: 160, b: 104 }), 'life.jpg', 'image/jpeg')
+  await productPhoto('Pack cut-out', packOnWhite, 'pack.jpg', 'image/jpeg', true)
+  await productPhoto('Box shot', await solid(2000, 2000, { r: 90, g: 60, b: 40 }), 'box.jpg', 'image/jpeg')
+  await productPhoto("What's included flat-lay", await seeThrough(1600, 700), 'included.png', 'image/png')
+  await productPhoto('Occasion chart', await seeThrough(1100, 875), 'chart.png', 'image/png')
+  await page.waitForSelector('text=Saved as a draft')
+
+  const [productPreview] = await Promise.all([context.waitForEvent('page'), page.click('button:text-is("Preview")')])
+  await productPreview.waitForURL(/\/product\/e2etestscent\?preview/)
+  await productPreview.waitForLoadState('networkidle')
+  const productText = await productPreview.evaluate(() => document.body.innerText)
+  check(
+    '16a. preview shows the new product at /product/e2etestscent with the ribbon',
+    productText.includes('E2E Test Scent') && /preview, not published/i.test(productText),
+  )
+  await productPreview.close()
+
+  await page.click('button:text-is("Publish")')
+  await page.waitForSelector('text=Live. The site shows your changes.', { timeout: 30000 })
+  await page.click('button:text-is("OK")')
+  const shelf = await ghJson('src/content/products.json')
+  const made = shelf.products.find((x) => x.id === 'e2etestscent')
+  const priceList = (await ghFile('api/_catalogue.ts')).toString('utf8')
+  const priced = JSON.parse(priceList.slice(priceList.indexOf('=', priceList.indexOf('PRODUCTS')) + 1))
+  check(
+    '16b. the product is published, and the server catalogue charges 95 for it',
+    made?.price === 95 && priced.e2etestscent?.price === 95,
+    `${made?.id} catalogue price ${priced.e2etestscent?.price}`,
+  )
+  const productFiles = await ghTree()
+  const committed = (path) => productFiles.find((f) => `/${f.replace(/^public\//, '')}` === path)
+  const lifeSize = await sharp(await ghFile(committed(made.image))).metadata()
+  const packSize = await sharp(await ghFile(committed(made.hoverImage))).metadata()
+  check(
+    '16c. its lifestyle photo is framed square at 1400 px, and its pack shot is see-through',
+    lifeSize.width === 1400 && lifeSize.height === 1400 && packSize.hasAlpha === true,
+    `${lifeSize.width}x${lifeSize.height}, pack alpha ${packSize.hasAlpha}`,
+  )
+
+  // 17. Orchid leads Home's Signature section, so it cannot be removed here
+  await page.click('button:text-is("All products")')
+  await page.locator('section:has(h2:text-is("Products on the shop")) li', { hasText: 'Orchid' }).first().locator('button:text-is("Remove")').click()
+  check("17. Orchid cannot be removed: it leads Home's Signature section", (dialogs.at(-1) ?? '').includes('Signature section'), dialogs.at(-1))
+
+  // 19. Restoring the products puts the shelf and the server catalogue back
+  await openTab(page, 'History')
+  await page.waitForSelector('text=Every published change')
+  await page.click('button:text-is("Restore Products")')
+  await until(async () => (await ghFile('src/content/products.json')).toString('utf8') === seedProducts, 'the restored products')
+  const restoredPrices = (await ghFile('api/_catalogue.ts')).toString('utf8')
+  check(
+    '19. restoring the products puts the shelf and the server catalogue back, and the question named what it took off',
+    restoredPrices === readFileSync('api/_catalogue.ts', 'utf8').replace(/\r\n/g, '\n') &&
+      (dialogs.at(-1) ?? '').includes('This takes E2E Test Scent off the site.'),
+    dialogs.at(-1),
+  )
 } catch (err) {
   failures++
   console.log(`FAIL  stopped: ${err.message}`)
