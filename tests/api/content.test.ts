@@ -396,6 +396,49 @@ describe('the content API', () => {
     expect(await contentStore().drafts()).toHaveLength(0)
   })
 
+  /** The server's price list in a committed api/_catalogue.ts, by product id. */
+  const catalogueIn = (text: string | undefined) => {
+    const source = text ?? ''
+    const at = source.indexOf('PRODUCTS')
+    return JSON.parse(source.slice(source.indexOf('=', at) + 1)) as Record<string, { price: number; size: string; name: string }>
+  }
+  const publishProducts = async (data: unknown) => {
+    await call({ method: 'PUT', query: { action: 'draft' }, body: { doc: 'products', data } })
+    return call({ method: 'POST', query: { action: 'publish' }, body: { docs: ['products'] } })
+  }
+
+  // Checkout prices only from api/_catalogue.ts. If the commit carried the new
+  // product without it, the shop would show a product checkout refuses.
+  it('publishing a new product puts it in the server catalogue at its price', async () => {
+    const fresh = SCENT('newscent', { name: 'New Scent', price: 95, compareAt: 120 })
+    const publish = await publishProducts({ products: [SCENT('orchid'), fresh] })
+    expect(publish.status).toBe(200)
+    expect(catalogueIn(publishedText('api/_catalogue.ts')).newscent).toEqual({
+      id: 'newscent',
+      name: 'New Scent',
+      size: '30ml Eau de Parfum',
+      price: 95,
+      collection: 'Signature',
+    })
+    expect(JSON.parse(publishedText('src/content/products.json')!).products[1].id).toBe('newscent')
+  })
+
+  it('the catalogue follows a renamed product', async () => {
+    const publish = await publishProducts({ products: [SCENT('orchid', { size: '50ml Eau de Parfum' })] })
+    expect(publish.status).toBe(200)
+    expect(catalogueIn(publishedText('api/_catalogue.ts')).orchid).toMatchObject({ size: '50ml Eau de Parfum', price: 188 })
+  })
+
+  it('restoring the products restores the catalogue with them', async () => {
+    await publishProducts({ products: [SCENT('orchid'), SCENT('newscent', { name: 'New Scent', price: 95, compareAt: 120 })] })
+    const history = await call({ query: { action: 'history', doc: 'products' } })
+    const seed = history.body.commits.at(-1).sha
+    const restored = await call({ method: 'POST', query: { action: 'restore' }, body: { doc: 'products', sha: seed } })
+    expect(restored.status).toBe(200)
+    expect(publishedText('src/content/products.json')).toBe(asFile(PRODUCTS()))
+    expect(Object.keys(catalogueIn(publishedText('api/_catalogue.ts')))).toEqual(['orchid'])
+  })
+
   it('publish keeps fields the dashboard does not know', async () => {
     // A developer adds a field by hand, for code that reads it.
     const handEdited = {

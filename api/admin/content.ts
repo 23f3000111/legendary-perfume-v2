@@ -288,7 +288,12 @@ async function publish(cfg: GitHubConfig, store: ContentStore, req: VercelReques
     try {
       const commit = await commitFiles(cfg, {
         message: `Dashboard: ${labels(docs)}`,
-        files: [...files, ...written.map(({ path, content }) => ({ path, content }))],
+        files: [
+          ...files,
+          ...written.map(({ path, content }) => ({ path, content })),
+          // The server's price list travels with the products, in the same commit.
+          ...ready.flatMap(({ doc, parsed }) => DOCS[doc].companions?.(parsed) ?? []),
+        ],
         parent: head,
       })
       // The dashboard holds editing while a publish runs, so nothing typed
@@ -351,7 +356,7 @@ async function restore(cfg: GitHubConfig, store: ContentStore, req: VercelReques
   })
   const change = {
     message: `Dashboard: restore ${label} to ${when}`,
-    files: [{ path: DOCS[doc].path, content: asFile(parsed) }],
+    files: [{ path: DOCS[doc].path, content: asFile(parsed) }, ...(DOCS[doc].companions?.(parsed) ?? [])],
   }
   try {
     return { commit: await commitFiles(cfg, change) }
