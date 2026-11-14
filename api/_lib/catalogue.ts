@@ -38,8 +38,9 @@ const MAX_LINES = 30
  * Price a basket from the server's own catalogue.
  *
  * The browser sends product ids and quantities and nothing else. Every price
- * comes from `_catalogue.ts`, which is generated from src/data/products.ts at
- * build time, so a tampered basket cannot change what is charged.
+ * comes from `_catalogue.ts`, which is generated from src/content/products.json
+ * at build time and in every dashboard publish of the products, so a tampered
+ * basket cannot change what is charged.
  *
  * `overrides` is the dashboard's layer on top: a price set there wins, and a
  * product marked out of stock or hidden is refused outright. This is the only

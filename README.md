@@ -42,8 +42,9 @@ Stripe takes the payment, and there are no accounts anywhere in the flow.
 
 1. **Checkout** (`src/pages/Checkout.tsx`) collects a name, email, phone and a
    Malaysian address, then posts the basket to `POST /api/checkout`.
-2. **`/api/checkout`** prices that basket from `api/_catalogue.json`, which is
-   generated from `src/data/products.ts` at build time. No price, and no total,
+2. **`/api/checkout`** prices that basket from `api/_catalogue.ts`, which is
+   generated from `src/content/products.json` at build time, and again in every
+   dashboard publish of the products. No price, and no total,
    is ever read from the browser. It mints an order reference, opens a Stripe
    PaymentIntent in MYR and records the order as pending.
 3. **Stripe's Payment Element** takes the card inside its own iframe, so card

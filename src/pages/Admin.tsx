@@ -27,9 +27,10 @@ type Tab = 'overview' | 'products' | 'orders' | 'faq' | 'stores' | 'journal' | '
  * quiet and fast rather than cinematic. It keeps the house's typography and
  * palette so it still feels like the same company, and drops the ceremony.
  *
- * What it can change is a small, safe set: stock, price, the was price, whether
- * something is in the Bestsellers edit, and whether it appears at all. Copy,
- * photography and compositions stay in git where they are reviewed. See
+ * Its price table changes a small, safe set at once: stock, price, the was
+ * price, whether something is in the Bestsellers edit, and whether it appears
+ * at all. A product's copy, photos and composition are edited on the same tab,
+ * and published through git like the rest of the content. See
  * api/_lib/overrides.ts for why the line is drawn there.
  *
  * On orders it records one thing: the courier and tracking number a paid order
@@ -511,9 +512,9 @@ function Products({ onEdit }: { onEdit: (id: string) => void }) {
         </table>
       </div>
       <p className="text-xs text-smoke">
-        Reset returns a fragrance to the price and state it was built with. Copy, photography and
-        compositions are not edited here: they live with the code, so they are reviewed before they
-        go live.
+        Changes in this table go live at once. Reset returns a fragrance to the price and state it
+        was launched with. A product's words, photos and notes are edited above, with Edit page, and
+        go live when you publish.
       </p>
     </div>
   )

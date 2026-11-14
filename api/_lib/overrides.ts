@@ -6,9 +6,9 @@ import { optionalEnv } from './http.js'
 /**
  * What the dashboard is allowed to change about a product.
  *
- * The catalogue itself stays in `src/data/products.ts` and in git: the copy,
- * the photography and the compositions are design work, versioned and reviewed
- * like the rest of the site. What a shopkeeper needs to change between deploys
+ * The catalogue itself lives in `src/content/products.json` and in git: the
+ * copy, the photography and the compositions are published from the dashboard
+ * as commits, versioned like the rest of the site. What a shopkeeper needs to change between deploys
  * is a much smaller set, and that is what lives here as an override layer on
  * top. Anything not overridden falls through to the catalogue.
  */
