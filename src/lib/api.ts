@@ -462,7 +462,7 @@ export function adminDerivePhoto(
   file: string,
   kind: SlotKind,
   opts: { white?: boolean } = {},
-): Promise<{ path: string; width: number; height: number }> {
+): Promise<{ path: string; mono?: string; width: number; height: number }> {
   const white = opts.white ? '&white=1' : ''
   return request(`/api/admin/media?derive=${encodeURIComponent(file)}&kind=${kind}${white}`, { ...withCookies, method: 'POST' })
 }

@@ -17,6 +17,8 @@ export interface SlotSpec {
   maxSide: number
   alpha: boolean
   square?: 'cover' | 'contain'
+  /** The place also needs a black and white print, made with the colour one: the logo walls rest in black and white. */
+  mono?: boolean
 }
 
 const KINDS = {
@@ -32,6 +34,14 @@ const KINDS = {
   productIncluded: { label: "What's included flat-lay", maxSide: 1600, alpha: true },
   productChart: { label: 'Occasion chart', maxSide: 1100, alpha: true },
   productBloom: { label: 'Botanical', maxSide: 1000, alpha: true },
+  /** A collection's square cover, on its card in the Home page's rail. */
+  collection: { label: 'Collection cover', maxSide: 1600, alpha: false, square: 'cover' },
+  /** A year's card on the Our Story journey. */
+  journey: { label: 'Journey photo', maxSide: 1000, alpha: false },
+  /** The photo on a Scented Memory map card. */
+  place: { label: 'Map card photo', maxSide: 1200, alpha: false },
+  /** A partner or seller logo: a colour print for hover and a black and white one, both see-through. */
+  logo: { label: 'Logo', maxSide: 340, alpha: true, mono: true },
 } satisfies Record<string, SlotSpec>
 
 export const SLOT_KINDS: Record<keyof typeof KINDS, SlotSpec> = KINDS

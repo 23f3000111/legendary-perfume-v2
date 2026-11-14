@@ -229,6 +229,77 @@ describe('the photo API', () => {
     expect(res.body.error).toBe('That kind of photo keeps its background.')
   })
 
+  /**
+   * A PNG `width` by `height` with a bar of `ink` in the middle, on a see-through
+   * page, or on a white one with no alpha channel at all, as a logo sent on white is.
+   */
+  async function bar(width: number, height: number, barW: number, barH: number, ink: { r: number; g: number; b: number }, page: 'clear' | 'white') {
+    const mark = await sharp({ create: { width: barW, height: barH, channels: 4, background: { ...ink, alpha: 1 } } }).png().toBuffer()
+    const ground =
+      page === 'clear'
+        ? sharp({ create: { width, height, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+        : sharp({ create: { width, height, channels: 3, background: { r: 255, g: 255, b: 255 } } })
+    const drawn = await ground.composite([{ input: mark, left: Math.round((width - barW) / 2), top: Math.round((height - barH) / 2) }]).png().toBuffer()
+    return page === 'clear' ? drawn : sharp(drawn).flatten({ background: '#ffffff' }).removeAlpha().png().toBuffer()
+  }
+  const deriveLogo = (master: string) => call({ method: 'POST', query: { derive: master, kind: 'logo' } })
+  const stored = (path: string) => fetchFile(path.slice('/assets/cms/'.length))
+
+  // The walls rest in black and white and show each logo's colours on hover,
+  // as scripts/prepare-assets.py's brand_mark draws the delivery's logos.
+  it('a logo gets a colour print and a black and white print', async () => {
+    const master = (await upload(await bar(1000, 400, 800, 200, { r: 200, g: 30, b: 30 }, 'clear'))).body.file
+    const res = await deriveLogo(master)
+    expect(res.status).toBe(200)
+    expect(res.body.path).toMatch(/^\/assets\/cms\/[0-9a-f]{20}\.webp$/)
+    expect(res.body.mono).toMatch(/^\/assets\/cms\/[0-9a-f]{20}\.webp$/)
+    expect(res.body.mono).not.toBe(res.body.path)
+
+    const colour = await stored(res.body.path)
+    const { width, height } = await sharp(colour).metadata()
+    // 340 px across, with a 20 px margin each side.
+    expect(width).toBe(380)
+    expect(res.body.width).toBe(380)
+    expect((await pixel(colour, 0, 0))[3]).toBe(0)
+    const [x, y] = [Math.floor(width! / 2), Math.floor(height! / 2)]
+    const red = await pixel(colour, x, y)
+    expect(red[0]).toBeGreaterThan(150)
+    expect(red[1]).toBeLessThan(80)
+
+    const mono = await stored(res.body.mono)
+    const monoSize = await sharp(mono).metadata()
+    expect([monoSize.width, monoSize.height]).toEqual([width, height])
+    const grey = await pixel(mono, x, y)
+    expect(grey[0]).toBe(grey[1])
+    expect(grey[1]).toBe(grey[2])
+    expect(Math.abs(grey[0] - 46)).toBeLessThanOrEqual(4)
+  })
+
+  it('a logo sent on white loses its white', async () => {
+    const master = (await upload(await bar(1200, 800, 600, 200, { r: 0, g: 0, b: 0 }, 'white'))).body.file
+    const res = await deriveLogo(master)
+    expect(res.status).toBe(200)
+    // Trimmed to the bar. With its white kept it would be about 380 by 267.
+    expect(res.body.width).toBe(380)
+    expect(res.body.height).toBeGreaterThanOrEqual(145)
+    expect(res.body.height).toBeLessThanOrEqual(165)
+  })
+
+  // Half the delivered marks are gold or white lockups drawn for a dark ground.
+  it('a white logo drawn for a dark ground comes out dark', async () => {
+    const master = (await upload(await bar(1000, 400, 800, 200, { r: 255, g: 255, b: 255 }, 'clear'))).body.file
+    const mono = await stored((await deriveLogo(master)).body.mono)
+    const { width, height } = await sharp(mono).metadata()
+    expect((await pixel(mono, Math.floor(width! / 2), Math.floor(height! / 2)))[0]).toBeLessThan(60)
+  })
+
+  it('a logo with nothing left is refused', async () => {
+    const blank = await sharp({ create: { width: 600, height: 400, channels: 3, background: { r: 255, g: 255, b: 255 } } }).png().toBuffer()
+    const res = await deriveLogo((await upload(blank)).body.file)
+    expect(res.status).toBe(400)
+    expect(res.body.error).toMatch(/white/)
+  })
+
   it('derive makes a 900 px store photo on white', async () => {
     const transparent = await sharp({
       create: { width: 2000, height: 1500, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },

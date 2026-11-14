@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { requireAdmin } from '../_lib/auth.js'
 import { handler, HttpError, json, nodeBody } from '../_lib/http.js'
-import { hashName, makeMaster, makeSlot, sniff } from '../_lib/content/images.js'
+import { hashName, makeLogo, makeMaster, makeSlot, sniff } from '../_lib/content/images.js'
 import { isSlotKind, SLOT_KINDS } from '../_lib/content/slots.js'
 import { contentStore } from '../_lib/content/store.js'
 import { githubConfig, listFiles, readBinary } from '../_lib/github.js'
@@ -11,7 +11,8 @@ import { githubConfig, listFiles, readBinary } from '../_lib/github.js'
  *
  *   POST  (the photo's bytes)          add a photo; it is kept large, as a master
  *   POST  ?derive=<file>&kind=<kind>   a copy of a master sized for one place;
- *                                      &white=1 makes a cut-out's white background see-through
+ *                                      &white=1 makes a cut-out's white background see-through;
+ *                                      a logo answers with its black and white print as `mono` too
  *   GET   ?file=<file>                 a stored photo, for the dashboard and previews
  *   GET                                the library, and the photos the site already has
  *
@@ -79,6 +80,18 @@ export default handler(async (req: VercelRequest, res: VercelResponse) => {
       master = (cfg && (await readBinary(cfg, `public/assets/cms/${derive}`))) || undefined
     }
     if (!master) throw new HttpError(404, 'That photo is no longer in the library. Upload it again.')
+    if (SLOT_KINDS[kind].mono) {
+      // A logo: its colour print and the black and white one the wall rests
+      // in, each kept under its own name. The document holds both paths, so a
+      // publish carries both, as it carries any photo a document uses.
+      const { colour, mono } = await makeLogo(master)
+      const file = `${hashName(colour.data)}.webp`
+      const monoFile = `${hashName(mono.data)}.webp`
+      await store.putMedia({ file, bytes: colour.data, width: colour.width, height: colour.height, kind, source: derive })
+      await store.putMedia({ file: monoFile, bytes: mono.data, width: mono.width, height: mono.height, kind, source: derive })
+      json(res, 200, { path: `/assets/cms/${file}`, mono: `/assets/cms/${monoFile}`, width: colour.width, height: colour.height })
+      return
+    }
     const slot = await makeSlot(master, kind, { white })
     const file = `${hashName(slot.data)}.webp`
     await store.putMedia({ file, bytes: slot.data, width: slot.width, height: slot.height, kind, source: derive })
