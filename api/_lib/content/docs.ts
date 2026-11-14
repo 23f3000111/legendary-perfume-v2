@@ -8,9 +8,11 @@ import {
   JournalDocSchema,
   PartnersDocSchema,
   PlacesDocSchema,
+  PoliciesDocSchema,
   ProductsDocSchema,
   ReviewsDocSchema,
   SellersDocSchema,
+  SiteDocSchema,
   StoresDocSchema,
   type ProductsDoc,
 } from './schema.js'
@@ -49,6 +51,8 @@ export const DOCS: Record<DocKey, DocSpec> = {
   partners: { path: 'src/content/partners.json', label: 'Partner logos', schema: PartnersDocSchema },
   sellers: { path: 'src/content/sellers.json', label: 'Trusted sellers', schema: SellersDocSchema },
   places: { path: 'src/content/places.json', label: 'Scented Memory map', schema: PlacesDocSchema },
+  site: { path: 'src/content/site.json', label: 'Site details', schema: SiteDocSchema },
+  policies: { path: 'src/content/policies.json', label: 'Policies', schema: PoliciesDocSchema },
 }
 
 export { DOC_KEYS, isDocKey, type DocKey }

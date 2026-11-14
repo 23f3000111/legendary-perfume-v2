@@ -9,7 +9,7 @@ import { SITE } from '../lib/seo'
 
 /**
  * One template for shipping, returns, terms and privacy. Copy lives in
- * src/data/policies.ts as Block[], so all four read in the same typography.
+ * src/content/policies.json as blocks, so all four read in the same typography.
  */
 export default function Policy() {
   // Each policy has its own top level route, so the slug is the path itself.

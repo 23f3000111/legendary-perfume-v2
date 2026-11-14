@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useUI } from '../store/ui'
 import { asset } from '../lib/asset'
-import { GREETING, handle, waLink, type BotReply } from '../lib/concierge'
+import { GREETING, handle, type BotReply } from '../lib/concierge'
+import { waLink } from '../data/site'
 import { Close, Send, WhatsApp, ArrowRight, ArrowUpRight } from './ui/icons'
 
 interface Msg { role: 'bot' | 'user'; text?: string; reply?: BotReply }

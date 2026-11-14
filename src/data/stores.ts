@@ -28,24 +28,6 @@ export interface Store {
  */
 export const storesDoc: StoresDoc = data
 
-/**
- * Client amendment: the contact page pointed at the Melaka flagship. It now
- * carries the registered office the client supplied in revision 2.
- */
-export const HEAD_OFFICE = {
-  name: 'Legendary Distribution Sdn Bhd',
-  address:
-    '12E, Pusat Teknologi Sunsuria, Jalan Teknologi, Taman Sains Selangor, PJU 5, Kota Damansara, 47810 Petaling Jaya, Selangor',
-  mapQuery:
-    'Legendary Distribution Sdn Bhd, Pusat Teknologi Sunsuria, Jalan Teknologi, Kota Damansara, 47810 Petaling Jaya, Selangor',
-  /**
-   * The client's own pinned embed. A place query resolves to the road rather
-   * than the unit, so this exact URL is used for the head office map.
-   */
-  mapEmbed:
-    'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3283.5034513756564!2d101.5665319!3d3.1534984999999995!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31cc4f0aa97cbbb1%3A0xb45be6e10820e74d!2sLegendary%20Distribution%20Sdn%20Bhd!5e1!3m2!1sen!2sin!4v1786498622660!5m2!1sen!2sin',
-}
-
 export function mapEmbedUrl(query: string): string {
   return `https://www.google.com/maps?q=${encodeURIComponent(query)}&z=15&output=embed`
 }

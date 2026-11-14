@@ -10,6 +10,8 @@ import journeyJson from './journey.json'
 import partnersJson from './partners.json'
 import sellersJson from './sellers.json'
 import placesJson from './places.json'
+import siteJson from './site.json'
+import policiesJson from './policies.json'
 import { faq } from '../data/faq'
 import { storesDoc } from '../data/stores'
 import { articleList, formatDate, journal } from '../data/articles'
@@ -19,6 +21,8 @@ import { reviews, reviewsDoc } from '../data/reviews'
 import { journeyDoc } from '../data/journey'
 import { partnersDoc, sellersDoc } from '../data/logos'
 import { placesDoc, scentPlaces } from '../data/places'
+import { site } from '../data/site'
+import { policies, policiesDoc } from '../data/policies'
 import { DOCS } from '../../api/_lib/content/docs'
 import {
   CollectionsDocSchema,
@@ -27,9 +31,11 @@ import {
   JournalDocSchema,
   PartnersDocSchema,
   PlacesDocSchema,
+  PoliciesDocSchema,
   ProductsDocSchema,
   ReviewsDocSchema,
   SellersDocSchema,
+  SiteDocSchema,
   StoresDocSchema,
 } from '../../api/_lib/content/schema'
 
@@ -37,6 +43,12 @@ describe('published content', () => {
   it('the published FAQ and stores pass their schemas', () => {
     expect(FaqDocSchema.safeParse(faq).success).toBe(true)
     expect(StoresDocSchema.safeParse(storesDoc).success).toBe(true)
+  })
+
+  it('the published site details and policies pass their schemas', () => {
+    for (const result of [SiteDocSchema.safeParse(site), PoliciesDocSchema.safeParse(policiesDoc)]) {
+      expect(result.success ? [] : result.error.issues).toEqual([])
+    }
   })
 
   it('the published journal passes its schema', () => {
@@ -98,6 +110,9 @@ describe('published content', () => {
     expect(sellersDoc).toBe(sellersJson)
     expect(placesDoc).toBe(placesJson)
     expect(scentPlaces).toBe(placesJson.places)
+    expect(site).toBe(siteJson)
+    expect(policiesDoc).toBe(policiesJson)
+    expect(policies).toBe(policiesJson.policies)
   })
 })
 

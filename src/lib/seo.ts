@@ -1,8 +1,10 @@
 /**
  * One place for the facts search engines and answer engines are given about
  * the house, so a change lands in the head tags, the structured data, the
- * sitemap and llms.txt at once.
+ * sitemap and llms.txt at once. The house's contact details and links are
+ * the site's own (src/data/site.ts), read when each page renders.
  */
+import { sameAs, site } from '../data/site'
 
 export const SITE = {
   name: 'Legendary',
@@ -16,17 +18,10 @@ export const SITE = {
    */
   url: (import.meta.env.VITE_SITE_URL as string | undefined)?.replace(/\/$/, '')
     ?? 'https://legendary.com.my',
-  email: 'noreply@legendary.com.my',
-  phone: '+60 19 383 6633',
   locale: 'en_MY',
   currency: 'MYR',
   country: 'MY',
   founded: '2015',
-  sameAs: [
-    'https://www.instagram.com/legendaryperfume.my/',
-    'https://www.facebook.com/legendaryperfumemy/',
-    'https://shopee.com.my/legendaryperfume',
-  ],
 }
 
 export function absolute(path: string): string {
@@ -44,10 +39,10 @@ export function organisationLd() {
     url: SITE.url,
     description: SITE.description,
     foundingDate: SITE.founded,
-    email: SITE.email,
-    telephone: SITE.phone,
+    email: site.email,
+    telephone: site.whatsapp,
     areaServed: { '@type': 'Country', name: 'Malaysia' },
-    sameAs: SITE.sameAs,
+    sameAs: sameAs(),
     logo: {
       '@type': 'ImageObject',
       url: absolute('/assets/client/logo-legendary.png'),
@@ -55,8 +50,8 @@ export function organisationLd() {
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'customer service',
-      email: SITE.email,
-      telephone: SITE.phone,
+      email: site.email,
+      telephone: site.whatsapp,
       availableLanguage: ['en', 'ms'],
     },
   }

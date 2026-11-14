@@ -5,7 +5,7 @@ import Accordion from '../components/ui/Accordion'
 import { Kicker } from '../components/ui/SplitText'
 import { ArrowRight, WhatsApp } from '../components/ui/icons'
 import { faq } from '../data/faq'
-import { waLink, WHATSAPP_DISPLAY } from '../lib/concierge'
+import { site, waLink } from '../data/site'
 import Seo from '../components/Seo'
 
 export default function Faq() {
@@ -85,7 +85,7 @@ export default function Faq() {
             Ask us anything
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-ink-soft">
-            Our Malaysian concierge team answers in minutes on WhatsApp at {WHATSAPP_DISPLAY}, or you
+            Our Malaysian concierge team answers in minutes on WhatsApp at {site.whatsapp}, or you
             can send us a note and we will reply within one business day.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">

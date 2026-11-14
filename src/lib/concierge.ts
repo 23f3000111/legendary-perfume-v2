@@ -2,21 +2,6 @@ import { products, moodList, moodCopy, type Mood } from '../data/products'
 import { formatRM } from './format'
 import { useStock } from '../store/stock'
 
-export const WHATSAPP_NUMBER = '60193836633'
-/** Client house style: numbers are spaced, never hyphenated. */
-export const WHATSAPP_DISPLAY = '+60 19 383 6633'
-/**
- * The house's primary address. Everything the site sends is sent from here,
- * and contact form messages and order notifications both arrive here.
- */
-export const SUPPORT_EMAIL = 'noreply@legendary.com.my'
-
-export function waLink(text: string): string {
-  return `https://api.whatsapp.com/send/?phone=%2B${WHATSAPP_NUMBER}&text=${encodeURIComponent(
-    text,
-  )}&type=phone_number&app_absent=0`
-}
-
 export interface ProductRef {
   id: string
   name: string

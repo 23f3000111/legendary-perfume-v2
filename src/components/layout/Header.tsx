@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useShop, cartCount } from '../../store/shop'
 import { useUI } from '../../store/ui'
 import { collections } from '../../data/collections'
+import { waChat } from '../../data/site'
 import { Search, User, Bag, Menu, Close, ArrowUpRight, ChevronDown, WhatsApp } from '../ui/icons'
 import { Wordmark } from '../ui/Wordmark'
 import SearchOverlay from '../SearchOverlay'
@@ -385,7 +386,7 @@ function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
                 list scrolls under it rather than pushing it away. */}
             <div className="border-t border-line px-6 py-4">
               <a
-                href="https://api.whatsapp.com/send/?phone=%2B60193836633"
+                href={waChat()}
                 target="_blank"
                 rel="noreferrer"
                 className="btn-gold w-full justify-center gap-2 !py-3.5"

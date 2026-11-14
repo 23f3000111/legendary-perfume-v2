@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { WhatsApp, Instagram, Facebook, TikTok, ArrowRight, Check, ChevronDown } from '../ui/icons'
-import { waLink } from '../../lib/concierge'
+import { site, waLink } from '../../data/site'
 import Particles from '../ui/Particles'
 import { Wordmark } from '../ui/Wordmark'
 
@@ -96,9 +96,9 @@ export default function Footer() {
           </p>
           <div className="mt-6 flex gap-3">
             {[
-              { I: Facebook, href: 'https://www.facebook.com/LegendaryPerfumeMY', label: 'Facebook' },
-              { I: Instagram, href: 'https://www.instagram.com/legendaryofficial.my/', label: 'Instagram' },
-              { I: TikTok, href: 'https://www.tiktok.com/@legendary.my', label: 'TikTok' },
+              { I: Facebook, href: site.facebook.url, label: 'Facebook' },
+              { I: Instagram, href: site.instagram.url, label: 'Instagram' },
+              { I: TikTok, href: site.tiktok, label: 'TikTok' },
               { I: WhatsApp, href: waLink('Hi Legendary!'), label: 'WhatsApp' },
             ].map(({ I, href, label }) => (
               <a

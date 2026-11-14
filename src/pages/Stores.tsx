@@ -6,7 +6,7 @@ import PageHeader from '../components/ui/PageHeader'
 import BrandLogo from '../components/ui/BrandLogo'
 import { sellersDoc } from '../data/logos'
 import { Pin, Phone, Clock, ArrowUpRight, WhatsApp } from '../components/ui/icons'
-import { waLink } from '../lib/concierge'
+import { waLink } from '../data/site'
 import Seo from '../components/Seo'
 import { absolute, SITE } from '../lib/seo'
 

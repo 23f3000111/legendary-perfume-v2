@@ -5,8 +5,8 @@ import PageHeader from '../components/ui/PageHeader'
 import { Kicker } from '../components/ui/SplitText'
 import Accordion from '../components/ui/Accordion'
 import { Phone, Instagram, Facebook, Pin, Check, ArrowRight } from '../components/ui/icons'
-import { waLink, WHATSAPP_DISPLAY } from '../lib/concierge'
-import { directionsUrl, HEAD_OFFICE } from '../data/stores'
+import { directionsUrl } from '../data/stores'
+import { site, waLink } from '../data/site'
 import { faq } from '../data/faq'
 import Seo from '../components/Seo'
 import { ApiError, sendContactMessage } from '../lib/api'
@@ -61,20 +61,20 @@ export default function Contact() {
       // handset sits inside it and matches the stroke of its two neighbours.
       I: Phone,
       label: 'WhatsApp',
-      value: WHATSAPP_DISPLAY,
+      value: site.whatsapp,
       href: waLink('Hi Legendary! I have a question.'),
     },
     {
       I: Instagram,
       label: 'Instagram',
-      value: '@legendaryofficial.my',
-      href: 'https://www.instagram.com/legendaryofficial.my/',
+      value: site.instagram.handle,
+      href: site.instagram.url,
     },
     {
       I: Facebook,
       label: 'Facebook',
-      value: 'LegendaryPerfumeMY',
-      href: 'https://www.facebook.com/LegendaryPerfumeMY',
+      value: site.facebook.handle,
+      href: site.facebook.url,
     },
   ]
 
@@ -218,14 +218,14 @@ export default function Contact() {
           <div>
             <Kicker>Find us</Kicker>
             <h2 className="mt-4 font-display text-[clamp(1.8rem,3.4vw,2.6rem)] leading-[1.1]">
-              {HEAD_OFFICE.name}
+              {site.office.name}
             </h2>
             <p className="mt-5 flex items-start gap-3 text-ink-soft">
               <Pin width={18} className="mt-1 shrink-0 text-gold" />
-              <span>{HEAD_OFFICE.address}</span>
+              <span>{site.office.address}</span>
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
-              <a href={directionsUrl(HEAD_OFFICE.mapQuery)} target="_blank" rel="noreferrer" className="btn-ghost gap-2">
+              <a href={directionsUrl(site.office.mapQuery)} target="_blank" rel="noreferrer" className="btn-ghost gap-2">
                 Get directions <ArrowRight width={16} />
               </a>
               <Link to="/stores" className="btn-ghost gap-2">
@@ -236,8 +236,8 @@ export default function Contact() {
 
           <div className="overflow-hidden rounded-sm border border-line">
             <iframe
-              title={`Map of ${HEAD_OFFICE.name}`}
-              src={HEAD_OFFICE.mapEmbed}
+              title={`Map of ${site.office.name}`}
+              src={site.office.mapEmbed}
               loading="lazy"
               allowFullScreen
               className="h-72 w-full border-0"
