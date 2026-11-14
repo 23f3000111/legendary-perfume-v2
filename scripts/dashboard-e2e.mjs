@@ -14,7 +14,9 @@
  * Signs in, edits and previews the FAQ, publishes it and waits for "Live",
  * adds a store with an 8000 px photo, restores the FAQ from History, resolves
  * a conflict, edits and previews a journal article, publishes a new one with
- * its photo, restores the Journal, and checks the photo paths in Safari's
+ * its photo, restores the Journal, publishes a product and restores it, changes
+ * the WhatsApp number, adds a partner logo, previews a review, publishes a
+ * policy, restores the site details, and checks the photo paths in Safari's
  * engine and on a phone.
  * It refuses to run against anything but a local GitHub, so it can never
  * publish to the real repository.
@@ -91,6 +93,7 @@ const openTab = (page, name) => page.click(`header nav button:text-is("${name}")
 const seedFaq = (await ghFile('src/content/faq.json')).toString('utf8')
 const seedJournal = (await ghFile('src/content/journal.json')).toString('utf8')
 const seedProducts = (await ghFile('src/content/products.json')).toString('utf8')
+const seedSite = (await ghFile('src/content/site.json')).toString('utf8')
 const browser = await chromium.launch({ executablePath: CHROME })
 const context = await browser.newContext({ viewport: { width: 1440, height: 900 } })
 const page = await context.newPage()
@@ -405,6 +408,134 @@ try {
     '19. restoring the products puts the shelf and the server catalogue back, and the question named what it took off',
     restoredPrices === readFileSync('api/_catalogue.ts', 'utf8').replace(/\r\n/g, '\n') &&
       (dialogs.at(-1) ?? '').includes('This takes E2E Test Scent off the site.'),
+    dialogs.at(-1),
+  )
+
+  // 20. A new WhatsApp number: previewed on the Contact page and in the footer, then published
+  await openTab(page, 'Site')
+  await page.waitForSelector('text=WhatsApp number')
+  await page.getByLabel('WhatsApp number').fill('+60 12 345 6789')
+  await page.waitForSelector('text=Saved as a draft')
+  const [contactPreview] = await Promise.all([context.waitForEvent('page'), page.click('button:text-is("Preview")')])
+  await contactPreview.waitForURL(/\/contact\?preview/)
+  await contactPreview.waitForLoadState('networkidle')
+  const contactText = await contactPreview.evaluate(() => document.body.innerText)
+  const footerWhatsApp = await contactPreview.locator('footer a[aria-label="WhatsApp"]').getAttribute('href')
+  await contactPreview.close()
+  await page.click('button:text-is("Publish")')
+  await page.waitForSelector('text=Live. The site shows your changes.', { timeout: 30000 })
+  await page.click('button:text-is("OK")')
+  const publishedSite = await ghJson('src/content/site.json')
+  check(
+    '20. a new WhatsApp number shows in preview and in the footer link, and is published',
+    contactText.includes('+60 12 345 6789') && (footerWhatsApp ?? '').includes('60123456789') && publishedSite.whatsapp === '+60 12 345 6789',
+    footerWhatsApp ?? '',
+  )
+
+  // 21. A collection products are in cannot be removed
+  await page.click('main nav button:has-text("Collections")')
+  await page.waitForSelector('text=Add a collection')
+  await page.locator('section', { hasText: 'Add a collection' }).getByRole('button', { name: 'Remove' }).first().click()
+  check(
+    '21. Signature cannot be removed while products are in it',
+    /are in Signature\. Move them to another collection first\./.test(dialogs.at(-1) ?? ''),
+    dialogs.at(-1),
+  )
+
+  // 22. A new partner logo, sent on white, goes live with both its prints
+  await page.click('main nav button:has-text("Partner logos")')
+  await page.waitForSelector('text=Add a row')
+  await page.evaluate(() => {
+    const span = [...document.querySelectorAll('span')].find((s) => s.textContent === 'Row 3')
+    span.parentElement.parentElement.setAttribute('data-row', '3')
+  })
+  const row3 = page.locator('[data-row="3"]')
+  await row3.locator('button:text-is("Add a logo")').click()
+  await row3.getByLabel('Name', { exact: true }).last().fill('E2E Partner')
+  const logoBar = await sharp({ create: { width: 600, height: 150, channels: 3, background: { r: 170, g: 20, b: 40 } } }).png().toBuffer()
+  const logoOnWhite = await sharp({ create: { width: 900, height: 600, channels: 3, background: { r: 255, g: 255, b: 255 } } })
+    .composite([{ input: logoBar, left: 150, top: 225 }])
+    .png()
+    .toBuffer()
+  await row3.locator('input[type="file"]').last().setInputFiles({ name: 'partner.png', mimeType: 'image/png', buffer: logoOnWhite })
+  await row3.locator('img[src*="/api/admin/media?file="]').waitFor({ timeout: 60000 })
+  await page.waitForSelector('text=Saved as a draft')
+  await page.click('button:text-is("Publish")')
+  await page.waitForSelector('text=Live. The site shows your changes.', { timeout: 30000 })
+  await page.click('button:text-is("OK")')
+  const wall = await ghJson('src/content/partners.json')
+  const newLogo = wall.rows[2]?.logos.at(-1)
+  const logoFiles = await ghTree()
+  const inRepo = (path) => logoFiles.find((f) => `/${f.replace(/^public\//, '')}` === path)
+  const colourFile = newLogo && inRepo(newLogo.logo)
+  const monoFile = newLogo && inRepo(newLogo.mono)
+  const colourPrint = colourFile ? await sharp(await ghFile(colourFile)).metadata() : null
+  let monoIsGrey = false
+  if (monoFile) {
+    const { data } = await sharp(await ghFile(monoFile)).ensureAlpha().raw().toBuffer({ resolveWithObject: true })
+    monoIsGrey = true
+    for (let i = 0; i < data.length; i += 4) {
+      if (data[i + 3] === 255 && (data[i] !== data[i + 1] || data[i + 1] !== data[i + 2])) monoIsGrey = false
+    }
+  }
+  check(
+    '22. a new partner logo goes live last in row 3, its white gone and its black and white print grey',
+    newLogo?.name === 'E2E Partner' &&
+      Boolean(colourFile && monoFile) &&
+      colourPrint?.hasAlpha === true &&
+      (colourPrint?.height ?? 999) < 160 &&
+      monoIsGrey,
+    `${newLogo?.logo} ${newLogo?.mono} ${colourPrint?.width}x${colourPrint?.height}`,
+  )
+
+  // 23. A review with four stars shows in preview, and is then discarded
+  await page.click('main nav button:has-text("Reviews")')
+  await page.waitForSelector('text=Add a review')
+  await page.click('button:text-is("Add a review")')
+  const reviewQuote = `A review written by the end to end check, ${Date.now()}.`
+  await page.getByLabel('Quote').last().fill(reviewQuote)
+  await page.getByLabel('Name', { exact: true }).last().fill('e2e.checker')
+  await page.getByLabel('Stars').last().selectOption('4')
+  await page.waitForSelector('text=Saved as a draft')
+  const [homePreview] = await Promise.all([context.waitForEvent('page'), page.click('button:text-is("Preview")')])
+  await homePreview.waitForURL(/\/\?preview/)
+  await homePreview.waitForLoadState('networkidle')
+  const homeText = await homePreview.evaluate(() => document.body.innerText)
+  await homePreview.close()
+  await page.click('button:text-is("Discard")')
+  await page.waitForFunction(() => !document.body.innerText.includes('Unpublished changes:'), null, { timeout: 15000 })
+  check('23. a four star review shows its quote in preview, and is discarded', homeText.includes(reviewQuote))
+
+  // 24. A policy's first paragraph: previewed, then published
+  await openTab(page, 'Policies')
+  await page.waitForSelector('text=The customer care pages')
+  await page.locator('main ul li', { hasText: 'Shipping Policy' }).locator('button:text-is("Edit")').click()
+  await page.waitForSelector('text=The page')
+  const shippingWords = `Orders leave us within one business day, written by the end to end check, ${Date.now()}.`
+  await page.locator('textarea').filter({ hasText: 'Orders are typically processed' }).fill(shippingWords)
+  await page.waitForSelector('text=Saved as a draft')
+  const [policyPreview] = await Promise.all([context.waitForEvent('page'), page.click('button:text-is("Preview")')])
+  await policyPreview.waitForURL(/\/shipping\?preview/)
+  await policyPreview.waitForLoadState('networkidle')
+  const policyText = await policyPreview.evaluate(() => document.body.innerText)
+  await policyPreview.close()
+  await page.click('button:text-is("Publish")')
+  await page.waitForSelector('text=Live. The site shows your changes.', { timeout: 30000 })
+  await page.click('button:text-is("OK")')
+  const publishedPolicies = await ghJson('src/content/policies.json')
+  check(
+    "24. the Shipping Policy's new paragraph shows in preview and is published",
+    policyText.includes(shippingWords) && JSON.stringify(publishedPolicies.policies[0].body).includes(shippingWords),
+  )
+
+  // 25. Restoring the site details puts the seeded file back
+  await openTab(page, 'History')
+  await page.waitForSelector('text=Every published change')
+  await page.click('button:text-is("Restore Site details")')
+  await until(async () => (await ghFile('src/content/site.json')).toString('utf8') === seedSite, 'the restored site details')
+  check(
+    '25. restoring the site details puts the seeded file back, and the question reads as plural',
+    (dialogs.at(-1) ?? '').startsWith('Put the Site details back as they were on'),
     dialogs.at(-1),
   )
 } catch (err) {

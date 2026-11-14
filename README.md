@@ -148,8 +148,10 @@ The dashboard needs somewhere durable to write.
 
 The same `/admin` edits the site's content, so the Legendary team can make their
 own changes instead of sending revision PDFs. It covers the **FAQ**, the **store
-list**, the **Journal** and the **products**. The pages and the hero poster
-follow, as set out in `docs/superpowers/specs/2026-11-12-content-dashboard-design.md`.
+list**, the **Journal**, the **products**, the **site details and lists** (the
+Site tab) and the **policies**. Each page's own words and photos, and the hero
+poster, follow, as set out in
+`docs/superpowers/specs/2026-11-12-content-dashboard-design.md`.
 
 - **Content lives in `src/content/*.json`.** The site imports it at build time,
   so pages stay as fast as before and Google sees every word. `npm run build`
@@ -205,6 +207,40 @@ follow, as set out in `docs/superpowers/specs/2026-11-12-content-dashboard-desig
   every article is in one document, the publish bar, and the Discard, conflict
   and restore questions, name the articles each would add, change, take off
   the site or bring back.
+- **The Site tab** edits eight more documents, one screen each:
+  - `site.json`, the **site details**: the WhatsApp number, the house's
+    address, the social links and the head office. Every WhatsApp button, the
+    header's chat link, the footer's social links, the Contact page and the
+    structured data search engines read (`organisationLd`, whose `sameAs` is
+    the links the site shows) are made from it when they render
+    (`src/data/site.ts`). The FAQ answers and the policies write the number
+    and the address out in their own words, so a new number is changed there
+    too; the form says so.
+  - `collections.json`: each collection's name, tagline, words on the Home
+    page's rail, its intro in the shop, colour and square cover (1600 px). A
+    collection's address, `/shop?collection=<id>`, is made from its name and
+    fixed once published. One that products are in, or that a map pin opens,
+    cannot be removed. Products keep a copy of their collection's name, but
+    the pages show the collection's own (`collectionName`), so a rename shows
+    everywhere at once. The shop banner is edited with the pages.
+  - `reviews.json`, the Home page's customer wall. Five stars is the default
+    and is left out of the data.
+  - `journey.json`, the Our Story years. A year with no photo (1000 px) shows
+    the house pattern in gold.
+  - `partners.json` and `sellers.json`, the two logo walls. The partner wall
+    is kept row by row, as the client drew it. A logo is two prints: its own
+    colours, shown on hover, and the black and white one the wall rests in.
+    The dashboard makes both from one upload as `brand_mark` in
+    `scripts/prepare-assets.py` does (white on an opaque file taken away,
+    trimmed, 340 px, a 6% margin, the black and white print toned so every logo
+    has the same weight), and the document holds both paths, so a publish
+    carries both.
+  - `places.json`, the Scented Memory map: each pin's name, words and card
+    photo (1200 px). Where a pin sits, the scent it opens and its boutiques
+    stay as they are.
+- **The Policies tab** edits `policies.json`, the four policy pages, with the
+  journal's blocks. Each keeps its own address, so the four are never added or
+  removed.
 
 ### Setting it up
 
@@ -244,6 +280,9 @@ Leave `DATABASE_URL` unset for the file store under `.data/`, or point it at a
 throwaway Postgres. `npm test` runs the unit and API tests.
 `node scripts/dashboard-e2e.mjs` drives the whole flow against that stack in
 Chrome, in Safari's engine and on a phone; it needs a freshly started fake.
+`node scripts/parity.mjs` captures what every page shows (its text, its
+images and where its links go), to prove a change to where content lives
+changed nothing on the site.
 
 
 ## Search, and answer engines
