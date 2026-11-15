@@ -2,8 +2,11 @@ import MalaysiaMap from '../components/MalaysiaMap'
 import Reveal from '../components/ui/Reveal'
 import Particles from '../components/ui/Particles'
 import { Kicker } from '../components/ui/SplitText'
+import Heading from '../components/ui/Heading'
+import { pages } from '../data/pages'
 
 export default function ScentMemory() {
+  const words = pages.home.map
   return (
     <section className="relative overflow-hidden bg-ink py-24 text-ivory md:py-32">
       <div className="pointer-events-none absolute -left-20 top-10 h-72 w-72 rounded-full bg-gold/10 blur-3xl" />
@@ -12,18 +15,14 @@ export default function ScentMemory() {
       <Particles />
       <div className="u-container relative z-10">
         <div className="mx-auto max-w-2xl text-center">
-          <Kicker>A Scented Memory of Malaysia</Kicker>
+          <Kicker>{words.kicker}</Kicker>
           <Reveal>
             <h2 className="mt-5 font-display text-[clamp(2.4rem,5vw,4rem)] leading-[1.03]">
-              Every scent is born<br />of a <span className="italic text-gilt">place</span>
+              <Heading text={words.heading} />
             </h2>
           </Reveal>
           <Reveal delay={0.1}>
-            <p className="mt-5 text-ivory/60">
-              From the sun kissed shores of Langkawi to the historic heart of Melaka, our scents
-              translate the spirit of Malaysia into fine perfumery. Select a place to begin your
-              sensory journey.
-            </p>
+            <p className="mt-5 text-ivory/60">{words.intro}</p>
           </Reveal>
         </div>
 

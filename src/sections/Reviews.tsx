@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { reviews, reviewsUrl, type Review } from '../data/reviews'
+import { pages } from '../data/pages'
+import Heading from '../components/ui/Heading'
 import { RevealGroup, RevealItem } from '../components/ui/Reveal'
 import { Kicker } from '../components/ui/SplitText'
 import { ArrowRight, ChevronLeft, ChevronRight, Star } from '../components/ui/icons'
@@ -112,16 +114,16 @@ export default function Reviews() {
       <div className="u-container">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div>
-            <Kicker>Tiny Reviews. Big Love.</Kicker>
+            <Kicker>{pages.home.reviews.kicker}</Kicker>
             <h2 className="mt-4 font-display text-[clamp(2rem,4.5vw,3.6rem)] leading-[1.05]">
-              What our customers say
+              <Heading text={pages.home.reviews.heading} />
             </h2>
           </div>
           <Link
             to={reviewsUrl}
             className="group flex items-center gap-2 text-xs font-medium uppercase tracking-[0.16em] text-ink"
           >
-            What our Customers Buy
+            {pages.home.reviews.link}
             <ArrowRight width={15} className="text-gold transition-transform duration-500 group-hover:translate-x-1" />
           </Link>
         </div>

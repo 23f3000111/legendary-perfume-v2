@@ -2,6 +2,8 @@ import { useLayoutEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { collections } from '../data/collections'
+import { pages } from '../data/pages'
+import Heading from '../components/ui/Heading'
 import { accent } from '../lib/accents'
 import { asset } from '../lib/asset'
 import Particles from '../components/ui/Particles'
@@ -60,6 +62,7 @@ export default function CollectionsRail() {
   // Client note: pan 15% slower. The same travel spread over a taller pinned
   // section means the viewer gets longer on each collection.
   const PACE = 1.15
+  const words = pages.home.collections
 
   return (
     <>
@@ -82,22 +85,18 @@ export default function CollectionsRail() {
           <motion.div ref={trackRef} style={{ x }} className="relative z-10 flex items-center gap-10 px-[12vw] will-change-transform">
             {/* Intro panel */}
             <div className="w-[34vw] shrink-0">
-              <Kicker>The Collections</Kicker>
+              <Kicker>{words.kicker}</Kicker>
               <h2 className="mt-5 font-display text-[clamp(2.6rem,4.4vw,4.4rem)] leading-[1.02]">
-                Four worlds,<br />bottled.
+                <Heading text={words.heading} />
               </h2>
-              <p className="mt-6 max-w-sm text-ivory/60">
-                Each Legendary collection is a sensory journey through Malaysia, bridging
-                tropical wilderness, cultural artistry and modern elegance. Scroll to wander
-                through them.
-              </p>
+              <p className="mt-6 max-w-sm text-ivory/60">{words.intro}</p>
 
               {/* Client amendment: a cue that this rail is driven by scrolling
                   down the page. It fades once the pan is under way. */}
               <motion.div style={{ opacity: cueOpacity }} className="mt-9 flex flex-col items-start gap-2">
                 <ChevronDown width={22} className="animate-bob text-gold" />
                 <span className="text-[0.66rem] uppercase tracking-[0.28em] text-ivory/60">
-                  Keep scrolling
+                  {words.cue}
                 </span>
               </motion.div>
             </div>
@@ -111,8 +110,10 @@ export default function CollectionsRail() {
       {/* Mobile: snap scroller */}
       <section className="bg-ink py-16 text-ivory lg:hidden">
         <div className="u-container">
-          <Kicker>The Collections</Kicker>
-          <h2 className="mt-4 font-display text-4xl">Four worlds, bottled.</h2>
+          <Kicker>{words.kicker}</Kicker>
+          <h2 className="mt-4 font-display text-4xl">
+            <Heading text={words.heading} flat />
+          </h2>
         </div>
         <div className="mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-4">
           {collections.map((c) => (

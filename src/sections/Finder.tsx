@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { moodList, moodCopy, moodIcon, productsByMood, type Mood } from '../data/products'
+import { moodList, moodLine, moodIcon, productsByMood, type Mood } from '../data/products'
+import { pages } from '../data/pages'
+import Heading from '../components/ui/Heading'
 import ProductCard from '../components/ProductCard'
 import Reveal from '../components/ui/Reveal'
 import { Kicker } from '../components/ui/SplitText'
@@ -13,22 +15,21 @@ export default function Finder() {
   // Nothing the dashboard has taken off the shop.
   const hidden = useStock((s) => s.hidden)
   const matches = productsByMood(mood).filter((p) => isListed(p, hidden)).slice(0, 4)
+  const words = pages.home.finder
 
   return (
     <section className="bg-sand/60 py-24 md:py-32">
       <div className="u-container">
         <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:items-end">
           <div>
-            <Kicker>The Olfactory Finder</Kicker>
+            <Kicker>{words.kicker}</Kicker>
             <Reveal>
               <h2 className="mt-5 font-display text-[clamp(2.2rem,4.5vw,3.6rem)] leading-[1.03]">
-                What mood are<br />you wearing today?
+                <Heading text={words.heading} />
               </h2>
             </Reveal>
             <Reveal delay={0.1}>
-              <p className="mt-5 max-w-md text-ink-soft">
-                Fragrance is emotion. Choose a feeling and we’ll show you the scents that speak it.
-              </p>
+              <p className="mt-5 max-w-md text-ink-soft">{words.intro}</p>
             </Reveal>
           </div>
 
@@ -60,7 +61,7 @@ export default function Finder() {
                   <p className="mt-3 flex h-6 shrink-0 items-center font-display text-xl leading-none">{m}</p>
                   {/* Client change: the mood headline replaces the ingredient hint */}
                   <p className={`mt-1.5 h-8 text-[0.72rem] leading-snug ${active ? 'text-ivory/70' : 'text-smoke'}`}>
-                    {moodCopy[m].line}
+                    {moodLine(m)}
                   </p>
                 </button>
               )
@@ -72,7 +73,7 @@ export default function Finder() {
         <div className="mt-14">
           <div className="mb-6 flex items-center justify-end">
             <Link to="/shop" className="hidden items-center gap-1.5 text-xs font-medium uppercase tracking-[0.16em] text-gold-deep sm:flex">
-              Shop all <ArrowRight width={14} />
+              {words.link} <ArrowRight width={14} />
             </Link>
           </div>
           <AnimatePresence mode="wait">

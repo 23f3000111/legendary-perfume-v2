@@ -6,6 +6,7 @@ import { useShop, cartCount } from '../../store/shop'
 import { useUI } from '../../store/ui'
 import { collections } from '../../data/collections'
 import { waChat } from '../../data/site'
+import { pages } from '../../data/pages'
 import { Search, User, Bag, Menu, Close, ArrowUpRight, ChevronDown, WhatsApp } from '../ui/icons'
 import { Wordmark } from '../ui/Wordmark'
 import SearchOverlay from '../SearchOverlay'
@@ -210,11 +211,11 @@ export default function Header() {
                   </motion.div>
                 </div>
                 <Link to="/product/orchid" onClick={() => setMega(false)} className="group relative overflow-hidden">
-                  <img src={asset('/assets/client/signature-orchid.webp')} alt="Orchid" className="h-56 w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <img src={asset(pages.layout.menu.photo)} alt={pages.layout.menu.alt} className="h-56 w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                   <div className="absolute inset-0 bg-gradient-to-t from-ink/70 to-transparent" />
                   <div className="absolute bottom-4 left-4 text-ivory">
-                    <p className="eyebrow eyebrow-gold">The Signature</p>
-                    <p className="mt-1 flex items-center gap-1 font-display text-2xl">Orchid <ArrowUpRight width={18} /></p>
+                    <p className="eyebrow eyebrow-gold">{pages.layout.menu.eyebrow}</p>
+                    <p className="mt-1 flex items-center gap-1 font-display text-2xl">{pages.layout.menu.title} <ArrowUpRight width={18} /></p>
                   </div>
                 </Link>
               </div>

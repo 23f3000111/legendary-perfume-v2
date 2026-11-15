@@ -11,6 +11,7 @@ import sellers from './sellers.json'
 import places from './places.json'
 import site from './site.json'
 import policies from './policies.json'
+import pages from './pages.json'
 
 /**
  * Every document the dashboard edits, as the site holds it: the very objects
@@ -31,4 +32,5 @@ export const CONTENT: Record<DocKey, Record<string, unknown>> = {
   places: places as Record<string, unknown>,
   site: site as Record<string, unknown>,
   policies: policies as Record<string, unknown>,
+  pages: pages as Record<string, unknown>,
 }

@@ -24,9 +24,12 @@ export default function Seo({
   crumbs,
   jsonLd,
   canonicalPath,
+  exact,
 }: {
   /** Page title, without the house name; that is appended. */
   title: string
+  /** Use `title` as it is, without the house name: the Home page gives its whole title. */
+  exact?: boolean
   description: string
   /** Social card image, absolute or site relative. */
   image?: string
@@ -41,7 +44,7 @@ export default function Seo({
 }) {
   const { pathname, search } = useLocation()
   const canonical = absolute(canonicalPath ?? pathname + search)
-  const fullTitle = title === SITE.name ? `${SITE.name} · ${SITE.tagline}` : `${title} · ${SITE.name}`
+  const fullTitle = exact ? title : title === SITE.name ? `${SITE.name} · ${SITE.tagline}` : `${title} · ${SITE.name}`
   const card = absolute(image ?? '/assets/client/banner-fragrances.webp')
 
   const nodes: object[] = [organisationLd(), websiteLd()]

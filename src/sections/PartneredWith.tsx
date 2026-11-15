@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion'
 import BrandLogo from '../components/ui/BrandLogo'
 import { partnersDoc } from '../data/logos'
+import { pages } from '../data/pages'
+import Heading from '../components/ui/Heading'
 
 /**
  * "Partnered With" sits directly above the customer reviews.
@@ -27,7 +29,9 @@ export default function PartneredWith() {
   return (
     <section className="border-t border-line bg-porcelain py-16 md:py-20">
       <div className="u-container">
-        <h2 className="text-center font-display text-[clamp(1.7rem,3vw,2.4rem)]">Partnered With</h2>
+        <h2 className="text-center font-display text-[clamp(1.7rem,3vw,2.4rem)]">
+          <Heading text={pages.home.partners.heading} />
+        </h2>
 
         {/* Each row animates as a unit. Row wrappers sit between the group and
             the logos, and variant state only travels through motion elements,

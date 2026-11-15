@@ -3,6 +3,8 @@ import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { WhatsApp, Instagram, Facebook, TikTok, ArrowRight, Check, ChevronDown } from '../ui/icons'
 import { site, waLink } from '../../data/site'
+import { pages } from '../../data/pages'
+import Heading from '../ui/Heading'
 import Particles from '../ui/Particles'
 import { Wordmark } from '../ui/Wordmark'
 
@@ -45,6 +47,7 @@ export default function Footer() {
   const [shopOpen, setShopOpen] = useState(false)
   // Client change: the newsletter sign-up appears on the contact page only.
   const showNewsletter = useLocation().pathname === '/contact'
+  const words = pages.layout.footer
 
   return (
     <footer className="relative overflow-hidden bg-ink text-ivory">
@@ -56,13 +59,11 @@ export default function Footer() {
       <div className="u-container relative border-b border-ivory/10 py-16 md:py-20">
         <div className="grid gap-10 md:grid-cols-2 md:items-end">
           <div>
-            <p className="eyebrow eyebrow-gold">The Legendary House</p>
+            <p className="eyebrow eyebrow-gold">{words.newsletter.eyebrow}</p>
             <h2 className="mt-4 font-display text-[clamp(2rem,4vw,3.2rem)] leading-[1.05]">
-              Join us, and receive<br />a scented welcome.
+              <Heading text={words.newsletter.heading} />
             </h2>
-            <p className="mt-4 max-w-md text-sm text-ivory/60">
-              Early access to new collections, private offers, and the stories behind each scent.
-            </p>
+            <p className="mt-4 max-w-md text-sm text-ivory/60">{words.newsletter.text}</p>
           </div>
           <form
             onSubmit={(e) => { e.preventDefault(); if (email) { setDone(true); setEmail('') } }}
@@ -79,7 +80,7 @@ export default function Footer() {
                 {done ? <Check width={20} /> : <ArrowRight width={20} />}
               </button>
             </div>
-            {done && <p className="mt-3 text-xs text-gold">Welcome to Legendary. Check your inbox.</p>}
+            {done && <p className="mt-3 text-xs text-gold">{words.newsletter.thanks}</p>}
           </form>
         </div>
       </div>
@@ -91,9 +92,7 @@ export default function Footer() {
           <Link to="/" aria-label="Legendary, home" className="inline-block text-ivory">
             <Wordmark height="1.7rem" />
           </Link>
-          <p className="mt-4 max-w-xs text-sm text-ivory/55">
-            A Malaysian perfume house on a mission to share the best of Malaysia’s fragrances with the world.
-          </p>
+          <p className="mt-4 max-w-xs text-sm text-ivory/55">{words.blurb}</p>
           <div className="mt-6 flex gap-3">
             {[
               { I: Facebook, href: site.facebook.url, label: 'Facebook' },
@@ -172,9 +171,11 @@ export default function Footer() {
           The launcher reaches about 84px up from the bottom edge at every
           width, hence the 96px. */}
       <div className="u-container relative flex flex-col items-center justify-between gap-4 border-t border-ivory/10 pb-24 pt-6 text-xs text-ivory/45 sm:flex-row">
-        <p className="text-center sm:text-left">© 2026 Legendary Perfume · Crafted in Malaysia</p>
+        <p className="text-center sm:text-left">{words.copyright}</p>
         <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-[0.62rem] uppercase tracking-[0.14em]">
-          <span>Visa</span><span>Mastercard</span><span>GrabPay</span><span>Touch ’n Go</span><span>Apple Pay</span>
+          {words.payments.map((mark) => (
+            <span key={mark}>{mark}</span>
+          ))}
         </div>
       </div>
     </footer>

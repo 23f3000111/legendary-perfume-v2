@@ -1,3 +1,4 @@
+import { pages } from './pages'
 import data from '../content/products.json'
 import type { ProductEntry, ProductsDoc, ProductVariant } from '../../api/_lib/content/schema'
 import { asset } from '../lib/asset'
@@ -58,14 +59,12 @@ export function galleryOf(product: Product): string[] {
 export const moodList: Mood[] = ['Serene', 'Bold', 'Romantic', 'Playful']
 
 /**
- * Client change: the mood tile now carries the headline itself rather than a
- * separate ingredient hint.
+ * The line on a mood's tile. Client change: the tile carries this headline
+ * rather than a separate ingredient hint. The words are the Home page's
+ * (src/content/pages.json), read when called so a preview's drafts show.
  */
-export const moodCopy: Record<Mood, { line: string }> = {
-  Serene: { line: 'Calm, clean and quietly luminous' },
-  Bold: { line: 'Warm, spirited and unforgettable' },
-  Romantic: { line: 'Tender, powdery and full of bloom' },
-  Playful: { line: 'Bright, fruity and full of joy' },
+export function moodLine(mood: Mood): string {
+  return pages.home.finder.moods[mood]
 }
 
 /** Client-supplied line art, re-tinted to the house gold at build time. */

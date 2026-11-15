@@ -7,11 +7,14 @@ import { articleList, getArticle } from '../data/articles'
 import { getProduct, products } from '../data/products'
 import { collectionName, collections } from '../data/collections'
 import { partnersDoc } from '../data/logos'
+import { pages } from '../data/pages'
+import { moodLine } from '../data/products'
 import faqJson from './faq.json'
 import journalJson from './journal.json'
 import productsJson from './products.json'
 import collectionsJson from './collections.json'
 import partnersJson from './partners.json'
+import pagesJson from './pages.json'
 
 afterEach(() => setPreviewMedia([]))
 
@@ -116,5 +119,24 @@ describe('preview', () => {
     }
     expect(collectionName(getProduct('orchid')!)).toBe('Signature')
     expect(partnersDoc.rows).toHaveLength(3)
+  })
+
+  // Every page's own words, the header and footer among them, are read when
+  // they render, so a preview of the Pages shows its drafts everywhere.
+  it('a draft of the pages is what the pages read', () => {
+    const saved = structuredClone(pagesJson)
+    const draft = structuredClone(pagesJson)
+    draft.home.signature.heading = 'Orchid, the scent\nthat started it all'
+    draft.layout.footer.copyright = '© 2027 Legendary Perfume'
+    draft.home.finder.moods.Bold = 'Warm and brave'
+    try {
+      applyDrafts({ pages: draft }, CONTENT)
+      expect(pages.home.signature.heading).toBe('Orchid, the scent\nthat started it all')
+      expect(pages.layout.footer.copyright).toBe('© 2027 Legendary Perfume')
+      expect(moodLine('Bold')).toBe('Warm and brave')
+    } finally {
+      applyDrafts({ pages: saved }, CONTENT)
+    }
+    expect(moodLine('Bold')).toBe('Warm, spirited and unforgettable')
   })
 })

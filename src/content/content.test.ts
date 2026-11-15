@@ -12,6 +12,7 @@ import sellersJson from './sellers.json'
 import placesJson from './places.json'
 import siteJson from './site.json'
 import policiesJson from './policies.json'
+import pagesJson from './pages.json'
 import { faq } from '../data/faq'
 import { storesDoc } from '../data/stores'
 import { articleList, formatDate, journal } from '../data/articles'
@@ -23,12 +24,14 @@ import { partnersDoc, sellersDoc } from '../data/logos'
 import { placesDoc, scentPlaces } from '../data/places'
 import { site } from '../data/site'
 import { policies, policiesDoc } from '../data/policies'
+import { pages } from '../data/pages'
 import { DOCS } from '../../api/_lib/content/docs'
 import {
   CollectionsDocSchema,
   FaqDocSchema,
   JourneyDocSchema,
   JournalDocSchema,
+  PagesDocSchema,
   PartnersDocSchema,
   PlacesDocSchema,
   PoliciesDocSchema,
@@ -43,6 +46,11 @@ describe('published content', () => {
   it('the published FAQ and stores pass their schemas', () => {
     expect(FaqDocSchema.safeParse(faq).success).toBe(true)
     expect(StoresDocSchema.safeParse(storesDoc).success).toBe(true)
+  })
+
+  it('the published pages pass their schema', () => {
+    const result = PagesDocSchema.safeParse(pages)
+    expect(result.success ? [] : result.error.issues).toEqual([])
   })
 
   it('the published site details and policies pass their schemas', () => {
@@ -113,6 +121,7 @@ describe('published content', () => {
     expect(site).toBe(siteJson)
     expect(policiesDoc).toBe(policiesJson)
     expect(policies).toBe(policiesJson.policies)
+    expect(pages).toBe(pagesJson)
   })
 })
 
