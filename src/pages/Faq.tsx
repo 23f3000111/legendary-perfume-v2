@@ -101,6 +101,8 @@ export function FaqHelp() {
       </h2>
       <p className="mx-auto mt-4 max-w-lg text-ink-soft">
         {help.before} {site.whatsapp}
+        {/* Publish trims what is typed, so a word after the number needs its space back. */}
+        {/^[,.;:!?)]/.test(help.after) ? '' : ' '}
         {help.after}
       </p>
       <div className="mt-8 flex flex-wrap justify-center gap-3">
