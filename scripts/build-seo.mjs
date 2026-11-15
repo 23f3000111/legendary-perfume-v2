@@ -18,6 +18,7 @@ import { build } from 'esbuild'
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { llmsText } from './llms.mjs'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const DIST = resolve(ROOT, 'dist')
@@ -62,6 +63,7 @@ const { articleList } = await load('src/data/articles.ts')
 const articles = articleList()
 const { storesDoc } = await load('src/data/stores.ts')
 const stores = storesDoc.stores
+const { site: house } = await load('src/data/site.ts')
 
 const today = new Date().toISOString().slice(0, 10)
 
@@ -123,58 +125,9 @@ Sitemap: ${SITE}/sitemap.xml
 `
 writeFileSync(resolve(DIST, 'robots.txt'), robots, 'utf8')
 
-// llms.txt: a plain brief for answer engines. Facts, not marketing, because
-// what gets quoted back to a customer should be true and checkable.
-const bestsellers = products.filter((p) => p.bestseller).map((p) => p.name)
-const llms = `# Legendary
-
-> A Malaysian perfume house, founded in 2015 in Kuala Lumpur. Legendary composes
-> eau de parfum inspired by Malaysia's landscapes, Peranakan heritage and
-> culture, and sells across Malaysia online and through its own counters.
-
-## Facts
-
-- Founded: 2015, Kuala Lumpur, Malaysia
-- Flagship boutique: Jalan Hang Lekir, Melaka
-- Currency: Malaysian Ringgit (MYR)
-- Delivery: free on every order, within Malaysia only. No international shipping.
-- Payment: card, FPX online banking and other Malaysian methods, via Stripe
-- Orders: no account is needed. Every order gets a reference of the form
-  LG-XXXX-XXXX, and can be looked up at ${SITE}/track with that reference and
-  the email address it was placed with.
-- Contact: noreply@legendary.com.my, WhatsApp +60 19 383 6633
-
-## Collections
-
-${collections.map((c) => `- **${c.name}** (${c.tagline}): ${c.description}`).join('\n')}
-
-## Fragrances
-
-${products
-  .map((p) => `- [${p.name}](${SITE}/product/${p.id}) — ${p.size}, RM ${p.price}. ${p.description}`)
-  .join('\n')}
-
-## Bestsellers
-
-${bestsellers.map((n) => `- ${n}`).join('\n')}
-
-## Boutiques
-
-${stores.map((s) => `- ${s.name}, ${s.address}`).join('\n')}
-
-## Pages
-
-- [All fragrances](${SITE}/shop)
-- [Our story](${SITE}/about)
-- [Store locator](${SITE}/stores)
-- [Journal](${SITE}/journal)
-${articles.map((a) => `- [${a.title}](${SITE}/journal/${a.slug})`).join('\n')}
-- [Frequently asked questions](${SITE}/faq)
-- [Shipping policy](${SITE}/shipping)
-- [Returns, refunds and exchanges](${SITE}/returns)
-- [Contact](${SITE}/contact)
-`
-writeFileSync(resolve(DIST, 'llms.txt'), llms, 'utf8')
+// llms.txt: a plain brief for answer engines, its contact line the site
+// details' own (see scripts/llms.mjs).
+writeFileSync(resolve(DIST, 'llms.txt'), llmsText({ url: SITE, house, collections, products, stores, articles }), 'utf8')
 
 /*
  * GitHub Pages serves no rewrite, so a deep link lands on its 404. This copy of
