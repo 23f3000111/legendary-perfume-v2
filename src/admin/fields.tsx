@@ -13,6 +13,13 @@ import { hasLongDash, replaceLongDashes } from './text'
 /** The message for one field, from the server's check of the draft. */
 export const errorAt = (errors: ContentIssue[], path: string) => errors.find((e) => e.path === path)?.message
 
+/**
+ * The message for a field, or else the first one under it: a list of lines is
+ * one field, but the check names the line at fault (`payments.1`).
+ */
+export const errorUnder = (errors: ContentIssue[], path: string) =>
+  errorAt(errors, path) ?? errors.find((e) => e.path.startsWith(`${path}.`))?.message
+
 interface FieldProps {
   label: string
   value: string

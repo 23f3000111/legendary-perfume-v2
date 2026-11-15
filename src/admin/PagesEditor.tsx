@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { PagesDoc } from '../../api/_lib/content/schema'
 import { sameContent, useContent } from './contentStore'
-import { ContentGate, errorAt, LinesField, NumberField, TextArea, TextField } from './fields'
+import { ContentGate, errorUnder, LinesField, NumberField, TextArea, TextField } from './fields'
 import { getAt, PAGE_SPECS, setAt, type PageField } from './pages'
 import PhotoField from './PhotoField'
 import PublishBar from './PublishBar'
@@ -50,7 +50,7 @@ function Editor() {
                   field={f}
                   value={getAt(data, f.path)}
                   onChange={(value) => set(f.path, value)}
-                  error={errorAt(doc.errors, f.path)}
+                  error={errorUnder(doc.errors, f.path)}
                   busy={busy}
                 />
               ))}
