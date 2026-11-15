@@ -22,6 +22,8 @@ export default function CollectionsEditor() {
   // The working products and places, so a move the team has not published yet counts.
   const products = useContent((s) => s.docs.products?.working) as ProductsDoc | null | undefined
   const places = useContent((s) => s.docs.places?.working) as PlacesDoc | null | undefined
+  // And the products on the site: a move out still in a draft is not done yet.
+  const liveProducts = useContent((s) => s.docs.products?.published) as ProductsDoc | null | undefined
   const edit = useContent((s) => s.edit)
   const busy = useContent((s) => s.publishing.state === 'publishing')
   if (!doc) return null
@@ -30,6 +32,11 @@ export default function CollectionsEditor() {
   const err = (path: string) => errorAt(doc.errors, path)
   const set = (collections: CollectionEntry[]) => edit('collections', { ...data, collections })
   const othersThan = (index: number) => new Set(data.collections.filter((_, i) => i !== index).map((c) => c.id))
+  // A collection something is in keeps its address, even while it is new.
+  const inUse = new Set([
+    ...(products?.products ?? []).map((p) => p.collectionId),
+    ...(places?.places ?? []).flatMap((p) => (p.collectionId ? [p.collectionId] : [])),
+  ])
 
   return (
     <div className="space-y-8">
@@ -42,7 +49,7 @@ export default function CollectionsEditor() {
           blank={() => blankCollection(new Set([...data.collections.map((c) => c.id), ...publishedIds]))}
           addLabel="Add a collection"
           itemLabel={(c) => (c.name ? c.name : 'this collection')}
-          canRemove={(c) => collectionInUse(c, products?.products ?? [], places?.places ?? [])}
+          canRemove={(c) => collectionInUse(c, products?.products ?? [], places?.places ?? [], liveProducts?.products ?? [])}
           disabled={busy}
           render={(c, update, i) => {
             const at = (field: string) => err(`collections.${i}.${field}`)
@@ -52,12 +59,12 @@ export default function CollectionsEditor() {
                   <TextField
                     label="Name"
                     value={c.name}
-                    onChange={(name) => update(renameCollection(c, name, publishedIds, othersThan(i)))}
+                    onChange={(name) => update(renameCollection(c, name, publishedIds, othersThan(i), inUse))}
                     error={at('name')}
                     disabled={busy}
                   />
                   <p className="mt-1 text-xs text-smoke">Address: /shop?collection={c.id}</p>
-                  <p className="text-xs text-smoke">Made from the name. It stays the same once the collection is published.</p>
+                  <p className="text-xs text-smoke">Made from the name. It stays the same once the collection is published, or once products are in it.</p>
                   {at('id') && <p className={`mt-1 text-xs ${danger}`}>{at('id')}</p>}
                 </div>
                 <TextField

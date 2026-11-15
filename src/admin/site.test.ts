@@ -49,4 +49,29 @@ describe('the Site tab', () => {
     expect(siteMono('/assets/client/store-bsas.webp')).toBeNull()
     expect(siteMono('/assets/cms/abc.webp')).toBeNull()
   })
+
+  // A typo fixed in a new collection's name must not leave its products in a
+  // collection that no longer exists.
+  it('a new collection keeps its address once products are in it', () => {
+    const merdeka = { ...blankCollection(new Set()), id: 'merdeka', name: 'Merdeka' }
+    expect(renameCollection(merdeka, 'Merdeka Raya', new Set(), new Set(), new Set(['merdeka'])).id).toBe('merdeka')
+    expect(renameCollection(merdeka, 'Merdeka Raya', new Set(), new Set(), new Set()).id).toBe('merdekaraya')
+  })
+
+  // Removing it while the site still has products in it, their move out only a
+  // draft, would leave them in a collection that is gone if that draft is dropped.
+  it('a collection products are in on the site cannot be removed until their move is published', () => {
+    const signature = { id: 'signature', name: 'Signature' }
+    const live = [
+      { name: 'Orchid', collectionId: 'signature' },
+      { name: 'Violet', collectionId: 'signature' },
+    ]
+    expect(collectionInUse(signature, [], [], live.slice(0, 1))).toBe(
+      'Orchid is in Signature on the site. Publish its move to another collection first.',
+    )
+    expect(collectionInUse(signature, [], [], live)).toBe(
+      'Orchid and Violet are in Signature on the site. Publish their move to another collection first.',
+    )
+    expect(collectionInUse(signature, [], [], [])).toBeNull()
+  })
 })

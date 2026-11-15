@@ -5,7 +5,7 @@ import { accents } from '../lib/accents'
 import { setOptional } from './blocks'
 import { LinesField, ListEditor, NumberField, Select, TextArea, TextField } from './fields'
 import PhotoField from './PhotoField'
-import { renameProduct } from './products'
+import { collectionMissing, renameProduct } from './products'
 import { useContent } from './contentStore'
 import { danger, panel, small } from './styles'
 
@@ -73,7 +73,7 @@ export default function ProductForm({
                 const chosen = collections.find((c) => c.id === id)
                 if (chosen) onChange({ ...product, collectionId: chosen.id, collection: chosen.name })
               }}
-              error={err('collectionId') ?? err('collection')}
+              error={err('collectionId') ?? err('collection') ?? collectionMissing(product, collections) ?? undefined}
               disabled={busy}
             />
             <TextField label="Scent family" value={product.family} onChange={(v) => set('family', v)} error={err('family')} disabled={busy} />

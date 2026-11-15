@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { getProduct } from '../data/products'
-import { blankProduct, duplicateProduct, pinReason, renameProduct } from './products'
+import { blankProduct, collectionMissing, duplicateProduct, pinReason, renameProduct } from './products'
 
 const signature = { id: 'signature', name: 'Signature' }
 
@@ -53,5 +53,13 @@ describe('products in the dashboard', () => {
     expect(pinReason('orchid')).toBe("Orchid leads the Home page's Signature section.")
     expect(pinReason('mahsuri')).toBe('Mahsuri is pinned on the Scented Memory map.')
     expect(pinReason('violet')).toBeNull()
+  })
+
+  // A draft dropped or a collection renamed elsewhere can leave a product
+  // pointing at a collection the shop no longer has: the form says so.
+  it('a product whose collection is gone is told to choose one', () => {
+    const collections = [{ id: 'signature', name: 'Signature' }]
+    expect(collectionMissing({ collectionId: 'merdeka' }, collections)).toBe('That collection is not in the shop. Choose one.')
+    expect(collectionMissing({ collectionId: 'signature' }, collections)).toBeNull()
   })
 })

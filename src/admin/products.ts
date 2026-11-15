@@ -84,3 +84,13 @@ export function pinReason(id: string): string | null {
   }
   return null
 }
+
+/**
+ * What to tell the team when a product's collection is not among the
+ * collections, or null when it is: a dropped draft or a collection removed
+ * elsewhere can leave a product pointing at one the shop no longer has. Given
+ * the working collections.
+ */
+export function collectionMissing(product: { collectionId: string }, collections: { id: string }[]): string | null {
+  return collections.some((c) => c.id === product.collectionId) ? null : 'That collection is not in the shop. Choose one.'
+}

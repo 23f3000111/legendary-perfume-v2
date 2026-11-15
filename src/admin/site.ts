@@ -21,34 +21,50 @@ export function blankCollection(taken: Set<string>): CollectionEntry {
 }
 
 /**
- * A collection with a new name. While it is unpublished its address follows
- * the name, as an article's does; once published it stays, because the menu,
- * old links and search results point at it. Never a published address either,
- * even one this draft removed.
+ * A collection with a new name. While it is unpublished and nothing is in it,
+ * its address follows the name, as an article's does. Once published it stays,
+ * because the menu, old links and search results point at it; and once
+ * products are in it (`inUse`), it stays too, or a corrected typo in the name
+ * would leave them in a collection that no longer exists. Never a published
+ * address either, even one this draft removed.
  */
 export function renameCollection(
   collection: CollectionEntry,
   name: string,
   publishedIds: Set<string>,
   taken: Set<string>,
+  inUse: Set<string> = new Set(),
 ): CollectionEntry {
-  if (publishedIds.has(collection.id)) return { ...collection, name }
+  if (publishedIds.has(collection.id) || inUse.has(collection.id)) return { ...collection, name }
   return { ...collection, name, id: newId(name || 'new collection', new Set([...taken, ...publishedIds])) }
 }
 
 /**
  * Why a collection must stay, or null when it can go: products are in it, or
- * a pin on the Scented Memory map opens it. Given the working products and
- * places, so a change the team has not published yet counts.
+ * a pin on the Scented Memory map opens it.
+ *
+ * Given the working products and places, so a change the team has not
+ * published yet counts, and the products on the site (`live`) as well: a
+ * collection whose products have moved out only in a draft must wait until
+ * that move is published, or dropping the draft would leave them in a
+ * collection that is gone.
  */
 export function collectionInUse(
   collection: { id: string; name: string },
   products: { name: string; collectionId: string }[],
   places: { place: string; collectionId?: string }[],
+  live: { name: string; collectionId: string }[] = [],
 ): string | null {
-  const inIt = products.filter((p) => p.collectionId === collection.id).map((p) => p.name || 'An unnamed product')
+  const names = (list: { name: string; collectionId: string }[]) =>
+    list.filter((p) => p.collectionId === collection.id).map((p) => p.name || 'An unnamed product')
+  const inIt = names(products)
   if (inIt.length === 1) return `${inIt[0]} is in ${collection.name}. Move it to another collection first.`
   if (inIt.length > 1) return `${titleList(inIt)} are in ${collection.name}. Move them to another collection first.`
+  const onSite = names(live)
+  if (onSite.length === 1) return `${onSite[0]} is in ${collection.name} on the site. Publish its move to another collection first.`
+  if (onSite.length > 1) {
+    return `${titleList(onSite)} are in ${collection.name} on the site. Publish their move to another collection first.`
+  }
   const pin = places.find((p) => p.collectionId === collection.id)
   if (pin) return `The Scented Memory map's ${pin.place} pin opens ${collection.name}.`
   return null
