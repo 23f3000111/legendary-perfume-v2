@@ -6,7 +6,7 @@ import { useContent } from './contentStore'
 import { danger, panel, small } from './styles'
 
 /** The documents whose names read as plural: "put the Products back as they were". */
-const PLURAL = new Set<DocKey>(['stores', 'products', 'collections', 'reviews', 'partners', 'sellers', 'policies', 'site'])
+const PLURAL = new Set<DocKey>(['stores', 'products', 'collections', 'reviews', 'partners', 'sellers', 'policies', 'site', 'pages'])
 
 const when = (iso: string, withTime = true) =>
   new Date(iso).toLocaleString('en-GB', {
@@ -55,9 +55,10 @@ export default function History() {
     let what = ''
     if (namesItems(doc)) {
       try {
-        const { removed, returned } = restoreChanges(docs[doc]?.published, (await adminVersion(doc, commit.sha)).data, doc)
+        const { removed, returned, changed } = restoreChanges(docs[doc]?.published, (await adminVersion(doc, commit.sha)).data, doc)
         if (removed.length) what += ` This takes ${titleList(removed)} off the site.`
         if (returned.length) what += ` It brings back ${titleList(returned)}.`
+        if (changed?.length) what += ` It changes ${titleList(changed)}.`
       } catch {
         // The plain question still stands.
       }

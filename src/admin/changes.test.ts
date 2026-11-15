@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { JournalArticle } from '../../api/_lib/content/schema'
 import { changeSummary, journalChanges, restoreChanges } from './changes'
+import pagesJson from '../content/pages.json'
 
 const article = (slug: string, title: string, over: Partial<JournalArticle> = {}): JournalArticle => ({
   slug,
@@ -87,5 +88,15 @@ describe('what a journal change does to the site', () => {
     const live = { policies: [page('shipping', 'Shipping Policy', 'Old.'), page('returns', 'Return, Refund & Exchange', 'Same.')] }
     const working = { policies: [page('shipping', 'Shipping Policy', 'New.'), page('returns', 'Return, Refund & Exchange', 'Same.')] }
     expect(changeSummary('policies', working, live)).toBe('Changed: Shipping Policy.')
+  })
+
+  // Every page's words are one document: a publish says which pages it changes.
+  it('changeSummary names the pages a publish changes', () => {
+    const live = structuredClone(pagesJson)
+    const working = structuredClone(pagesJson)
+    working.home.signature.button = 'Meet Orchid'
+    working.about.cta.shop = 'Shop now'
+    expect(changeSummary('pages', working, live)).toBe('Changed: Home and Our Story.')
+    expect(changeSummary('pages', live, live)).toBeNull()
   })
 })

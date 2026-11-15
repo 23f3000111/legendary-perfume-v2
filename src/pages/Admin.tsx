@@ -13,13 +13,14 @@ import FaqEditor from '../admin/FaqEditor'
 import History from '../admin/History'
 import JournalEditor from '../admin/JournalEditor'
 import PhotoLibrary from '../admin/PhotoLibrary'
+import PagesEditor from '../admin/PagesEditor'
 import PoliciesEditor from '../admin/PoliciesEditor'
 import ProductsEditor from '../admin/ProductsEditor'
 import SiteTab, { isSiteScreen, type SiteScreen } from '../admin/SiteTab'
 import StoresEditor from '../admin/StoresEditor'
 import { useContent } from '../admin/contentStore'
 
-type Tab = 'overview' | 'products' | 'orders' | 'faq' | 'stores' | 'journal' | 'site' | 'policies' | 'photos' | 'history'
+type Tab = 'overview' | 'products' | 'orders' | 'faq' | 'stores' | 'journal' | 'pages' | 'site' | 'policies' | 'photos' | 'history'
 
 /**
  * The house dashboard.
@@ -109,6 +110,7 @@ export default function Admin() {
             {tab === 'faq' && <FaqEditor />}
             {tab === 'stores' && <StoresEditor />}
             {tab === 'journal' && <JournalEditor />}
+            {tab === 'pages' && <PagesEditor />}
             {tab === 'site' && <SiteTab screen={siteScreen} onScreen={setSiteScreen} />}
             {tab === 'policies' && <PoliciesEditor />}
             {tab === 'photos' && <PhotoLibrary />}
@@ -210,6 +212,7 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'faq', label: 'FAQ' },
   { key: 'stores', label: 'Stores' },
   { key: 'journal', label: 'Journal' },
+  { key: 'pages', label: 'Pages' },
   { key: 'site', label: 'Site' },
   { key: 'policies', label: 'Policies' },
   { key: 'photos', label: 'Photos' },
@@ -230,6 +233,7 @@ const DOC_TABS: Record<string, Tab> = {
   sellers: 'site',
   places: 'site',
   policies: 'policies',
+  pages: 'pages',
 }
 
 function UnpublishedChanges({ onOpen }: { onOpen: (t: Tab, doc: string) => void }) {

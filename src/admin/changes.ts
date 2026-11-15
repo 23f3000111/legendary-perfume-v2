@@ -1,5 +1,6 @@
 import type { DocKey } from '../../api/_lib/content/keys'
 import { sameContent } from './contentStore'
+import { PAGE_SPECS } from './pages'
 
 /**
  * What a change to a list document does to the site, item by item.
@@ -48,9 +49,23 @@ const LISTS: Partial<Record<DocKey, ListShape>> = {
   },
 }
 
-/** Whether a document's changes are named item by item: its items have addresses of their own. */
+/**
+ * Documents made of named parts rather than a list: the Pages hold each page's
+ * words under the page's key, so a change names the pages it touches.
+ */
+const SECTIONS: Partial<Record<DocKey, { key: string; title: string }[]>> = {
+  pages: PAGE_SPECS.map((p) => ({ key: p.key, title: p.title })),
+}
+
+/** The parts of a sectioned document that differ between `a` and `b`, by name. */
+function sectionChanges(doc: DocKey, a: unknown, b: unknown): string[] {
+  const at = (value: unknown, key: string) => (value as Record<string, unknown> | null)?.[key]
+  return (SECTIONS[doc] ?? []).filter(({ key }) => !sameContent(at(a, key), at(b, key))).map((p) => p.title)
+}
+
+/** Whether a document's changes are named part by part: its items have addresses, or its parts names, of their own. */
 export function namesItems(doc: DocKey): boolean {
-  return Boolean(LISTS[doc])
+  return Boolean(LISTS[doc] || SECTIONS[doc])
 }
 
 const itemsOf = (shape: ListShape, doc: unknown): Map<string, Record<string, unknown>> => {
@@ -82,7 +97,13 @@ export function journalChanges(working: unknown, published: unknown) {
 }
 
 /** What restoring a list document to `old` would do to `current`: the items it takes off the site and brings back. */
-export function restoreChanges(current: unknown, old: unknown, doc: DocKey = 'journal'): { removed: string[]; returned: string[] } {
+export function restoreChanges(
+  current: unknown,
+  old: unknown,
+  doc: DocKey = 'journal',
+): { removed: string[]; returned: string[]; changed?: string[] } {
+  // A sectioned document takes nothing off the site: a restore changes its parts.
+  if (SECTIONS[doc]) return { removed: [], returned: [], changed: sectionChanges(doc, old, current) }
   const { added, removed } = listChanges(doc, old, current)
   // Restoring `old` over `current` adds what only `old` has and removes what only `current` has.
   return { removed, returned: added }
@@ -96,6 +117,10 @@ export function titleList(titles: string[]): string {
 
 /** One line saying which items an unpublished list document adds, changes and removes. Null otherwise. */
 export function changeSummary(doc: DocKey, working: unknown, published: unknown): string | null {
+  if (SECTIONS[doc]) {
+    const changed = sectionChanges(doc, working, published)
+    return changed.length ? `Changed: ${titleList(changed)}.` : null
+  }
   if (!LISTS[doc]) return null
   const { added, changed, removed } = listChanges(doc, working, published)
   const parts = [
