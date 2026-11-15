@@ -16,7 +16,8 @@
  * a conflict, edits and previews a journal article, publishes a new one with
  * its photo, restores the Journal, publishes a product and restores it, changes
  * the WhatsApp number, adds a partner logo, previews a review, publishes a
- * policy, restores the site details, and checks the photo paths in Safari's
+ * policy, restores the site details, changes a page's words and the footer,
+ * restores the pages, and checks the photo paths in Safari's
  * engine and on a phone.
  * It refuses to run against anything but a local GitHub, so it can never
  * publish to the real repository.
@@ -94,6 +95,7 @@ const seedFaq = (await ghFile('src/content/faq.json')).toString('utf8')
 const seedJournal = (await ghFile('src/content/journal.json')).toString('utf8')
 const seedProducts = (await ghFile('src/content/products.json')).toString('utf8')
 const seedSite = (await ghFile('src/content/site.json')).toString('utf8')
+const seedPages = (await ghFile('src/content/pages.json')).toString('utf8')
 const browser = await chromium.launch({ executablePath: CHROME })
 const context = await browser.newContext({ viewport: { width: 1440, height: 900 } })
 const page = await context.newPage()
@@ -538,6 +540,50 @@ try {
     (dialogs.at(-1) ?? '').startsWith('Put the Site details back as they were on'),
     dialogs.at(-1),
   )
+
+  // 26. A page's words: the Signature heading, previewed and published
+  await openTab(page, 'Pages')
+  await page.waitForSelector('text=Each page')
+  await page.locator('main ul li', { hasText: 'Home' }).first().locator('button:text-is("Edit")').click()
+  await page.waitForSelector('button:text-is("All pages")')
+  const signatureLine = `that began it all, ${Date.now()}`
+  await page.getByLabel('Heading').first().fill(`Orchid, the scent\n${signatureLine}`)
+  await page.waitForSelector('text=Saved as a draft')
+  const [signaturePreview] = await Promise.all([context.waitForEvent('page'), page.click('button:text-is("Preview")')])
+  await signaturePreview.waitForURL(/\/\?preview/)
+  await signaturePreview.waitForLoadState('networkidle')
+  const signatureText = await signaturePreview.evaluate(() => document.body.innerText)
+  await signaturePreview.close()
+  await page.click('button:text-is("Publish")')
+  await page.waitForSelector('text=Live. The site shows your changes.', { timeout: 30000 })
+  await page.click('button:text-is("OK")')
+  const publishedPages = await ghJson('src/content/pages.json')
+  check(
+    "26. Home's Signature heading shows in preview and is published, its line break kept",
+    signatureText.includes(signatureLine) && publishedPages.home.signature.heading === `Orchid, the scent\n${signatureLine}`,
+  )
+
+  // 27. The footer's last line shows on every page in preview
+  await page.click('button:text-is("All pages")')
+  await page.locator('main ul li', { hasText: 'Every page' }).first().locator('button:text-is("Edit")').click()
+  await page.waitForSelector('button:text-is("All pages")')
+  const copyright = `© 2026 Legendary Perfume, checked ${Date.now()}`
+  await page.getByLabel('Last line').fill(copyright)
+  await page.waitForSelector('text=Saved as a draft')
+  const aboutPreview = await context.newPage()
+  await aboutPreview.goto(`${site}/about?preview`, { waitUntil: 'networkidle' })
+  const footerText = await aboutPreview.locator('footer').innerText()
+  await aboutPreview.close()
+  await page.click('button:text-is("Discard")')
+  await page.waitForFunction(() => !document.body.innerText.includes('Unpublished changes:'), null, { timeout: 15000 })
+  check("27. the footer's last line shows on another page in preview", footerText.includes(copyright))
+
+  // 28. Restoring the pages puts the seeded file back, and the question names the page
+  await openTab(page, 'History')
+  await page.waitForSelector('text=Every published change')
+  await page.click('button:text-is("Restore Pages")')
+  await until(async () => (await ghFile('src/content/pages.json')).toString('utf8') === seedPages, 'the restored pages')
+  check('28. restoring the pages puts the seeded file back, and the question names Home', (dialogs.at(-1) ?? '').includes('It changes Home.'), dialogs.at(-1))
 } catch (err) {
   failures++
   console.log(`FAIL  stopped: ${err.message}`)

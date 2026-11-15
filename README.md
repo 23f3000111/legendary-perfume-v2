@@ -148,9 +148,9 @@ The dashboard needs somewhere durable to write.
 
 The same `/admin` edits the site's content, so the Legendary team can make their
 own changes instead of sending revision PDFs. It covers the **FAQ**, the **store
-list**, the **Journal**, the **products**, the **site details and lists** (the
-Site tab) and the **policies**. Each page's own words and photos, and the hero
-poster, follow, as set out in
+list**, the **Journal**, the **products**, **each page's own words** (the Pages
+tab), the **site details and lists** (the Site tab) and the **policies**. The
+page banners, the sharing images and the hero poster follow, as set out in
 `docs/superpowers/specs/2026-11-12-content-dashboard-design.md`.
 
 - **Content lives in `src/content/*.json`.** The site imports it at build time,
@@ -241,6 +241,25 @@ poster, follow, as set out in
 - **The Policies tab** edits `policies.json`, the four policy pages, with the
   journal's blocks. Each keeps its own address, so the four are never added or
   removed.
+- **The Pages tab** edits `pages.json`, every page's own words in one document
+  keyed by page: the headings, introductions and buttons in the copy, the
+  header menu's featured card, the footer, two page photos (the Signature
+  section's Orchid and Our Story's first flower, 1800 px), and each page's
+  search-engine title and description. `src/admin/pages.ts` lists each page's
+  sections and fields in page order, and one form draws any page from it; a
+  test holds that table and the document together, so no word goes without a
+  field.
+  - A heading takes a newline for a line break and `*word*` for the gold
+    italic accent (`src/lib/heading.ts`, drawn by `Heading`). Title bar titles
+    stay plain text, since articles and policies share them.
+  - Where the WhatsApp number or its link sits inside a sentence (the Contact
+    form's line, the FAQ page's "Ask us anything"), the words either side are
+    fields and the number and link still come from Site details.
+  - Interface wording stays in code: menu, filter and form labels, the cart,
+    search, the 404 page and the intro curtain; so do the icons, each
+    section's layout, and which product Signature and the menu card open.
+  - A publish names the pages it changes, and a restore says which pages it
+    changes back.
 
 ### Setting it up
 
