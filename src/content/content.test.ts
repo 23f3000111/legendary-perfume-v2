@@ -25,6 +25,9 @@ import { placesDoc, scentPlaces } from '../data/places'
 import { site } from '../data/site'
 import { policies, policiesDoc } from '../data/policies'
 import { pages } from '../data/pages'
+import { organisationLd } from '../lib/seo'
+import { applyDrafts } from './preview'
+import { CONTENT } from './registry'
 import { DOCS } from '../../api/_lib/content/docs'
 import {
   CollectionsDocSchema,
@@ -51,6 +54,19 @@ describe('published content', () => {
   it('the published pages pass their schema', () => {
     const result = PagesDocSchema.safeParse(pages)
     expect(result.success ? [] : result.error.issues).toEqual([])
+  })
+
+  // Search engines are told what the house is in the Home page's own words.
+  it('the house is described as the Home page is', () => {
+    const saved = structuredClone(pagesJson)
+    const draft = structuredClone(pagesJson)
+    draft.home.seo.description = 'A Malaysian perfume house, described anew.'
+    try {
+      applyDrafts({ pages: draft }, CONTENT)
+      expect(organisationLd().description).toBe('A Malaysian perfume house, described anew.')
+    } finally {
+      applyDrafts({ pages: saved }, CONTENT)
+    }
   })
 
   it('the published site details and policies pass their schemas', () => {

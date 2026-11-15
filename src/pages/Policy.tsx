@@ -6,6 +6,7 @@ import { getPolicy, policies } from '../data/policies'
 import { ArrowRight } from '../components/ui/icons'
 import Seo from '../components/Seo'
 import { SITE } from '../lib/seo'
+import { pages } from '../data/pages'
 
 /**
  * One template for shipping, returns, terms and privacy. Copy lives in
@@ -68,7 +69,7 @@ export default function Policy() {
       {/* The rest of the customer care set */}
       <section className="border-t border-line bg-porcelain py-14">
         <div className="u-narrow">
-          <p className="eyebrow text-smoke">Also worth reading</p>
+          <p className="eyebrow text-smoke">{pages.policies.more}</p>
           <ul className="mt-6 grid gap-3 sm:grid-cols-2">
             {others.map((p) => (
               <li key={p.slug}>

@@ -5,6 +5,8 @@ import { storesDoc, mapEmbedUrl, directionsUrl } from '../data/stores'
 import PageHeader from '../components/ui/PageHeader'
 import BrandLogo from '../components/ui/BrandLogo'
 import { sellersDoc } from '../data/logos'
+import { pages } from '../data/pages'
+import Heading from '../components/ui/Heading'
 import { Pin, Phone, Clock, ArrowUpRight, WhatsApp } from '../components/ui/icons'
 import { waLink } from '../data/site'
 import Seo from '../components/Seo'
@@ -25,8 +27,8 @@ export default function Stores() {
   return (
     <>
       <Seo
-        title="Store locator"
-        description="Visit a Legendary perfume counter across Malaysia, from Pavilion Kuala Lumpur to the Melaka flagship. Live maps, opening hours and directions."
+        title={pages.stores.seo.title}
+        description={pages.stores.seo.description}
         image="/assets/client/banner-stores.webp"
         crumbs={[{ name: 'Home', path: '/' }, { name: 'Stores', path: '/stores' }]}
         jsonLd={stores.map((s) => ({
@@ -40,9 +42,9 @@ export default function Stores() {
         }))}
       />
       <PageHeader
-        eyebrow="Find Us"
-        title="Boutiques across Malaysia"
-        intro="From Pavilion KL to the shores of Langkawi, visit a Legendary perfume counter to discover your scent in person. Live maps and directions below."
+        eyebrow={pages.stores.header.eyebrow}
+        title={pages.stores.header.title}
+        intro={pages.stores.header.intro}
         crumbs={[{ label: 'Home', to: '/' }, { label: 'Stores' }]}
         image={asset('/assets/client/banner-stores.webp')}
       />
@@ -149,9 +151,11 @@ export default function Stores() {
 
           {/* Trusted sellers — client change from "Also available at" */}
           <div className="mt-14 border-t border-line pt-14">
-            <h2 className="text-center font-display text-[clamp(1.7rem,3vw,2.4rem)]">Trusted Sellers</h2>
+            <h2 className="text-center font-display text-[clamp(1.7rem,3vw,2.4rem)]">
+              <Heading text={pages.stores.sellers.heading} />
+            </h2>
             <p className="mx-auto mt-3 max-w-xl text-center text-sm text-smoke">
-              Beyond our own boutiques, Legendary is stocked by these authorised partners.
+              {pages.stores.sellers.intro}
             </p>
             {/* Authorised stockists, from the client's Trusted Sellers
                 artwork, kept in src/content/sellers.json. Revision 5: the wall

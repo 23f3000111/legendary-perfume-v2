@@ -569,8 +569,8 @@ const heading = (max: number) =>
 /** What search engines show for a page. */
 const seo = object({ title: text(70), description: text(300) })
 
-/** A page's title bar. */
-const header = (eyebrow = 40) => object({ eyebrow: text(eyebrow), title: heading(80), intro: text(400) })
+/** A page's title bar. Its title is plain text, as every title bar draws it. */
+const header = (eyebrow = 40) => object({ eyebrow: text(eyebrow), title: text(80), intro: text(400) })
 
 const exactly = <T extends z.ZodTypeAny>(item: T, count: number, what: string) =>
   z.array(item).length(count, `Keep the ${count} ${what}: the page has a place for each.`)
@@ -669,7 +669,7 @@ export const PagesDocSchema = object({
   }),
   faq: object({
     seo,
-    header: object({ eyebrow: text(40), title: heading(80) }),
+    header: object({ eyebrow: text(40), title: text(80) }),
     /** The words either side of the WhatsApp number, which comes from the site details. */
     help: object({
       kicker: text(40),

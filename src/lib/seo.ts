@@ -5,13 +5,12 @@
  * the site's own (src/data/site.ts), read when each page renders.
  */
 import { sameAs, site } from '../data/site'
+import { pages } from '../data/pages'
 
 export const SITE = {
   name: 'Legendary',
   legalName: 'Legendary Perfume',
   tagline: 'A Scented Memory of Malaysia',
-  description:
-    'Legendary is a Malaysian perfume house founded in 2015, bottling the botanical heritage and soul of Malaysia. Shop eau de parfum for her, for him and gift sets, with free delivery across Malaysia.',
   /**
    * The canonical origin. Overridden at build time by SITE_URL so a preview
    * deployment does not publish canonicals pointing at production.
@@ -37,7 +36,7 @@ export function organisationLd() {
     name: SITE.name,
     legalName: SITE.legalName,
     url: SITE.url,
-    description: SITE.description,
+    description: pages.home.seo.description,
     foundingDate: SITE.founded,
     email: site.email,
     telephone: site.whatsapp,
@@ -63,7 +62,7 @@ export function websiteLd() {
     '@id': `${SITE.url}/#website`,
     url: SITE.url,
     name: SITE.name,
-    description: SITE.description,
+    description: pages.home.seo.description,
     inLanguage: 'en-MY',
     publisher: { '@id': `${SITE.url}/#organisation` },
   }

@@ -6,14 +6,16 @@ import { Kicker } from '../components/ui/SplitText'
 import { ArrowRight, WhatsApp } from '../components/ui/icons'
 import { faq } from '../data/faq'
 import { site, waLink } from '../data/site'
+import { pages } from '../data/pages'
+import Heading from '../components/ui/Heading'
 import Seo from '../components/Seo'
 
 export default function Faq() {
   return (
     <>
       <Seo
-        title="Frequently asked questions"
-        description={faq.intro}
+        title={pages.faq.seo.title}
+        description={pages.faq.seo.description}
         image="/assets/client/banner-contact.webp"
         crumbs={[{ name: 'Home', path: '/' }, { name: 'FAQ', path: '/faq' }]}
         jsonLd={[
@@ -33,8 +35,8 @@ export default function Faq() {
         ]}
       />
       <PageHeader
-        eyebrow="Customer Care"
-        title="Frequently asked questions"
+        eyebrow={pages.faq.header.eyebrow}
+        title={pages.faq.header.title}
         intro={faq.intro}
         crumbs={[{ label: 'Home', to: '/' }, { label: 'FAQ' }]}
         image={asset('/assets/client/banner-contact.webp')}
@@ -79,31 +81,42 @@ export default function Faq() {
 
       {/* Still stuck */}
       <section className="border-t border-line bg-porcelain py-16 md:py-20">
-        <div className="u-narrow text-center">
-          <Kicker className="justify-center">Still wondering</Kicker>
-          <h2 className="mt-4 font-display text-[clamp(1.8rem,3.6vw,2.8rem)]">
-            Ask us anything
-          </h2>
-          <p className="mx-auto mt-4 max-w-lg text-ink-soft">
-            Our Malaysian concierge team answers in minutes on WhatsApp at {site.whatsapp}, or you
-            can send us a note and we will reply within one business day.
-          </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <a
-              href={waLink('Hi Legendary! I have a question.')}
-              target="_blank"
-              rel="noreferrer"
-              className="btn-gold gap-2"
-            >
-              <WhatsApp width={16} /> Chat on WhatsApp
-            </a>
-            <Link to="/contact" className="btn-ghost group gap-2">
-              Send a message
-              <ArrowRight width={16} className="transition-transform duration-500 group-hover:translate-x-1" />
-            </Link>
-          </div>
-        </div>
+        <FaqHelp />
       </section>
     </>
+  )
+}
+
+/**
+ * "Ask us anything": the page's words either side of the WhatsApp number,
+ * which comes from the site details, so a new number shows here too.
+ */
+export function FaqHelp() {
+  const help = pages.faq.help
+  return (
+    <div className="u-narrow text-center">
+      <Kicker className="justify-center">{help.kicker}</Kicker>
+      <h2 className="mt-4 font-display text-[clamp(1.8rem,3.6vw,2.8rem)]">
+        <Heading text={help.heading} />
+      </h2>
+      <p className="mx-auto mt-4 max-w-lg text-ink-soft">
+        {help.before} {site.whatsapp}
+        {help.after}
+      </p>
+      <div className="mt-8 flex flex-wrap justify-center gap-3">
+        <a
+          href={waLink('Hi Legendary! I have a question.')}
+          target="_blank"
+          rel="noreferrer"
+          className="btn-gold gap-2"
+        >
+          <WhatsApp width={16} /> {help.whatsapp}
+        </a>
+        <Link to="/contact" className="btn-ghost group gap-2">
+          {help.message}
+          <ArrowRight width={16} className="transition-transform duration-500 group-hover:translate-x-1" />
+        </Link>
+      </div>
+    </div>
   )
 }

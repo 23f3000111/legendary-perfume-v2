@@ -1,3 +1,4 @@
+import { pages } from '../data/pages'
 import { Link } from 'react-router-dom'
 import { asset } from '../lib/asset'
 import { articleList } from '../data/articles'
@@ -17,15 +18,15 @@ export default function Journal() {
   return (
     <>
       <Seo
-        title="The Journal"
-        description="Stories from the house on scent, craft and the Malaysian culture that shapes every Legendary fragrance."
+        title={pages.journal.seo.title}
+        description={pages.journal.seo.description}
         image="/assets/client/banner-journal.webp"
         crumbs={[{ name: 'Home', path: '/' }, { name: 'Journal', path: '/journal' }]}
       />
       <PageHeader
-        eyebrow="The Journal"
-        title="Notes, rituals & heritage"
-        intro="Stories from the house on scent, craft and the Malaysian culture that shapes every Legendary fragrance."
+        eyebrow={pages.journal.header.eyebrow}
+        title={pages.journal.header.title}
+        intro={pages.journal.header.intro}
         crumbs={[{ label: 'Home', to: '/' }, { label: 'Journal' }]}
         image={asset('/assets/client/banner-journal.webp')}
       />

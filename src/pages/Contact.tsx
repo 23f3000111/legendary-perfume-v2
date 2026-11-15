@@ -7,6 +7,8 @@ import Accordion from '../components/ui/Accordion'
 import { Phone, Instagram, Facebook, Pin, Check, ArrowRight } from '../components/ui/icons'
 import { directionsUrl } from '../data/stores'
 import { site, waLink } from '../data/site'
+import { pages } from '../data/pages'
+import Heading from '../components/ui/Heading'
 import { faq } from '../data/faq'
 import Seo from '../components/Seo'
 import { ApiError, sendContactMessage } from '../lib/api'
@@ -86,15 +88,15 @@ export default function Contact() {
   return (
     <>
       <Seo
-        title="Contact"
-        description="Talk to the house about a scent, an order, corporate gifting or a partnership. Message us on WhatsApp, or send a note and we will reply within one business day."
+        title={pages.contact.seo.title}
+        description={pages.contact.seo.description}
         image="/assets/client/banner-contact.webp"
         crumbs={[{ name: 'Home', path: '/' }, { name: 'Contact', path: '/contact' }]}
       />
       <PageHeader
-        eyebrow="Partnerships and Inquiries"
-        title="Collaborate and Inquire"
-        intro="Whether you are exploring creative partnerships, corporate gifting or need assistance with your personal fragrance journey, our team is at your service."
+        eyebrow={pages.contact.header.eyebrow}
+        title={pages.contact.header.title}
+        intro={pages.contact.header.intro}
         crumbs={[{ label: 'Home', to: '/' }, { label: 'Contact' }]}
         image={asset('/assets/client/banner-contact.webp')}
       />
@@ -103,14 +105,14 @@ export default function Contact() {
       <section className="bg-ivory py-16 md:py-24">
         <div className="u-narrow">
           <div className="mx-auto max-w-2xl text-center">
-            <Kicker className="justify-center">Send a message</Kicker>
+            <Kicker className="justify-center">{pages.contact.form.kicker}</Kicker>
             <h2 className="mt-4 font-display text-[clamp(2rem,4.5vw,3.2rem)] leading-[1.05]">
-              How can we assist you?
+              <Heading text={pages.contact.form.heading} />
             </h2>
             <p className="mt-4 text-ink-soft">
-              Fill in the form below, or reach us directly on{' '}
+              {pages.contact.form.intro}{' '}
               <a href={waLink('Hi Legendary! I have a question.')} target="_blank" rel="noreferrer" className="link-gold text-gold-deep">
-                WhatsApp
+                {pages.contact.form.link}
               </a>
               .
             </p>
@@ -216,7 +218,7 @@ export default function Contact() {
       <section className="border-t border-line bg-porcelain py-16 md:py-20">
         <div className="u-container grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center lg:gap-16">
           <div>
-            <Kicker>Find us</Kicker>
+            <Kicker>{pages.contact.office.kicker}</Kicker>
             <h2 className="mt-4 font-display text-[clamp(1.8rem,3.4vw,2.6rem)] leading-[1.1]">
               {site.office.name}
             </h2>
@@ -226,10 +228,10 @@ export default function Contact() {
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
               <a href={directionsUrl(site.office.mapQuery)} target="_blank" rel="noreferrer" className="btn-ghost gap-2">
-                Get directions <ArrowRight width={16} />
+                {pages.contact.office.directions} <ArrowRight width={16} />
               </a>
               <Link to="/stores" className="btn-ghost gap-2">
-                Our boutiques <ArrowRight width={16} />
+                {pages.contact.office.stores} <ArrowRight width={16} />
               </Link>
             </div>
           </div>
@@ -251,8 +253,10 @@ export default function Contact() {
       <section id="faq" className="scroll-mt-32 border-t border-line bg-ivory py-16 md:py-24">
         <div className="u-narrow">
           <div className="text-center">
-            <Kicker className="justify-center">Good to Know</Kicker>
-            <h2 className="mt-4 font-display text-[clamp(2rem,4vw,3.2rem)]">Frequently asked questions</h2>
+            <Kicker className="justify-center">{pages.contact.faq.kicker}</Kicker>
+            <h2 className="mt-4 font-display text-[clamp(2rem,4vw,3.2rem)]">
+              <Heading text={pages.contact.faq.heading} />
+            </h2>
           </div>
 
           <div className="mt-12">
@@ -266,7 +270,7 @@ export default function Contact() {
 
           <div className="mt-10 text-center">
             <Link to="/faq" className="btn-ghost group gap-2">
-              Read every answer
+              {pages.contact.faq.button}
               <ArrowRight width={16} className="transition-transform duration-500 group-hover:translate-x-1" />
             </Link>
           </div>

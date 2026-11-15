@@ -1,6 +1,7 @@
 import { RevealGroup, RevealItem } from '../components/ui/Reveal'
 import { asset } from '../lib/asset'
 import { ShieldCheck, Truck, Gift } from '../components/ui/icons'
+import { pages } from '../data/pages'
 
 type Service = {
   title: string
@@ -18,22 +19,24 @@ type Service = {
  */
 /* Revision 5: wording from the client's Our Story copy sheet. "Secure Payment"
    becomes "Secure Checkout" and "Gift Wrapping" becomes "Art of Gifting". */
-const services: Service[] = [
-  { I: ShieldCheck, title: 'Secure Checkout', copy: 'SSL encrypted payments for complete peace of mind.' },
-  { art: asset('/assets/client/icon-vial.png'), title: 'Complimentary Samples', copy: 'Discover new iconic scents with every order.' },
-  { I: Truck, title: 'Complimentary Delivery', copy: 'Fully tracked delivery across Malaysia.' },
-  { I: Gift, title: 'Art of Gifting', copy: 'Elegantly packaged in our signature box, ready to gift.' },
+const ICONS: Pick<Service, 'I' | 'art'>[] = [
+  { I: ShieldCheck },
+  { art: '/assets/client/icon-vial.png' },
+  { I: Truck },
+  { I: Gift },
 ]
 
 export default function Services() {
+  // The words are the Our Story page's (src/content/pages.json), read at render; the icons stay by position.
+  const services: Service[] = pages.about.services.map((s, i) => ({ ...ICONS[i], ...s }))
   return (
     <section className="border-y border-line bg-sand/40 py-16">
       <RevealGroup className="u-container grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-4">
-        {services.map((s) => (
-          <RevealItem key={s.title} className="flex flex-col items-center gap-3 text-center">
+        {services.map((s, i) => (
+          <RevealItem key={i} className="flex flex-col items-center gap-3 text-center">
             <span className="grid h-14 w-14 place-items-center rounded-full border border-gold/30 text-gold">
               {s.art ? (
-                <img src={s.art} alt="" aria-hidden className="h-9 w-auto" />
+                <img src={asset(s.art)} alt="" aria-hidden className="h-9 w-auto" />
               ) : (
                 s.I && <s.I width={24} />
               )}

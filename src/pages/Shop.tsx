@@ -1,3 +1,4 @@
+import { pages } from '../data/pages'
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { asset } from '../lib/asset'
@@ -20,16 +21,10 @@ const audiences = ['All', 'For Her', 'For Him', 'Unisex'] as const
  * Every view used to share one line about olfactory postcards, whichever chip
  * or collection you had pressed. The client wrote a paragraph for each, so the
  * bar now introduces the edit you are actually looking at. Keys are the view
- * the header resolves to; `all` is the fallback. Each collection's own
- * paragraph lives with the collection, in src/content/collections.json.
+ * the header resolves to; `all` is the fallback. The words are the Shop
+ * page's (src/content/pages.json), and each collection's own paragraph lives
+ * with the collection, in src/content/collections.json.
  */
-const INTROS: Record<string, string> = {
-  all: 'Discover our complete realm of fragrances, where rich Malaysian heritage meets haute perfumery. Find your signature scent, personal rituals and timeless gifts.',
-  bestsellers: 'Discover the acclaimed fragrances that lead our collections. Perfect for defining your daily ritual or presenting a gift of distinguished elegance.',
-  gifts: 'Thoughtfully curated trios and boxed collections. Discover a variety of distinct scents in one set, perfect for thoughtful gifting, travel or everyday discovery.',
-  her: 'A diverse range of fine perfumes for women. Discover uplifting daytime scents, bold evening blends and memorable gift sets.',
-  him: 'A curated edit of fine fragrances for men. Discover crisp, refreshing daytime notes and bold deep woody blends crafted for a lasting impression.',
-}
 
 function isGift(p: Product) {
   return p.gift === true
@@ -114,6 +109,7 @@ export default function Shop() {
     : collectionParam !== 'all' ? activeCollection?.name ?? 'Fragrances'
     : 'All Fragrances'
 
+  const INTROS = pages.shop.intros
   const intro =
     filterParam === 'bestsellers' ? INTROS.bestsellers
     : filterParam === 'gifts' ? INTROS.gifts
@@ -168,7 +164,7 @@ export default function Shop() {
         ]}
       />
       <PageHeader
-        eyebrow="The Collection"
+        eyebrow={pages.shop.eyebrow}
         title={activeTitle}
         intro={intro}
         crumbs={[{ label: 'Home', to: '/' }, { label: 'Fragrances' }]}
