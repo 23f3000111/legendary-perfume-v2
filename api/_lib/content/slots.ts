@@ -42,6 +42,8 @@ const KINDS = {
   place: { label: 'Map card photo', maxSide: 1200, alpha: false },
   /** A partner or seller logo: a colour print for hover and a black and white one, both see-through. */
   logo: { label: 'Logo', maxSide: 340, alpha: true, mono: true },
+  /** A photograph on a page, such as the Signature section's Orchid or Our Story's first flower. */
+  page: { label: 'Page photo', maxSide: 1800, alpha: false },
 } satisfies Record<string, SlotSpec>
 
 export const SLOT_KINDS: Record<keyof typeof KINDS, SlotSpec> = KINDS

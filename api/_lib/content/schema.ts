@@ -555,6 +555,137 @@ export const PoliciesDocSchema = object({
 export type PoliciesDoc = z.infer<typeof PoliciesDocSchema>
 export type PolicyEntry = PoliciesDoc['policies'][number]
 
+// ------------------------------------------------------------------- pages
+
+/**
+ * A page heading: a newline starts a new line, and a word between stars is set
+ * in the house's gold italic (src/lib/heading.ts reads it the same way).
+ */
+const heading = (max: number) =>
+  text(max)
+    .refine((s) => s.split('\n').length <= 4, 'Keep a heading to four lines.')
+    .refine((s) => (s.match(/\*/g)?.length ?? 0) % 2 === 0, 'Close the gold word with a second *.')
+
+/** What search engines show for a page. */
+const seo = object({ title: text(70), description: text(300) })
+
+/** A page's title bar. */
+const header = (eyebrow = 40) => object({ eyebrow: text(eyebrow), title: heading(80), intro: text(400) })
+
+const exactly = <T extends z.ZodTypeAny>(item: T, count: number, what: string) =>
+  z.array(item).length(count, `Keep the ${count} ${what}: the page has a place for each.`)
+
+const FIGURE = 'Use a whole number.'
+
+/**
+ * Every page's own words, and its two photographs, keyed by page. The words
+ * of the lists (collections, reviews and the rest) live in their own
+ * documents; banners and sharing images follow in stage 4c.
+ */
+export const PagesDocSchema = object({
+  /** On every page: the header menu's featured card and the footer. */
+  layout: object({
+    menu: object({ eyebrow: text(40), title: text(40), photo, alt: text(120) }),
+    footer: object({
+      blurb: text(300),
+      /** The sign-up on the Contact page. */
+      newsletter: object({ eyebrow: text(40), heading: heading(120), text: text(300), thanks: text(120) }),
+      copyright: text(120),
+      payments: z.array(text(30)).min(1, 'Add at least one way to pay.').max(10, 'Up to ten.'),
+    }),
+  }),
+  home: object({
+    seo,
+    signature: object({
+      kicker: text(40),
+      heading: heading(80),
+      since: heading(20),
+      figure: z.number({ invalid_type_error: FIGURE }).int(FIGURE).min(1, FIGURE).max(100_000_000, FIGURE),
+      suffix: optionalText(4),
+      figureLabel: text(60),
+      button: text(40),
+      note: text(60),
+      photo,
+      alt: text(120),
+    }),
+    collections: object({ kicker: text(40), heading: heading(60), intro: text(400), cue: text(40) }),
+    map: object({ kicker: text(60), heading: heading(80), intro: text(400) }),
+    bestsellers: object({ kicker: text(40), heading: heading(60), link: text(30) }),
+    finder: object({
+      kicker: text(40),
+      heading: heading(80),
+      intro: text(300),
+      link: text(30),
+      /** The line on each mood's tile. */
+      moods: object({ Serene: text(60), Bold: text(60), Romantic: text(60), Playful: text(60) }),
+    }),
+    partners: object({ heading: heading(60) }),
+    reviews: object({ kicker: text(60), heading: heading(80), link: text(40) }),
+  }),
+  shop: object({
+    eyebrow: text(40),
+    /** Under the title for each view of the shop. A collection's own is with the collection. */
+    intros: object({ all: text(400), bestsellers: text(400), gifts: text(400), her: text(400), him: text(400) }),
+  }),
+  about: object({
+    seo,
+    header: header(),
+    beginning: object({
+      photo,
+      alt: text(120),
+      kicker: text(40),
+      heading: heading(80),
+      /** Paragraphs, a blank line between them. */
+      body: text(2000),
+      button: text(40),
+    }),
+    /** The four promises under the opening, each beside its icon. */
+    services: exactly(object({ title: text(40), copy: text(160) }), 4, 'four promises'),
+    journey: object({ kicker: text(40), heading: heading(80) }),
+    purpose: object({
+      kicker: text(40),
+      heading: heading(80),
+      items: exactly(object({ label: text(40), title: text(120), body: text(600) }), 2, 'vision and mission'),
+    }),
+    values: object({
+      kicker: text(40),
+      heading: heading(80),
+      items: exactly(object({ title: text(40), body: text(200) }), 4, 'four values'),
+    }),
+    cta: object({ heading: heading(80), shop: text(30), stores: text(30) }),
+  }),
+  stores: object({
+    seo,
+    header: header(),
+    sellers: object({ heading: heading(60), intro: text(300) }),
+  }),
+  contact: object({
+    seo,
+    header: header(60),
+    /** "Fill in the form below, or reach us directly on" and the WhatsApp link's words. */
+    form: object({ kicker: text(40), heading: heading(80), intro: text(200), link: text(30) }),
+    office: object({ kicker: text(40), directions: text(30), stores: text(30) }),
+    faq: object({ kicker: text(40), heading: heading(80), button: text(30) }),
+  }),
+  faq: object({
+    seo,
+    header: object({ eyebrow: text(40), title: heading(80) }),
+    /** The words either side of the WhatsApp number, which comes from the site details. */
+    help: object({
+      kicker: text(40),
+      heading: heading(80),
+      before: text(200),
+      after: text(300),
+      whatsapp: text(30),
+      message: text(30),
+    }),
+  }),
+  journal: object({ seo, header: header() }),
+  policies: object({ more: text(40) }),
+})
+
+export type PagesDoc = z.infer<typeof PagesDocSchema>
+
 // ----------------------------------------------------------------- helpers
 
 function eachString(value: unknown, path: string[], visit: (s: string, path: string[]) => void): void {

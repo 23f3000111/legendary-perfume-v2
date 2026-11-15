@@ -1,0 +1,249 @@
+{
+  "layout": {
+    "menu": {
+      "eyebrow": "The Signature",
+      "title": "Orchid",
+      "photo": "/assets/client/signature-orchid.webp",
+      "alt": "Orchid"
+    },
+    "footer": {
+      "blurb": "A Malaysian perfume house on a mission to share the best of Malaysia’s fragrances with the world.",
+      "newsletter": {
+        "eyebrow": "The Legendary House",
+        "heading": "Join us, and receive\na scented welcome.",
+        "text": "Early access to new collections, private offers, and the stories behind each scent.",
+        "thanks": "Welcome to Legendary. Check your inbox."
+      },
+      "copyright": "© 2026 Legendary Perfume · Crafted in Malaysia",
+      "payments": [
+        "Visa",
+        "Mastercard",
+        "GrabPay",
+        "Touch ’n Go",
+        "Apple Pay"
+      ]
+    }
+  },
+  "home": {
+    "seo": {
+      "title": "Legendary · A Scented Memory of Malaysia",
+      "description": "Legendary is a Malaysian perfume house founded in 2015, bottling the botanical heritage and soul of Malaysia. Shop eau de parfum for her, for him and gift sets, with free delivery across Malaysia."
+    },
+    "signature": {
+      "kicker": "The Signature",
+      "heading": "Orchid, the scent\nthat began it all",
+      "since": "Since\n2015",
+      "figure": 300000,
+      "suffix": "+",
+      "figureLabel": "Bottles Loved Worldwide",
+      "button": "Discover Orchid",
+      "note": "30ml Eau de Parfum",
+      "photo": "/assets/client/signature-orchid.webp",
+      "alt": "Orchid eau de parfum"
+    },
+    "collections": {
+      "kicker": "The Collections",
+      "heading": "Four worlds,\nbottled.",
+      "intro": "Each Legendary collection is a sensory journey through Malaysia, bridging tropical wilderness, cultural artistry and modern elegance. Scroll to wander through them.",
+      "cue": "Keep scrolling"
+    },
+    "map": {
+      "kicker": "A Scented Memory of Malaysia",
+      "heading": "Every scent is born\nof a *place*",
+      "intro": "From the sun kissed shores of Langkawi to the historic heart of Melaka, our scents translate the spirit of Malaysia into fine perfumery. Select a place to begin your sensory journey."
+    },
+    "bestsellers": {
+      "kicker": "Most Loved",
+      "heading": "The bestsellers",
+      "link": "View all"
+    },
+    "finder": {
+      "kicker": "The Olfactory Finder",
+      "heading": "What mood are\nyou wearing today?",
+      "intro": "Fragrance is emotion. Choose a feeling and we’ll show you the scents that speak it.",
+      "link": "Shop all",
+      "moods": {
+        "Serene": "Calm, clean and quietly luminous",
+        "Bold": "Warm, spirited and unforgettable",
+        "Romantic": "Tender, powdery and full of bloom",
+        "Playful": "Bright, fruity and full of joy"
+      }
+    },
+    "partners": {
+      "heading": "Partnered With"
+    },
+    "reviews": {
+      "kicker": "Tiny Reviews. Big Love.",
+      "heading": "What our customers say",
+      "link": "What our Customers Buy"
+    }
+  },
+  "shop": {
+    "eyebrow": "The Collection",
+    "intros": {
+      "all": "Discover our complete realm of fragrances, where rich Malaysian heritage meets haute perfumery. Find your signature scent, personal rituals and timeless gifts.",
+      "bestsellers": "Discover the acclaimed fragrances that lead our collections. Perfect for defining your daily ritual or presenting a gift of distinguished elegance.",
+      "gifts": "Thoughtfully curated trios and boxed collections. Discover a variety of distinct scents in one set, perfect for thoughtful gifting, travel or everyday discovery.",
+      "her": "A diverse range of fine perfumes for women. Discover uplifting daytime scents, bold evening blends and memorable gift sets.",
+      "him": "A curated edit of fine fragrances for men. Discover crisp, refreshing daytime notes and bold deep woody blends crafted for a lasting impression."
+    }
+  },
+  "about": {
+    "seo": {
+      "title": "Our Story",
+      "description": "Founded in 2015, Legendary is an artisanal Malaysian perfume house capturing the botanical heritage and soul of Malaysia through modern, world class perfumery."
+    },
+    "header": {
+      "eyebrow": "The House",
+      "title": "The Legend of Scent",
+      "intro": "Founded in 2015, Legendary is an artisanal Malaysian perfume house dedicated to capturing the rich botanical heritage and soulful essence of Malaysia through modern, world class perfumery."
+    },
+    "beginning": {
+      "photo": "/assets/client/about-beginning.webp",
+      "alt": "Orchid, the signature scent",
+      "kicker": "Our Beginning",
+      "heading": "It started with a single flower",
+      "body": "Legendary began with Orchid, a signature scent born from the wild blooms of Malaysia’s ancient rainforests. Embodying a timeless balance of grace and serenity, it remains the eternal soul of the house.\n\nRooted in heritage yet crafted for the modern world, each Legendary creation is an authentic expression of art and emotion. We believe the right fragrance does more than linger. It awakens confidence, captures memories and leaves an unforgettable impression.",
+      "button": "Explore the fragrances"
+    },
+    "services": [
+      {
+        "title": "Secure Checkout",
+        "copy": "SSL encrypted payments for complete peace of mind."
+      },
+      {
+        "title": "Complimentary Samples",
+        "copy": "Discover new iconic scents with every order."
+      },
+      {
+        "title": "Complimentary Delivery",
+        "copy": "Fully tracked delivery across Malaysia."
+      },
+      {
+        "title": "Art of Gifting",
+        "copy": "Elegantly packaged in our signature box, ready to gift."
+      }
+    ],
+    "journey": {
+      "kicker": "The Journey",
+      "heading": "Twelve years, in scent"
+    },
+    "purpose": {
+      "kicker": "What Drives Us",
+      "heading": "Vision & mission",
+      "items": [
+        {
+          "label": "Our Vision",
+          "title": "To carry the scent of Malaysia to the world",
+          "body": "To be the fragrance house the world recognises as Malaysia’s own, proving that a scent born of this country’s landscapes, culture and craft belongs on any dressing table, anywhere."
+        },
+        {
+          "label": "Our Mission",
+          "title": "Luxury that stays welcoming",
+          "body": "To compose Malaysian fragrances of genuine quality at a price that invites people in rather than shutting them out. Made in authenticity, worn with pride, and served with complimentary samples, wrapping and delivery on every order."
+        }
+      ]
+    },
+    "values": {
+      "kicker": "What We Believe",
+      "heading": "The values we wear",
+      "items": [
+        {
+          "title": "Heritage",
+          "body": "Every scent is a memory of Malaysia: its landscapes, its culture, its soul."
+        },
+        {
+          "title": "Craft",
+          "body": "Composed in three considered acts: a first impression, a character, a memory."
+        },
+        {
+          "title": "Integrity",
+          "body": "Made to the same standard every time, so you can wear it with confidence and pride."
+        },
+        {
+          "title": "Generosity",
+          "body": "Complimentary samples, wrapping and delivery, because luxury should feel welcoming."
+        }
+      ]
+    },
+    "cta": {
+      "heading": "Come find your *scent*",
+      "shop": "Shop Fragrances",
+      "stores": "Visit a Boutique"
+    }
+  },
+  "stores": {
+    "seo": {
+      "title": "Store locator",
+      "description": "Visit a Legendary perfume counter across Malaysia, from Pavilion Kuala Lumpur to the Melaka flagship. Live maps, opening hours and directions."
+    },
+    "header": {
+      "eyebrow": "Find Us",
+      "title": "Boutiques across Malaysia",
+      "intro": "From Pavilion KL to the shores of Langkawi, visit a Legendary perfume counter to discover your scent in person. Live maps and directions below."
+    },
+    "sellers": {
+      "heading": "Trusted Sellers",
+      "intro": "Beyond our own boutiques, Legendary is stocked by these authorised partners."
+    }
+  },
+  "contact": {
+    "seo": {
+      "title": "Contact",
+      "description": "Talk to the house about a scent, an order, corporate gifting or a partnership. Message us on WhatsApp, or send a note and we will reply within one business day."
+    },
+    "header": {
+      "eyebrow": "Partnerships and Inquiries",
+      "title": "Collaborate and Inquire",
+      "intro": "Whether you are exploring creative partnerships, corporate gifting or need assistance with your personal fragrance journey, our team is at your service."
+    },
+    "form": {
+      "kicker": "Send a message",
+      "heading": "How can we assist you?",
+      "intro": "Fill in the form below, or reach us directly on",
+      "link": "WhatsApp"
+    },
+    "office": {
+      "kicker": "Find us",
+      "directions": "Get directions",
+      "stores": "Our boutiques"
+    },
+    "faq": {
+      "kicker": "Good to Know",
+      "heading": "Frequently asked questions",
+      "button": "Read every answer"
+    }
+  },
+  "faq": {
+    "seo": {
+      "title": "Frequently asked questions",
+      "description": "We have gathered the questions our customers ask most often and answered each one properly. Browse below for an instant answer, or reach out if you would rather speak to someone. Your fragrance journey matters to us."
+    },
+    "header": {
+      "eyebrow": "Customer Care",
+      "title": "Frequently asked questions"
+    },
+    "help": {
+      "kicker": "Still wondering",
+      "heading": "Ask us anything",
+      "before": "Our Malaysian concierge team answers in minutes on WhatsApp at",
+      "after": ", or you can send us a note and we will reply within one business day.",
+      "whatsapp": "Chat on WhatsApp",
+      "message": "Send a message"
+    }
+  },
+  "journal": {
+    "seo": {
+      "title": "The Journal",
+      "description": "Stories from the house on scent, craft and the Malaysian culture that shapes every Legendary fragrance."
+    },
+    "header": {
+      "eyebrow": "The Journal",
+      "title": "Notes, rituals & heritage",
+      "intro": "Stories from the house on scent, craft and the Malaysian culture that shapes every Legendary fragrance."
+    }
+  },
+  "policies": {
+    "more": "Also worth reading"
+  }
+}
