@@ -564,7 +564,13 @@ export type PolicyEntry = PoliciesDoc['policies'][number]
 const heading = (max: number) =>
   text(max)
     .refine((s) => s.split('\n').length <= 4, 'Keep a heading to four lines.')
-    .refine((s) => (s.match(/\*/g)?.length ?? 0) % 2 === 0, 'Close the gold word with a second *.')
+    // Exactly what src/lib/heading.ts draws as gold: *words* within one line. Any
+    // other star (a lone one, **bold**, a gold phrase across a line) would show
+    // on the page as a star, so it is refused here.
+    .refine(
+      (s) => s.split('\n').every((line) => !line.replace(/\*([^*\n]+)\*/g, '').includes('*')),
+      'Put a single * either side of the gold word, on one line.',
+    )
 
 /** What search engines show for a page. */
 const seo = object({ title: text(70), description: text(300) })
