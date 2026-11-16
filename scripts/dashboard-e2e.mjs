@@ -17,7 +17,8 @@
  * its photo, restores the Journal, publishes a product and restores it, changes
  * the WhatsApp number, adds a partner logo, previews a review, publishes a
  * policy, restores the site details, changes a page's words and the footer,
- * restores the pages, and checks the photo paths in Safari's
+ * restores the pages, publishes a new Our Story banner with its spot, previews
+ * the Stores page's sharing image, and checks the photo paths in Safari's
  * engine and on a phone.
  * It refuses to run against anything but a local GitHub, so it can never
  * publish to the real repository.
@@ -584,6 +585,72 @@ try {
   await page.click('button:text-is("Restore Pages")')
   await until(async () => (await ghFile('src/content/pages.json')).toString('utf8') === seedPages, 'the restored pages')
   check('28. restoring the pages puts the seeded file back, and the question names Home', (dialogs.at(-1) ?? '').includes('It changes Home.'), dialogs.at(-1))
+
+  // 29. A new banner for Our Story, its spot near the right edge, goes live with both prints
+  await openTab(page, 'Pages')
+  await page.waitForSelector('text=Each page')
+  await page.locator('main ul li', { hasText: 'Our Story' }).first().locator('button:text-is("Edit")').click()
+  await page.waitForSelector('button:text-is("All pages")')
+  const storyBar = page.locator('section', { has: page.locator('h3', { hasText: 'Our Story · Title bar' }) })
+  const storyBottle = await sharp({ create: { width: 300, height: 700, channels: 3, background: { r: 40, g: 30, b: 20 } } }).png().toBuffer()
+  const storyPhoto = await sharp({ create: { width: 3000, height: 1500, channels: 3, background: { r: 214, g: 196, b: 160 } } })
+    .composite([{ input: storyBottle, left: 2400, top: 400 }])
+    .png()
+    .toBuffer()
+  await storyBar.locator('input[type="file"]').setInputFiles({ name: 'story-banner.png', mimeType: 'image/png', buffer: storyPhoto })
+  await storyBar.locator('img[src*="/api/admin/media?file="]').first().waitFor({ timeout: 60000 })
+  // The spot is set on the new photo, so it waits for that photo to draw.
+  const picker = storyBar.locator('[aria-label="Set the spot that stays in view"]')
+  await picker.locator('img[src*="/api/admin/media?file="]').evaluate((img) =>
+    img.complete && img.naturalWidth > 0 ? null : new Promise((done) => img.addEventListener('load', done, { once: true })),
+  )
+  // Clicked through the element, which waits for the page's smooth scroll to
+  // settle and for the spot to be clear of the publish bar.
+  const spot = await picker.boundingBox()
+  await picker.click({ position: { x: spot.width * 0.85, y: spot.height * 0.5 } })
+  await picker.locator('span[style*="left: 85%"]').waitFor()
+  await page.click('button:text-is("Publish")')
+  await page.waitForSelector('text=Live. The site shows your changes.', { timeout: 30000 })
+  await page.click('button:text-is("OK")')
+  const storyBanner = (await ghJson('src/content/pages.json')).about.banner
+  const bannerTree = await ghTree()
+  const bannerFile = (path) => bannerTree.find((f) => `/${f.replace(/^public\//, '')}` === path)
+  const wideFile = storyBanner && bannerFile(storyBanner.image)
+  const phoneFile = storyBanner && bannerFile(storyBanner.phone)
+  const widePrint = wideFile ? await sharp(await ghFile(wideFile)).metadata() : null
+  check(
+    "29. Our Story's new banner goes live with both prints, 2400 px wide, its spot near the right edge",
+    /^\/assets\/cms\//.test(storyBanner?.image ?? '') &&
+      /^\/assets\/cms\//.test(storyBanner?.phone ?? '') &&
+      storyBanner.image !== storyBanner.phone &&
+      Boolean(wideFile && phoneFile) &&
+      (storyBanner.focus?.x ?? 0) > 0.7 &&
+      widePrint?.width === 2400,
+    `${storyBanner?.image} ${storyBanner?.phone} ${JSON.stringify(storyBanner?.focus)} ${widePrint?.width}`,
+  )
+
+  // 30. The Stores page's sharing image is the one og:image its preview carries
+  await page.click('button:text-is("All pages")')
+  await page.locator('main ul li', { hasText: 'Stores' }).first().locator('button:text-is("Edit")').click()
+  await page.waitForSelector('button:text-is("All pages")')
+  const storesSearch = page.locator('section', { has: page.locator('h3', { hasText: 'Stores · Search engines' }) })
+  const shareCard = await sharp({ create: { width: 1600, height: 840, channels: 3, background: { r: 120, g: 90, b: 60 } } }).png().toBuffer()
+  await storesSearch.locator('input[type="file"]').setInputFiles({ name: 'stores-card.png', mimeType: 'image/png', buffer: shareCard })
+  const shareImg = storesSearch.locator('img[src*="/api/admin/media?file="]')
+  await shareImg.waitFor({ timeout: 60000 })
+  const shareFile = (await shareImg.getAttribute('src')).replace(/^.*file=/, '')
+  await page.waitForSelector('text=Saved as a draft')
+  const storesPreview = await context.newPage()
+  await storesPreview.goto(`${site}/stores?preview`, { waitUntil: 'networkidle' })
+  const ogImages = await storesPreview.evaluate(() => [...document.querySelectorAll('meta[property="og:image"]')].map((m) => m.content))
+  await storesPreview.close()
+  await page.click('button:text-is("Discard")')
+  await page.waitForFunction(() => !document.body.innerText.includes('Unpublished changes:'), null, { timeout: 15000 })
+  check(
+    "30. the Stores page's sharing image is the one og:image in its preview",
+    ogImages.length === 1 && ogImages[0].endsWith(`/assets/cms/${shareFile}`),
+    ogImages.join(' | '),
+  )
 } catch (err) {
   failures++
   console.log(`FAIL  stopped: ${err.message}`)

@@ -149,8 +149,8 @@ The dashboard needs somewhere durable to write.
 The same `/admin` edits the site's content, so the Legendary team can make their
 own changes instead of sending revision PDFs. It covers the **FAQ**, the **store
 list**, the **Journal**, the **products**, **each page's own words** (the Pages
-tab), the **site details and lists** (the Site tab) and the **policies**. The
-page banners, the sharing images and the hero poster follow, as set out in
+tab), the **site details and lists** (the Site tab), the **policies**, the
+**banners** and the **sharing images**. The hero poster follows, as set out in
 `docs/superpowers/specs/2026-11-12-content-dashboard-design.md`.
 
 - **Content lives in `src/content/*.json`.** The site imports it at build time,
@@ -222,7 +222,8 @@ page banners, the sharing images and the hero poster follow, as set out in
     fixed once published. One that products are in, or that a map pin opens,
     cannot be removed. Products keep a copy of their collection's name, but
     the pages show the collection's own (`collectionName`), so a rename shows
-    everywhere at once. The shop banner is edited with the pages.
+    everywhere at once. Its shop banner, behind its title in the shop, is
+    optional: left empty, the shop's own All Fragrances banner shows.
   - `reviews.json`, the Home page's customer wall. Five stars is the default
     and is left out of the data.
   - `journey.json`, the Our Story years. A year with no photo (1000 px) shows
@@ -260,6 +261,23 @@ page banners, the sharing images and the hero poster follow, as set out in
     section's layout, and which product Signature and the menu card open.
   - A publish names the pages it changes, and a restore says which pages it
     changes back.
+- **Banners** sit behind the title bars: one on each of Our Story, Stores,
+  Contact, FAQ and the Journal, one for the four policies, and the shop's five
+  views (All Fragrances, Bestsellers, Gifts & Sets, For Her, For Him), all in
+  the Pages tab; a collection's own is on its Collections screen. A banner is
+  two prints made from one upload: the wide one at 2400 px, and a 1200 px one
+  that a `<source>` gives windows up to 640 px wide. The team clicks the photo
+  where the bottle is. That spot is kept as `focus`, two fractions, and becomes
+  the photo's `object-position`, so a laptop's wide title bar and a phone's
+  near square one both keep it in view; without one the photo is centred. A
+  new photo starts centred, since the old spot belonged to the old photo. The
+  banners the site started with keep the phone crops `scripts/prepare-assets.py`
+  made for them (`banner-<name>-sm.webp`) until a new photo replaces them.
+- **Sharing images.** Each page's search section has an optional sharing image
+  (1200 px), the picture a link preview or social card shows. Left empty, the
+  page shares its banner (`shareImage` in `src/data/pages.ts`), and Home, which
+  has no banner, shares the house's default picture
+  (`/assets/client/banner-fragrances.webp`). A shop view shares its banner.
 
 ### Setting it up
 
@@ -310,6 +328,17 @@ changed nothing on the site.
   paths to `index.html` and `dist/404.html` doing the same job on GitHub Pages.
 - Per route `<title>`, description, canonical, Open Graph and Twitter tags via
   `src/components/Seo.tsx`.
+- The static head follows Home. A link preview (WhatsApp, Facebook and the
+  like) reads only the page as served, before any script runs, and every route
+  is served the same `index.html`. So at build time `scripts/home-head.mjs`
+  (called from `vite.config.ts`) writes the Home page's search title,
+  description and sharing image from `src/content/pages.json` into it, as the
+  title, the description and Open Graph tags. Those tags are marked `data-rh`,
+  so once the site runs `Seo` replaces them with each page's own rather than
+  adding its own beside them. Per route heads are not prerendered: a shared
+  link to the shop, a journal article or a product previews with Home's words
+  and picture. Prerendering each route's head at build time is what would
+  change that.
 - JSON-LD on every page: `Organization` and `WebSite` throughout, plus `Product`
   with an `Offer` carrying price, currency and stock; `FAQPage` over all fifty
   questions; `Store` per boutique; `Article` per journal piece; and a
