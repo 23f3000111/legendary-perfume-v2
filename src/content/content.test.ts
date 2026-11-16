@@ -24,7 +24,7 @@ import { partnersDoc, sellersDoc } from '../data/logos'
 import { placesDoc, scentPlaces } from '../data/places'
 import { site } from '../data/site'
 import { policies, policiesDoc } from '../data/policies'
-import { pages } from '../data/pages'
+import { pages, shareImage } from '../data/pages'
 import { organisationLd } from '../lib/seo'
 import { applyDrafts } from './preview'
 import { CONTENT } from './registry'
@@ -49,6 +49,16 @@ describe('published content', () => {
   it('the published FAQ and stores pass their schemas', () => {
     expect(FaqDocSchema.safeParse(faq).success).toBe(true)
     expect(StoresDocSchema.safeParse(storesDoc).success).toBe(true)
+  })
+
+  // A link to a page shows its own sharing image, or else its banner, as
+  // every page did before; Home has no banner and shares the house default.
+  it('a page without a sharing image shares its banner', () => {
+    expect(shareImage(pages.about)).toBe('/assets/client/banner-our-story.webp')
+    expect(shareImage({ ...pages.about, seo: { ...pages.about.seo, image: '/assets/cms/0123456789abcdef0123.webp' } })).toBe(
+      '/assets/cms/0123456789abcdef0123.webp',
+    )
+    expect(shareImage(pages.home)).toBeUndefined()
   })
 
   it('the published pages pass their schema', () => {

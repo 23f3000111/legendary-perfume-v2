@@ -48,6 +48,12 @@ describe('the pages schema', () => {
     }
   })
 
+  it("a banner's focus stays on the photo", () => {
+    const doc = structuredClone(pagesJson) as unknown as { about: { banner: Record<string, unknown> } }
+    doc.about.banner = { ...doc.about.banner, focus: { x: 1.2, y: 0.5 } }
+    expect(firstIssuePath(PagesDocSchema.safeParse(doc))).toEqual(['about', 'banner', 'focus', 'x'])
+  })
+
   // The values sit beside four icons, in a row of four.
   it('the four values stay four', () => {
     const doc = structuredClone(pagesJson)

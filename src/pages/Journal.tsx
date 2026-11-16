@@ -1,4 +1,4 @@
-import { pages } from '../data/pages'
+import { pages, shareImage } from '../data/pages'
 import { Link } from 'react-router-dom'
 import { asset } from '../lib/asset'
 import { articleList } from '../data/articles'
@@ -20,7 +20,7 @@ export default function Journal() {
       <Seo
         title={pages.journal.seo.title}
         description={pages.journal.seo.description}
-        image="/assets/client/banner-journal.webp"
+        image={shareImage(pages.journal)}
         crumbs={[{ name: 'Home', path: '/' }, { name: 'Journal', path: '/journal' }]}
       />
       <PageHeader
@@ -28,7 +28,7 @@ export default function Journal() {
         title={pages.journal.header.title}
         intro={pages.journal.header.intro}
         crumbs={[{ label: 'Home', to: '/' }, { label: 'Journal' }]}
-        image={asset('/assets/client/banner-journal.webp')}
+        banner={pages.journal.banner}
       />
 
       <section className="bg-ivory py-14 md:py-20">

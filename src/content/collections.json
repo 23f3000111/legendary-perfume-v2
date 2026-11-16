@@ -8,7 +8,10 @@
       "intro": "Explore the foundational scents that built our reputation. A collection of timeless, versatile eau de parfums made to accompany every moment.",
       "accent": "gold",
       "image": "/assets/client/collection-signature.webp",
-      "banner": "/assets/client/banner-signature.webp"
+      "banner": {
+        "image": "/assets/client/banner-signature.webp",
+        "phone": "/assets/client/banner-signature-sm.webp"
+      }
     },
     {
       "id": "nyonya",
@@ -18,7 +21,10 @@
       "intro": "Celebrating Malaysia’s unique Peranakan roots. Discover storytelling scents crafted with delicate floral, gourmand and aromatic notes.",
       "accent": "rose",
       "image": "/assets/client/collection-nyonya.webp",
-      "banner": "/assets/client/banner-nyonya.webp"
+      "banner": {
+        "image": "/assets/client/banner-nyonya.webp",
+        "phone": "/assets/client/banner-nyonya-sm.webp"
+      }
     },
     {
       "id": "three-wishes",
@@ -28,7 +34,10 @@
       "intro": "Pure, gentle and alcohol free. Explore everyday fragrances crafted for effortless wear, delicate layering and ultimate skin comfort.",
       "accent": "gold",
       "image": "/assets/client/collection-3-wishes.webp",
-      "banner": "/assets/client/banner-3wishes.webp"
+      "banner": {
+        "image": "/assets/client/banner-3wishes.webp",
+        "phone": "/assets/client/banner-3wishes-sm.webp"
+      }
     },
     {
       "id": "spirit",
@@ -38,7 +47,10 @@
       "intro": "Infused with fine, light catching shimmers. Discover captivating eau de parfums that give your skin a luminous glow and a lasting, beautiful scent.",
       "accent": "teal",
       "image": "/assets/client/collection-spirit.webp",
-      "banner": "/assets/client/banner-spirit.webp"
+      "banner": {
+        "image": "/assets/client/banner-spirit.webp",
+        "phone": "/assets/client/banner-spirit-sm.webp"
+      }
     }
   ]
 }

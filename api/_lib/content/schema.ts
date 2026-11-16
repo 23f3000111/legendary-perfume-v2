@@ -378,6 +378,25 @@ function noRepeats<T>(items: T[], field: keyof T & string, at: string, message: 
   })
 }
 
+// ----------------------------------------------------------------- banners
+
+const FRACTION = 'Click the photo to set where it stays in view.'
+const fraction = z.number({ invalid_type_error: FRACTION }).min(0, FRACTION).max(1, FRACTION)
+
+/**
+ * A banner behind a title: the wide print, a lighter one for phones framed the
+ * same (or, for the delivery's banners, the asset script's own phone crop),
+ * and the spot that stays in view however the title bar crops it.
+ */
+export const BannerSchema = object({
+  image: photo,
+  phone: photo,
+  /** Where the bottle is, as fractions across and down. Left out, the banner is centred. */
+  focus: object({ x: fraction, y: fraction }).optional(),
+})
+
+export type BannerEntry = z.infer<typeof BannerSchema>
+
 // ------------------------------------------------------------- collections
 
 export const CollectionSchema = object({
@@ -393,8 +412,8 @@ export const CollectionSchema = object({
   accent: z.enum(ACCENTS, { errorMap: () => ({ message: 'Choose a colour.' }) }),
   /** The square cover. */
   image: photo,
-  /** The banner behind the shop's title for this collection. */
-  banner: photo.optional(),
+  /** The banner behind the shop's title for this collection. Left out, the shop's own shows. */
+  banner: BannerSchema.optional(),
 })
 
 export const CollectionsDocSchema = object({
@@ -572,8 +591,8 @@ const heading = (max: number) =>
       'Put a single * either side of the gold word, on one line.',
     )
 
-/** What search engines show for a page. */
-const seo = object({ title: text(70), description: text(300) })
+/** What search engines show for a page, and the picture a shared link shows. Left out, a page shares its banner. */
+const seo = object({ title: text(70), description: text(300), image: photo.optional() })
 
 /** A page's title bar. Its title is plain text, as every title bar draws it. */
 const header = (eyebrow = 40) => object({ eyebrow: text(eyebrow), title: text(80), intro: text(400) })
@@ -584,9 +603,9 @@ const exactly = <T extends z.ZodTypeAny>(item: T, count: number, what: string) =
 const FIGURE = 'Use a whole number.'
 
 /**
- * Every page's own words, and its two photographs, keyed by page. The words
- * of the lists (collections, reviews and the rest) live in their own
- * documents; banners and sharing images follow in stage 4c.
+ * Every page's own words, its photographs and banners, and its sharing image,
+ * keyed by page. The words of the lists (collections, reviews and the rest)
+ * live in their own documents.
  */
 export const PagesDocSchema = object({
   /** On every page: the header menu's featured card and the footer. */
@@ -630,12 +649,15 @@ export const PagesDocSchema = object({
   }),
   shop: object({
     eyebrow: text(40),
+    /** Behind the title for each view of the shop. A collection's own is with the collection. */
+    banners: object({ all: BannerSchema, bestsellers: BannerSchema, gifts: BannerSchema, her: BannerSchema, him: BannerSchema }),
     /** Under the title for each view of the shop. A collection's own is with the collection. */
     intros: object({ all: text(400), bestsellers: text(400), gifts: text(400), her: text(400), him: text(400) }),
   }),
   about: object({
     seo,
     header: header(),
+    banner: BannerSchema,
     beginning: object({
       photo,
       alt: text(120),
@@ -663,11 +685,13 @@ export const PagesDocSchema = object({
   stores: object({
     seo,
     header: header(),
+    banner: BannerSchema,
     sellers: object({ heading: heading(60), intro: text(300) }),
   }),
   contact: object({
     seo,
     header: header(60),
+    banner: BannerSchema,
     /** "Fill in the form below, or reach us directly on" and the WhatsApp link's words. */
     form: object({ kicker: text(40), heading: heading(80), intro: text(200), link: text(30) }),
     office: object({ kicker: text(40), directions: text(30), stores: text(30) }),
@@ -676,6 +700,7 @@ export const PagesDocSchema = object({
   faq: object({
     seo,
     header: object({ eyebrow: text(40), title: text(80) }),
+    banner: BannerSchema,
     /** The words either side of the WhatsApp number, which comes from the site details. */
     help: object({
       kicker: text(40),
@@ -686,8 +711,9 @@ export const PagesDocSchema = object({
       message: text(30),
     }),
   }),
-  journal: object({ seo, header: header() }),
-  policies: object({ more: text(40) }),
+  journal: object({ seo, header: header(), banner: BannerSchema }),
+  /** The four policy pages share their banner. */
+  policies: object({ banner: BannerSchema, more: text(40) }),
 })
 
 export type PagesDoc = z.infer<typeof PagesDocSchema>

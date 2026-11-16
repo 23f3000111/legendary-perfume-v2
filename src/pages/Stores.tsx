@@ -5,7 +5,7 @@ import { storesDoc, mapEmbedUrl, directionsUrl } from '../data/stores'
 import PageHeader from '../components/ui/PageHeader'
 import BrandLogo from '../components/ui/BrandLogo'
 import { sellersDoc } from '../data/logos'
-import { pages } from '../data/pages'
+import { pages, shareImage } from '../data/pages'
 import Heading from '../components/ui/Heading'
 import { Pin, Phone, Clock, ArrowUpRight, WhatsApp } from '../components/ui/icons'
 import { waLink } from '../data/site'
@@ -29,7 +29,7 @@ export default function Stores() {
       <Seo
         title={pages.stores.seo.title}
         description={pages.stores.seo.description}
-        image="/assets/client/banner-stores.webp"
+        image={shareImage(pages.stores)}
         crumbs={[{ name: 'Home', path: '/' }, { name: 'Stores', path: '/stores' }]}
         jsonLd={stores.map((s) => ({
           '@type': 'Store',
@@ -46,7 +46,7 @@ export default function Stores() {
         title={pages.stores.header.title}
         intro={pages.stores.header.intro}
         crumbs={[{ label: 'Home', to: '/' }, { label: 'Stores' }]}
-        image={asset('/assets/client/banner-stores.webp')}
+        banner={pages.stores.banner}
       />
 
       <section className="bg-ivory py-12 md:py-16">

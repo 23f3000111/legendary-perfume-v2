@@ -12,3 +12,12 @@ import type { PagesDoc } from '../../api/_lib/content/schema'
  * a newline and *gold words*; see src/lib/heading.ts.
  */
 export const pages = data as PagesDoc
+
+/**
+ * The picture a shared link to a page shows: its own sharing image, or else
+ * its banner, as every page shared before. Undefined when it has neither (the
+ * Home page), and the house's default picture is used.
+ */
+export function shareImage(page: { seo: { image?: string }; banner?: { image: string } }): string | undefined {
+  return page.seo.image ?? page.banner?.image
+}

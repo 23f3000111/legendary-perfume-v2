@@ -1,8 +1,16 @@
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import Particles from './Particles'
+import { asset } from '../../lib/asset'
 
 interface Crumb { label: string; to?: string }
+
+/** A page banner from the dashboard: root paths, and the spot that stays in view. */
+interface Banner {
+  image: string
+  phone: string
+  focus?: { x: number; y: number }
+}
 
 /**
  * Client change: every inner page title bar sits on a photograph behind a
@@ -15,6 +23,7 @@ export default function PageHeader({
   meta,
   crumbs,
   image,
+  banner,
   size = 'default',
   scrim = 'light',
 }: {
@@ -24,7 +33,10 @@ export default function PageHeader({
   /** A small line below the intro, e.g. an article's date and reading time. */
   meta?: string
   crumbs?: Crumb[]
+  /** A photograph, resolved already: an article's header photo. */
   image?: string
+  /** A page banner from the content: its wide and phone prints, and its focus point. */
+  banner?: Banner
   /**
    * Article titles run far longer than a page name, so they get a smaller
    * setting. Everything else keeps the display size the house opens with.
@@ -67,12 +79,23 @@ export default function PageHeader({
      photograph, which has none, and a <source> that names a missing file is
      not a fallback: the browser takes it anyway, and on a phone the header
      was left with no picture at all. So it is only offered for a banner. */
-  const phoneCrop = image && /\/banner-[^/]+\.webp$/.test(image) ? image.replace(/\.webp$/, '-sm.webp') : null
+  /* A banner from the content names its phone print itself, and may carry a
+     focus point: both prints are then cropped around it rather than the
+     middle, so the bottle stays in view on a phone and on a wide screen. */
+  const photo = banner ? asset(banner.image) : image
+  const phoneCrop = banner
+    ? asset(banner.phone)
+    : image && /\/banner-[^/]+\.webp$/.test(image)
+      ? image.replace(/\.webp$/, '-sm.webp')
+      : null
+  const focus = banner?.focus
+    ? { objectPosition: `${Math.round(banner.focus.x * 100)}% ${Math.round(banner.focus.y * 100)}%` }
+    : undefined
   return (
     <header
       className={`relative flex flex-col justify-center overflow-hidden bg-ink pb-12 pt-28 text-ivory md:pb-16 md:pt-36 ${depth}`}
     >
-      {image ? (
+      {photo ? (
         <>
           {/* Two crops, because one shape cannot serve both.
               A title bar is about 3.5:1 on a desktop and about 1:1 on a phone,
@@ -83,7 +106,7 @@ export default function PageHeader({
               served as it is at every width; see phoneCrop above. */}
           <picture className="absolute inset-0 h-full w-full">
             {phoneCrop && <source media="(max-width: 640px)" srcSet={phoneCrop} />}
-            <img src={image} alt="" aria-hidden className="h-full w-full object-cover" />
+            <img src={photo} alt="" aria-hidden className="h-full w-full object-cover" style={focus} />
           </picture>
           {/* Black transparency so the title always reads. */}
           <div className={`absolute inset-0 ${scrim === 'strong' ? 'bg-ink/55' : 'bg-ink/35'}`} />

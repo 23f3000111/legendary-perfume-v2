@@ -80,6 +80,28 @@
   },
   "shop": {
     "eyebrow": "The Collection",
+    "banners": {
+      "all": {
+        "image": "/assets/client/banner-fragrances.webp",
+        "phone": "/assets/client/banner-fragrances-sm.webp"
+      },
+      "bestsellers": {
+        "image": "/assets/client/banner-bestsellers.webp",
+        "phone": "/assets/client/banner-bestsellers-sm.webp"
+      },
+      "gifts": {
+        "image": "/assets/client/banner-gifts.webp",
+        "phone": "/assets/client/banner-gifts-sm.webp"
+      },
+      "her": {
+        "image": "/assets/client/banner-for-her.webp",
+        "phone": "/assets/client/banner-for-her-sm.webp"
+      },
+      "him": {
+        "image": "/assets/client/banner-for-him.webp",
+        "phone": "/assets/client/banner-for-him-sm.webp"
+      }
+    },
     "intros": {
       "all": "Discover our complete realm of fragrances, where rich Malaysian heritage meets haute perfumery. Find your signature scent, personal rituals and timeless gifts.",
       "bestsellers": "Discover the acclaimed fragrances that lead our collections. Perfect for defining your daily ritual or presenting a gift of distinguished elegance.",
@@ -97,6 +119,10 @@
       "eyebrow": "The House",
       "title": "The Legend of Scent",
       "intro": "Founded in 2015, Legendary is an artisanal Malaysian perfume house dedicated to capturing the rich botanical heritage and soulful essence of Malaysia through modern, world class perfumery."
+    },
+    "banner": {
+      "image": "/assets/client/banner-our-story.webp",
+      "phone": "/assets/client/banner-our-story-sm.webp"
     },
     "beginning": {
       "photo": "/assets/client/about-beginning.webp",
@@ -182,6 +208,10 @@
       "title": "Boutiques across Malaysia",
       "intro": "From Pavilion KL to the shores of Langkawi, visit a Legendary perfume counter to discover your scent in person. Live maps and directions below."
     },
+    "banner": {
+      "image": "/assets/client/banner-stores.webp",
+      "phone": "/assets/client/banner-stores-sm.webp"
+    },
     "sellers": {
       "heading": "Trusted Sellers",
       "intro": "Beyond our own boutiques, Legendary is stocked by these authorised partners."
@@ -196,6 +226,10 @@
       "eyebrow": "Partnerships and Inquiries",
       "title": "Collaborate and Inquire",
       "intro": "Whether you are exploring creative partnerships, corporate gifting or need assistance with your personal fragrance journey, our team is at your service."
+    },
+    "banner": {
+      "image": "/assets/client/banner-contact.webp",
+      "phone": "/assets/client/banner-contact-sm.webp"
     },
     "form": {
       "kicker": "Send a message",
@@ -223,6 +257,10 @@
       "eyebrow": "Customer Care",
       "title": "Frequently asked questions"
     },
+    "banner": {
+      "image": "/assets/client/banner-contact.webp",
+      "phone": "/assets/client/banner-contact-sm.webp"
+    },
     "help": {
       "kicker": "Still wondering",
       "heading": "Ask us anything",
@@ -241,9 +279,17 @@
       "eyebrow": "The Journal",
       "title": "Notes, rituals & heritage",
       "intro": "Stories from the house on scent, craft and the Malaysian culture that shapes every Legendary fragrance."
+    },
+    "banner": {
+      "image": "/assets/client/banner-journal.webp",
+      "phone": "/assets/client/banner-journal-sm.webp"
     }
   },
   "policies": {
+    "banner": {
+      "image": "/assets/client/banner-journal.webp",
+      "phone": "/assets/client/banner-journal-sm.webp"
+    },
     "more": "Also worth reading"
   }
 }

@@ -1,12 +1,11 @@
 import { Link } from 'react-router-dom'
-import { asset } from '../lib/asset'
 import PageHeader from '../components/ui/PageHeader'
 import Accordion from '../components/ui/Accordion'
 import { Kicker } from '../components/ui/SplitText'
 import { ArrowRight, WhatsApp } from '../components/ui/icons'
 import { faq } from '../data/faq'
 import { site, waLink } from '../data/site'
-import { pages } from '../data/pages'
+import { pages, shareImage } from '../data/pages'
 import Heading from '../components/ui/Heading'
 import Seo from '../components/Seo'
 
@@ -16,7 +15,7 @@ export default function Faq() {
       <Seo
         title={pages.faq.seo.title}
         description={pages.faq.seo.description}
-        image="/assets/client/banner-contact.webp"
+        image={shareImage(pages.faq)}
         crumbs={[{ name: 'Home', path: '/' }, { name: 'FAQ', path: '/faq' }]}
         jsonLd={[
           {
@@ -39,7 +38,7 @@ export default function Faq() {
         title={pages.faq.header.title}
         intro={faq.intro}
         crumbs={[{ label: 'Home', to: '/' }, { label: 'FAQ' }]}
-        image={asset('/assets/client/banner-contact.webp')}
+        banner={pages.faq.banner}
       />
 
       {/* Revision 5: the client's sheet runs to roughly fifty questions,

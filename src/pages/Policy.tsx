@@ -1,5 +1,4 @@
 import { Link, useLocation } from 'react-router-dom'
-import { asset } from '../lib/asset'
 import PageHeader from '../components/ui/PageHeader'
 import Prose from '../components/ui/Prose'
 import { getPolicy, policies } from '../data/policies'
@@ -35,7 +34,7 @@ export default function Policy() {
       <Seo
         title={policy.title}
         description={policy.intro}
-        image="/assets/client/banner-journal.webp"
+        image={pages.policies.banner.image}
         canonicalPath={`/${policy.slug}`}
         crumbs={[
           { name: 'Home', path: '/' },
@@ -56,7 +55,7 @@ export default function Policy() {
         title={policy.title}
         intro={policy.intro}
         crumbs={[{ label: 'Home', to: '/' }, { label: policy.title }]}
-        image={asset('/assets/client/banner-journal.webp')}
+        banner={pages.policies.banner}
       />
 
       <section className="bg-ivory py-16 md:py-24">

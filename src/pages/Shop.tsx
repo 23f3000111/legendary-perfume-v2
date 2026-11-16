@@ -1,7 +1,6 @@
 import { pages } from '../data/pages'
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { asset } from '../lib/asset'
 import { products, type Product } from '../data/products'
 import { collections } from '../data/collections'
 import ProductCard from '../components/ProductCard'
@@ -117,13 +116,13 @@ export default function Shop() {
     : forHim ? INTROS.him
     : (collectionParam !== 'all' ? activeCollection?.intro : undefined) ?? INTROS.all
 
-  const banner = asset(
-    filterParam === 'bestsellers' ? '/assets/client/banner-bestsellers.webp'
-    : filterParam === 'gifts' ? '/assets/client/banner-gifts.webp'
-    : forHer ? '/assets/client/banner-for-her.webp'
-    : forHim ? '/assets/client/banner-for-him.webp'
-    : activeCollection?.banner ?? '/assets/client/banner-fragrances.webp',
-  )
+  const banners = pages.shop.banners
+  const banner =
+    filterParam === 'bestsellers' ? banners.bestsellers
+    : filterParam === 'gifts' ? banners.gifts
+    : forHer ? banners.her
+    : forHim ? banners.him
+    : activeCollection?.banner ?? banners.all
 
   /* Every filter combination is a distinct URL, and most of them list the same
      fragrances in a different order. Canonicalising each view onto its own
@@ -142,7 +141,7 @@ export default function Shop() {
       <Seo
         title={activeTitle}
         description={intro}
-        image={banner}
+        image={banner.image}
         canonicalPath={canonicalPath}
         crumbs={[
           { name: 'Home', path: '/' },
@@ -168,7 +167,7 @@ export default function Shop() {
         title={activeTitle}
         intro={intro}
         crumbs={[{ label: 'Home', to: '/' }, { label: 'Fragrances' }]}
-        image={banner}
+        banner={banner}
       />
 
       <section className="bg-ivory py-12 md:py-16">

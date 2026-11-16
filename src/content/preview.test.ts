@@ -121,6 +121,19 @@ describe('preview', () => {
     expect(partnersDoc.rows).toHaveLength(3)
   })
 
+  it('a banner draft is what the page reads', () => {
+    const saved = structuredClone(pagesJson)
+    const draft = structuredClone(pagesJson)
+    draft.about.banner.image = '/assets/cms/0123456789abcdef0123.webp'
+    try {
+      applyDrafts({ pages: draft }, CONTENT)
+      expect(pages.about.banner.image).toBe('/assets/cms/0123456789abcdef0123.webp')
+    } finally {
+      applyDrafts({ pages: saved }, CONTENT)
+    }
+    expect(pages.about.banner.image).toBe('/assets/client/banner-our-story.webp')
+  })
+
   // Every page's own words, the header and footer among them, are read when
   // they render, so a preview of the Pages shows its drafts everywhere.
   it('a draft of the pages is what the pages read', () => {

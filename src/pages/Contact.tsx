@@ -1,13 +1,12 @@
 import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { asset } from '../lib/asset'
 import PageHeader from '../components/ui/PageHeader'
 import { Kicker } from '../components/ui/SplitText'
 import Accordion from '../components/ui/Accordion'
 import { Phone, Instagram, Facebook, Pin, Check, ArrowRight } from '../components/ui/icons'
 import { directionsUrl } from '../data/stores'
 import { site, waLink } from '../data/site'
-import { pages } from '../data/pages'
+import { pages, shareImage } from '../data/pages'
 import Heading from '../components/ui/Heading'
 import { faq } from '../data/faq'
 import Seo from '../components/Seo'
@@ -90,7 +89,7 @@ export default function Contact() {
       <Seo
         title={pages.contact.seo.title}
         description={pages.contact.seo.description}
-        image="/assets/client/banner-contact.webp"
+        image={shareImage(pages.contact)}
         crumbs={[{ name: 'Home', path: '/' }, { name: 'Contact', path: '/contact' }]}
       />
       <PageHeader
@@ -98,7 +97,7 @@ export default function Contact() {
         title={pages.contact.header.title}
         intro={pages.contact.header.intro}
         crumbs={[{ label: 'Home', to: '/' }, { label: 'Contact' }]}
-        image={asset('/assets/client/banner-contact.webp')}
+        banner={pages.contact.banner}
       />
 
       {/* One centred card, the way the client's reference page works. */}

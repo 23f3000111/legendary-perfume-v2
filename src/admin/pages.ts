@@ -5,7 +5,7 @@
  * holds the two together).
  */
 
-export type FieldKind = 'text' | 'heading' | 'area' | 'paragraphs' | 'lines' | 'number' | 'photo'
+export type FieldKind = 'text' | 'heading' | 'area' | 'paragraphs' | 'lines' | 'number' | 'photo' | 'banner' | 'share'
 
 export interface PageField {
   /** Where the word is in the document, dotted: `about.services.2.title`. */
@@ -18,6 +18,8 @@ export interface PageField {
   /** Past this many characters, `warning` shows. It never stops a publish. */
   warnAt?: number
   warning?: string
+  /** The document may leave it out: a sharing image, until one is chosen. */
+  optional?: boolean
 }
 
 export interface PageSection {
@@ -46,11 +48,21 @@ const field = (path: string, label: string, kind: FieldKind = 'text', extra: Par
 const heading = (path: string, label = 'Heading', warnAt?: number): PageField =>
   field(path, label, 'heading', { hint: HEADING_HINT, ...(warnAt ? { warnAt, warning: DRAWN_FOR } : {}) })
 
+const BANNER_HINT = 'Click the photo where the bottle is: phones and wide screens keep that spot in view.'
+const banner = (path: string, label = 'Banner'): PageField => field(path, label, 'banner', { hint: BANNER_HINT })
+
 const seo = (key: string): PageSection => ({
   title: 'Search engines',
   fields: [
     field(`${key}.seo.title`, 'Title', 'text', { warnAt: 60, warning: 'Search engines cut titles past about 60 characters.' }),
     field(`${key}.seo.description`, 'Description', 'area', { warnAt: 160, warning: 'Search engines show about 160 characters.' }),
+    field(`${key}.seo.image`, 'Sharing image', 'share', {
+      optional: true,
+      hint:
+        key === 'home'
+          ? 'Shown when the page is shared. Left empty, the page shares the house’s default picture.'
+          : 'Shown when the page is shared. Left empty, the page shares its banner.',
+    }),
   ],
 })
 const titleBar = (key: string): PageSection => ({
@@ -59,6 +71,7 @@ const titleBar = (key: string): PageSection => ({
     field(`${key}.header.eyebrow`, 'Small line above the title'),
     field(`${key}.header.title`, 'Title'),
     field(`${key}.header.intro`, 'Introduction', 'area'),
+    banner(`${key}.banner`),
   ],
 })
 
@@ -170,6 +183,16 @@ export const PAGE_SPECS: PageSpec[] = [
           field('shop.intros.him', 'For Him', 'area'),
         ],
       },
+      {
+        title: 'Banners',
+        fields: [
+          banner('shop.banners.all', 'All Fragrances'),
+          banner('shop.banners.bestsellers', 'Bestsellers'),
+          banner('shop.banners.gifts', 'Gifts & Sets'),
+          banner('shop.banners.her', 'For Her'),
+          banner('shop.banners.him', 'For Him'),
+        ],
+      },
     ],
   },
   {
@@ -273,6 +296,7 @@ export const PAGE_SPECS: PageSpec[] = [
         fields: [
           field('faq.header.eyebrow', 'Small line above the title'),
           field('faq.header.title', 'Title', 'text', { hint: 'The introduction under it is the FAQ tab’s.' }),
+          banner('faq.banner'),
         ],
       },
       {
@@ -299,7 +323,10 @@ export const PAGE_SPECS: PageSpec[] = [
     key: 'policies',
     title: 'Policies',
     preview: '/shipping',
-    sections: [{ title: 'Under each policy', fields: [field('policies.more', 'Small line above the other policies')] }],
+    sections: [
+      { title: 'Banner', fields: [banner('policies.banner', 'Banner for all four')] },
+      { title: 'Under each policy', fields: [field('policies.more', 'Small line above the other policies')] },
+    ],
   },
 ]
 

@@ -9,7 +9,7 @@ import { Kicker } from '../components/ui/SplitText'
 import { ArrowRight, Sparkle, ShieldCheck, Compass, Droplet } from '../components/ui/icons'
 import Seo from '../components/Seo'
 import { SITE } from '../lib/seo'
-import { pages } from '../data/pages'
+import { pages, shareImage } from '../data/pages'
 import Heading from '../components/ui/Heading'
 
 /** The values' icons, by position: the words are the page's. */
@@ -23,7 +23,7 @@ export default function About() {
       <Seo
         title={words.seo.title}
         description={words.seo.description}
-        image="/assets/client/banner-our-story.webp"
+        image={shareImage(pages.about)}
         crumbs={[{ name: 'Home', path: '/' }, { name: 'Our Story', path: '/about' }]}
         jsonLd={[
           {
@@ -38,7 +38,7 @@ export default function About() {
         title={words.header.title}
         intro={words.header.intro}
         crumbs={[{ label: 'Home', to: '/' }, { label: 'Our Story' }]}
-        image={asset('/assets/client/banner-our-story.webp')}
+        banner={pages.about.banner}
       />
 
       {/* Intro split */}

@@ -7,7 +7,7 @@ import Bestsellers from '../sections/Bestsellers'
 import PartneredWith from '../sections/PartneredWith'
 import Reviews from '../sections/Reviews'
 import Seo from '../components/Seo'
-import { pages } from '../data/pages'
+import { pages, shareImage } from '../data/pages'
 
 /**
  * Client note: the Our Story block and the company attributes strip have both
@@ -24,7 +24,7 @@ export default function Home() {
         title={pages.home.seo.title}
         exact
         description={pages.home.seo.description}
-        image="/assets/client/banner-fragrances.webp"
+        image={shareImage(pages.home)}
         canonicalPath="/"
       />
       <Hero />
