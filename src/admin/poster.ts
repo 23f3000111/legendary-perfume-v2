@@ -52,6 +52,20 @@ export function nudgeBox(box: Box, key: string, resize: boolean): Box | null {
   return resize ? resizeBox(box, 'br', step[0], step[1]) : moveBox(box, step[0], step[1])
 }
 
+/** Squarer than this, a poster is cut down hard on a wide screen. 16:9 is about 1.78. */
+const LANDSCAPE = 1.5
+
+/**
+ * A word for the team when a poster is much squarer than the 16:9 the hero is
+ * drawn for: a wide screen then keeps a band of it around the words, and the
+ * picture may not survive. A warning, not a refusal, as the spec asks of a
+ * design's practical limits; `null` for a landscape poster.
+ */
+export function posterShapeWarning(image: { width: number; height: number }): string | null {
+  if (image.width / image.height >= LANDSCAPE) return null
+  return 'This poster is squarer than the hero is drawn for, so a wide screen keeps only a band of it around the words. Check the previews below: a landscape poster, about 16 by 9, fills the hero best.'
+}
+
 /** A poster fitted from the library, as the document holds it; `null` when the fitting made no prints. */
 export function posterImageFrom(derived: DerivedPhoto): PosterImage | null {
   if (!derived.prints?.length || !derived.fill) return null

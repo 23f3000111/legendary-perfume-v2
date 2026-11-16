@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { moveBox, nudgeBox, posterImageFrom, resizeBox } from './poster'
+import { moveBox, nudgeBox, posterImageFrom, posterShapeWarning, resizeBox } from './poster'
 
 describe('the poster boxes', () => {
   // A box is part of the poster: dragged off its edge, it stops at the edge,
@@ -18,6 +18,15 @@ describe('the poster boxes', () => {
     expect(nudgeBox([0.5, 0.3, 0.9, 0.7], 'ArrowRight', false)).toEqual([0.505, 0.3, 0.905, 0.7])
     expect(nudgeBox([0.5, 0.3, 0.9, 0.7], 'ArrowDown', true)).toEqual([0.5, 0.3, 0.9, 0.705])
     expect(nudgeBox([0.5, 0.3, 0.9, 0.7], 'a', false)).toBeNull()
+  })
+
+  // The hero is drawn for a landscape poster about 16:9. A square or upright
+  // one is cut down hard on a wide screen: the tab says so, and still takes it.
+  it('a poster much squarer than 16:9 is warned about, not refused', () => {
+    expect(posterShapeWarning({ width: 3200, height: 1802 })).toBeNull()
+    expect(posterShapeWarning({ width: 3000, height: 1000 })).toBeNull()
+    expect(posterShapeWarning({ width: 2000, height: 2000 })).toMatch(/landscape/)
+    expect(posterShapeWarning({ width: 1600, height: 2000 })).toMatch(/landscape/)
   })
 
   it("a derived poster becomes the poster's image", () => {

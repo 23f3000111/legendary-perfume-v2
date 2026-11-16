@@ -676,7 +676,11 @@ try {
   await openTab(page, 'Poster')
   await page.waitForSelector('text=The two boxes')
   const seedHero = await ghJson('src/content/hero.json')
-  await page.locator('[data-box="words"]').focus()
+  // Clicked as a person clicks it, then the keys: the click must give it focus.
+  const wordsBox = page.locator('[data-box="words"]')
+  await wordsBox.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
+  const wordsAt = await wordsBox.boundingBox()
+  await page.mouse.click(wordsAt.x + wordsAt.width / 2, wordsAt.y + wordsAt.height / 2)
   for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowRight')
   await page.getByLabel('Header over the poster').selectOption('dark')
   await page.click('button:text-is("Publish")')

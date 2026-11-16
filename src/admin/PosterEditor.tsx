@@ -1,10 +1,10 @@
 import { useRef } from 'react'
 import type { Box, HeroDoc, PosterEntry } from '../../api/_lib/content/schema'
-import { frameFor } from '../lib/poster'
+import { frameFor, headerHeight } from '../lib/poster'
 import { useContent } from './contentStore'
 import { ContentGate, errorUnder, Select, TextArea } from './fields'
 import PhotoField, { PhotoPreview } from './PhotoField'
-import { moveBox, nudgeBox, posterImageFrom, resizeBox, type Corner } from './poster'
+import { moveBox, nudgeBox, posterImageFrom, posterShapeWarning, resizeBox, type Corner } from './poster'
 import PublishBar from './PublishBar'
 import { danger, panel } from './styles'
 
@@ -65,6 +65,9 @@ function Editor() {
               }}
             />
             {err('poster.image') && <p className={`mt-1 text-xs ${danger}`}>{err('poster.image')}</p>}
+            {posterShapeWarning(poster.image) && (
+              <p className="mt-2 max-w-3xl text-xs text-gold-deep">{posterShapeWarning(poster.image)}</p>
+            )}
           </div>
           <TextArea
             label="Describe the poster"
@@ -140,6 +143,10 @@ function Boxes({
     // A corner is inside its box: the box itself must not start a move too.
     e.stopPropagation()
     e.preventDefault()
+    // preventDefault keeps the page from selecting text under the drag, but it
+    // also keeps the box from taking focus, so it is given focus here: a box
+    // dragged roughly into place then takes the arrow keys for the last steps.
+    ;(e.currentTarget.closest('[data-box]') as HTMLElement | null)?.focus({ preventScroll: true })
     const rect = area.current.getBoundingClientRect()
     drag.current = { which, corner, x: e.clientX, y: e.clientY, box: poster[which], width: rect.width, height: rect.height }
     e.currentTarget.setPointerCapture(e.pointerId)
@@ -216,7 +223,7 @@ const SCREENS = [
   { label: 'A wide screen', width: 2560, height: 1080 },
   { label: 'A phone', width: 390, height: 844 },
 ]
-const HEADER = 80
+// Each under the header the site draws at its width (headerHeight).
 
 /**
  * How the site crops the poster on three shapes of screen, framed by the same
@@ -226,7 +233,8 @@ function Previews({ poster }: { poster: PosterEntry }) {
   return (
     <div className="mt-6 flex flex-wrap items-end gap-4">
       {SCREENS.map((screen) => {
-        const frame = frameFor(screen.width, screen.height, poster, HEADER)
+        const header = headerHeight(screen.width)
+        const frame = frameFor(screen.width, screen.height, poster, header)
         return (
           <figure key={screen.label} style={{ width: screen.width > screen.height ? 240 : 104 }}>
             <div
@@ -243,7 +251,7 @@ function Previews({ poster }: { poster: PosterEntry }) {
                   style={frame.fit === 'cover' ? { objectPosition: `${frame.x}% ${frame.y}%` } : undefined}
                 />
               </div>
-              <div className="absolute inset-x-0 top-0 bg-ink/45" style={{ height: `${(HEADER / screen.height) * 100}%` }} />
+              <div className="absolute inset-x-0 top-0 bg-ink/45" style={{ height: `${(header / screen.height) * 100}%` }} />
             </div>
             <figcaption className="mt-1 text-[0.68rem] text-smoke">{screen.label}</figcaption>
           </figure>

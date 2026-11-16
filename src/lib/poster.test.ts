@@ -1,5 +1,6 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { frameFor, heroSlides, posterSources } from './poster'
+import { frameFor, headerHeight, heroSlides, posterSources } from './poster'
 
 const balloon = {
   image: {
@@ -49,6 +50,22 @@ describe('the hero poster', () => {
     expect(posterSources(small, (p) => `/base${p}`).srcSet).toBe(
       '/base/assets/cms/aaaaaaaaaaaaaaaaaaaa.webp 1280w, /base/assets/cms/bbbbbbbbbbbbbbbbbbbb.webp 2000w',
     )
+  })
+
+  // The Poster tab's previews frame the poster under the header the site draws
+  // at that width: two rows, 130 px, on a laptop or a wide screen.
+  it('the header is as tall as the site draws it at each width', () => {
+    expect(headerHeight(390)).toBe(62)
+    expect(headerHeight(800)).toBe(78)
+    expect(headerHeight(1440)).toBe(130)
+    expect(frameFor(2560, 1080, balloon, headerHeight(2560))).toEqual({ fit: 'cover', x: 50, y: 76 })
+  })
+
+  it("the header's heights are the stylesheet's", () => {
+    const css = readFileSync('src/index.css', 'utf8')
+    const steps = [...css.matchAll(/(?:@media \(min-width: (\d+)px\)\s*\{\s*:root\s*\{\s*)?--header-h:\s*(\d+)px/g)]
+    expect(steps.length).toBe(3)
+    for (const [, from, height] of steps) expect(headerHeight(Number(from ?? 0))).toBe(Number(height))
   })
 
   it('the poster is a slide only while it is shown', () => {

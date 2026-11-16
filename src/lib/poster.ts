@@ -55,6 +55,19 @@ export const AIR = 12
 /** The arrows wherever the poster can cover: 88px wide, 96px in from the right, top edge 76px up. */
 export const ARROWS = { width: 88, right: 96, top: 76 }
 
+/**
+ * How tall the site's fixed header is in a window `width` px wide, as
+ * `--header-h` in src/index.css sets it: one row on a phone, a taller one from
+ * a tablet, and from a laptop up a second row for the menu. The hero reads the
+ * real value from the page; the Poster tab's previews, which have no such
+ * page, use this. A test holds it to the stylesheet.
+ */
+export function headerHeight(width: number): number {
+  if (width >= 1024) return 130
+  if (width >= 768) return 78
+  return 62
+}
+
 /** The frame for a hero `width` by `height` px, under a header `header` px tall. */
 export function frameFor(width: number, height: number, poster: PosterLayout, header: number): PosterFrame {
   const { words, picture } = poster
