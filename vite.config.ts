@@ -1,5 +1,22 @@
-import { defineConfig } from 'vite'
+import { readFileSync } from 'node:fs'
+import { defineConfig, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
+import { homeHead } from './scripts/home-head.mjs'
+
+/**
+ * The Home page's search words and sharing image, from the dashboard's Pages
+ * document, written into the static head a link preview reads. Read when the
+ * page is served or built, so a published change goes out with the next build.
+ */
+function homeHeadPlugin(): Plugin {
+  return {
+    name: 'legendary-home-head',
+    transformIndexHtml(html) {
+      const pages = JSON.parse(readFileSync(new URL('./src/content/pages.json', import.meta.url), 'utf8'))
+      return homeHead(html, pages.home.seo, process.env.SITE_URL ?? 'https://legendary.com.my')
+    },
+  }
+}
 
 /**
  * https://vitejs.dev/config/
@@ -19,7 +36,7 @@ export default defineConfig(({ command }) => {
 
   return {
     base,
-    plugins: [react()],
+    plugins: [react(), homeHeadPlugin()],
     server: {
       port: 5173,
       open: true,
