@@ -101,3 +101,21 @@ export function siteMono(path: string): string | null {
   if (!m || m[1].endsWith('-mono')) return null
   return `${m[1]}-mono.png`
 }
+
+/**
+ * The phone crop beside a banner the site already has, which
+ * scripts/prepare-assets.py writes as banner-<name>-sm.webp next to it.
+ * Null for anything else, a phone crop itself included.
+ */
+export function sitePhone(path: string): string | null {
+  const m = /^(\/assets\/client\/banner-[\w-]+)\.webp$/.exec(path)
+  if (!m || m[1].endsWith('-sm')) return null
+  return `${m[1]}-sm.webp`
+}
+
+/** The second print beside a site photo, for a kind that needs one: a logo's black and white, a banner's phone crop. */
+export function siteSecond(kind: { mono?: boolean; phone?: boolean }, path: string): string | null {
+  if (kind.mono) return siteMono(path)
+  if (kind.phone) return sitePhone(path)
+  return null
+}

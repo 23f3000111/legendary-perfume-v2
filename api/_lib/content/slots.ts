@@ -19,6 +19,8 @@ export interface SlotSpec {
   square?: 'cover' | 'contain'
   /** The place also needs a black and white print, made with the colour one: the logo walls rest in black and white. */
   mono?: boolean
+  /** The place also needs a 1200 px print for phones, framed the same: the page banners. */
+  phone?: boolean
 }
 
 const KINDS = {
@@ -44,6 +46,10 @@ const KINDS = {
   logo: { label: 'Logo', maxSide: 340, alpha: true, mono: true },
   /** A photograph on a page, such as the Signature section's Orchid or Our Story's first flower. */
   page: { label: 'Page photo', maxSide: 1800, alpha: false },
+  /** A page's banner, behind its title: 2400 px for wide screens, and a 1200 px print for phones. */
+  banner: { label: 'Banner', maxSide: 2400, alpha: false, phone: true },
+  /** What a link to the page shows when it is shared. */
+  share: { label: 'Sharing image', maxSide: 1200, alpha: false },
 } satisfies Record<string, SlotSpec>
 
 export const SLOT_KINDS: Record<keyof typeof KINDS, SlotSpec> = KINDS

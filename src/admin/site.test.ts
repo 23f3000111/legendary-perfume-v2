@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest'
-import { blankCollection, collectionInUse, moveLogo, renameCollection, setStars, siteMono } from './site'
+import { blankCollection, collectionInUse, moveLogo, renameCollection, setStars, siteMono, sitePhone } from './site'
+
+describe('delivery banners', () => {
+  // A delivery banner keeps the phone crop the asset script made beside it.
+  it('sitePhone finds the phone crop beside a delivery banner', () => {
+    expect(sitePhone('/assets/client/banner-nyonya.webp')).toBe('/assets/client/banner-nyonya-sm.webp')
+    expect(sitePhone('/assets/client/banner-nyonya-sm.webp')).toBeNull()
+    expect(sitePhone('/assets/client/store-bsas.webp')).toBeNull()
+    expect(sitePhone('/assets/cms/abc.webp')).toBeNull()
+  })
+})
 
 describe('the Site tab', () => {
   // A collection's id is its address in the shop, /shop?collection=<id>.

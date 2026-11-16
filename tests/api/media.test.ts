@@ -300,6 +300,20 @@ describe('the photo API', () => {
     expect(res.body.error).toMatch(/white/)
   })
 
+  // A page banner: 2400 px for wide screens, and a lighter print for phones,
+  // framed the same, which the title bar crops around its focus point.
+  it('a banner gets a wide print and a phone print', async () => {
+    const wide = await sharp({ create: { width: 3000, height: 1500, channels: 3, background: { r: 60, g: 40, b: 30 } } }).jpeg().toBuffer()
+    const master = (await upload(wide)).body.file
+    const res = await call({ method: 'POST', query: { derive: master, kind: 'banner' } })
+    expect(res.status).toBe(200)
+    expect([res.body.width, res.body.height]).toEqual([2400, 1200])
+    expect(res.body.phone).toMatch(/^\/assets\/cms\/[0-9a-f]{20}\.webp$/)
+    expect(res.body.phone).not.toBe(res.body.path)
+    const phone = await sharp(await fetchFile(res.body.phone.slice('/assets/cms/'.length))).metadata()
+    expect([phone.width, phone.height]).toEqual([1200, 600])
+  })
+
   it('derive makes a 900 px store photo on white', async () => {
     const transparent = await sharp({
       create: { width: 2000, height: 1500, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },

@@ -3,7 +3,7 @@ import { SLOT_KINDS, type SlotKind } from '../../api/_lib/content/slots'
 import { adminDerivePhoto, apiUrl } from '../lib/api'
 import { asset } from '../lib/asset'
 import { coarsePointer, LibraryPicker, messageOf, uploadToLibrary, type LibraryChoice } from './PhotoLibrary'
-import { siteMono } from './site'
+import { siteSecond } from './site'
 import { danger, small } from './styles'
 
 /**
@@ -18,8 +18,8 @@ export default function PhotoField({
 }: {
   kind: SlotKind
   value?: string
-  /** The photo's path; for a logo, its black and white print's path too. */
-  onChange: (path: string | undefined, mono?: string) => void
+  /** The photo's path; for a logo, its black and white print's path too, and for a banner its phone print's. */
+  onChange: (path: string | undefined, second?: string) => void
   label?: string
   disabled?: boolean
   /** Told when a photo starts and stops being uploaded or fitted, so the form can hold still meanwhile. */
@@ -49,8 +49,8 @@ export default function PhotoField({
       alive.current = false
     }
   }, [])
-  const done = (path: string | undefined, mono?: string) => {
-    if (alive.current) latest.current.onChange(path, mono)
+  const done = (path: string | undefined, second?: string) => {
+    if (alive.current) latest.current.onChange(path, second)
   }
 
   const run = async (work: () => Promise<void>) => {
@@ -67,8 +67,8 @@ export default function PhotoField({
   }
   const place = async (master: string) => {
     setBusy('Fitting the photo…')
-    const { path, mono } = await adminDerivePhoto(master, kind, { white: offerWhite && onWhite })
-    done(path, mono)
+    const { path, mono, phone } = await adminDerivePhoto(master, kind, { white: offerWhite && onWhite })
+    done(path, mono ?? phone)
   }
   const upload = (file: File) =>
     run(async () => {
@@ -80,8 +80,8 @@ export default function PhotoField({
     setPicking(false)
     void run(async () => {
       if ('master' in choice) await place(choice.master)
-      // A logo the site has already has its black and white print beside it.
-      else done(choice.site, SLOT_KINDS[kind].mono ? siteMono(choice.site) ?? undefined : undefined)
+      // A logo or banner the site already has keeps the second print beside it.
+      else done(choice.site, siteSecond(SLOT_KINDS[kind], choice.site) ?? undefined)
     })
   }
   const locked = disabled || Boolean(busy)
