@@ -720,6 +720,54 @@ export const PagesDocSchema = object({
 
 export type PagesDoc = z.infer<typeof PagesDocSchema>
 
+// -------------------------------------------------------------------- hero
+
+const BOX = 'Give the box some width and height.'
+
+/**
+ * A region of the poster, as fractions of it: left, top, right, bottom. The
+ * hero crops the poster around two of them on every shape of screen.
+ */
+const box = z
+  .tuple([fraction, fraction, fraction, fraction])
+  .refine(([left, top, right, bottom]) => right - left >= 0.02 && bottom - top >= 0.02, BOX)
+
+/**
+ * A poster's files, as save_hero_poster in scripts/prepare-assets.py makes
+ * them: its prints, narrowest first, each at its own width for the srcset; the
+ * blurred fill it sits on where it is shown whole; and its size, for the shape
+ * of the frame before a print has loaded.
+ */
+export const PosterImageSchema = object({
+  prints: z
+    .array(object({ path: photo, width: z.number().int().positive() }))
+    .min(1, 'Choose a poster.')
+    .refine((prints) => prints.every((p, i) => i === 0 || p.width > prints[i - 1].width), 'The prints run from narrow to wide.'),
+  fill: photo,
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+})
+
+/** The campaign poster that follows the film in the Home hero. */
+export const HeroDocSchema = object({
+  poster: object({
+    /** Off, the film plays on its own, over and over. */
+    show: z.boolean(),
+    image: PosterImageSchema,
+    alt: text(300),
+    /** A light poster turns the header and the arrows to ink while it is up. */
+    tone: z.enum(['light', 'dark']),
+    /** The lettering: kept whole, below the header and clear of the arrows. */
+    words: box,
+    /** The product shot: kept in frame as far as the words allow. */
+    picture: box,
+  }),
+})
+export type HeroDoc = z.infer<typeof HeroDocSchema>
+export type PosterEntry = HeroDoc['poster']
+export type PosterImage = PosterEntry['image']
+export type Box = PosterEntry['words']
+
 // ----------------------------------------------------------------- helpers
 
 function eachString(value: unknown, path: string[], visit: (s: string, path: string[]) => void): void {

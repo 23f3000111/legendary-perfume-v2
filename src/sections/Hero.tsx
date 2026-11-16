@@ -4,7 +4,9 @@ import { Link } from 'react-router-dom'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import HeroHeading from '../components/ui/HeroHeading'
 import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight } from '../components/ui/icons'
+import { hero } from '../data/hero'
 import { pages } from '../data/pages'
+import { frameFor, heroSlides, posterSources, type Fit, type PosterFrame } from '../lib/poster'
 import { useUI } from '../store/ui'
 
 /**
@@ -13,7 +15,9 @@ import { useUI } from '../store/ui'
  * Revision 10. The client asked for the two to run as a slideshow: the film
  * plays to its end, the poster holds for a few seconds, the film plays again,
  * and arrows move between them by hand. Revision 11 brought the balloon
- * artwork in place of the first anniversary poster; see POSTER.
+ * artwork in place of the first anniversary poster. The poster, its two
+ * regions and its tone are now the team's, in src/content/hero.json (the
+ * dashboard's Poster tab); turned off, the film plays alone and loops.
  *
  * So the film no longer loops. Its own `ended` is what brings the poster in,
  * which means the poster never cuts across it partway through, and it starts
@@ -28,9 +32,6 @@ import { useUI } from '../store/ui'
  * way, so they step aside while it is up. Over a light poster the header and
  * the arrows switch from ivory to ink.
  */
-const SLIDES = ['film', 'poster'] as const
-type Slide = (typeof SLIDES)[number]
-
 /** How long the poster holds before the film comes back. */
 const POSTER_MS = 6000
 
@@ -45,116 +46,6 @@ const STALL_MS = 5000
 /** Circumference of the countdown ring around the next arrow, r = 19.5. */
 const RING = 2 * Math.PI * 19.5
 
-/** A region of the artwork, as fractions of it: left, top, right, bottom. */
-type Box = readonly [number, number, number, number]
-
-/**
- * The poster now showing.
- *
- * Everything else follows from this entry: how the poster is cropped on each
- * shape of screen, and whether the header and arrows turn to ink over it. A new
- * campaign is a new entry here and a new save_hero_poster line in
- * prepare-assets.py, with a new name, since /assets/ is cached for a year and
- * an old name would keep showing the old poster to anyone who had seen it.
- *
- *   words    the lettering. It must stay whole, below the header and clear of
- *            the arrows.
- *   picture  the product shot. It should stay in frame too, and gives way to
- *            the words when the two cannot both be met.
- *
- * Measured off a 5% grid laid over the client's file.
- */
-const POSTER = {
-  name: 'balloon',
-  /** The generated files' size, for the aspect ratio before one has loaded. */
-  width: 3200,
-  height: 1802,
-  alt: 'Legendary’s 11th anniversary: a bottle of Legendary and a cake in the basket of a golden hot air balloon. The legend of scent.',
-  /** A light poster turns the header and arrows to ink while it is up. */
-  tone: 'light' as 'light' | 'dark',
-  words: [0.515, 0.288, 0.928, 0.767] as Box,
-  picture: [0.12, 0.41, 0.475, 0.955] as Box,
-}
-
-const posterFile = (variant: number | 'fill') => asset(`/assets/client/hero-${POSTER.name}-${variant}.webp`)
-
-/**
- * How the poster meets the frame.
- *
- * cover  A desktop window is close enough to the poster's own 16:9 that it can
- *        fill the frame edge to edge. A frame narrower than the poster loses
- *        width, split so the picture on one side and the words on the other
- *        keep equal margins; it covers for as long as both keep at least 2% of
- *        the width, which for the balloon is down to about 1.5:1. A frame wider
- *        than the poster loses height instead, decided as described below.
- * band   A tablet or a squarish window. Covering it would cut into the words or
- *        the picture, so the poster is shown whole across the full width and
- *        set on the bottom edge. The space above sits behind the header, on a
- *        blurred field cut from the poster.
- * card   A phone held upright, where a 16:9 picture can only fill the screen by
- *        losing two thirds of its width. It is shown whole and centred on the
- *        same field instead, clear of the controls and the concierge button.
- *
- * The vertical cut, when there is one, keeps the words below the header and
- * above the arrows where the two overlap, and within that keeps the picture in
- * frame and below the header, splitting whatever room is left down the middle.
- * If the picture cannot be kept whole, the cut goes as near to it as the words
- * allow; if even the words cannot clear both, they stay clear of the arrows.
- *
- * Measured off the hero rather than the window, because the hero has a minimum
- * height and the two part company on a phone turned sideways.
- */
-type Fit = 'cover' | 'band' | 'card'
-
-/** Room kept between the poster's important parts and anything over them. */
-const AIR = 12
-/** The arrows wherever the poster can cover: 88px wide, 96px in from the right, top edge 76px up. */
-const ARROWS = { width: 88, right: 96, top: 76 }
-
-function frameFor(width: number, height: number): { fit: Fit; x: number; y: number } {
-  const { words, picture } = POSTER
-  const ratio = width / height
-  const posterRatio = POSTER.width / POSTER.height
-
-  // Narrower than the poster: the share of its width that would be lost,
-  // against the room either side of the words and the picture together.
-  const left = Math.min(words[0], picture[0])
-  const right = Math.max(words[2], picture[2])
-  const room = left + (1 - right)
-  const widthLost = 1 - ratio / posterRatio
-  if (widthLost > room - 0.04) return { fit: ratio >= 1 ? 'band' : 'card', x: 50, y: 50 }
-  if (widthLost > 0) {
-    // Held between 0% and 100%. A frame only a hair narrower than the poster,
-    // which is what a 16:9 screen in full screen leaves once a scrollbar takes
-    // its 10 to 17px, loses a few pixels of width, and the split worked out
-    // above then asks for many times that from the left: 635% at 1920x1080.
-    // Past 100% the picture slid left off its own edge and the film showed
-    // through a strip down the right, which is what the client saw.
-    const margin = (room - widthLost) / 2
-    const x = Math.min(1, Math.max(0, (left - margin) / widthLost))
-    return { fit: 'cover', x: Math.round(x * 100), y: 50 }
-  }
-
-  // Wider than the poster: how far down to start it, in px of its own height.
-  const shown = width / posterRatio
-  const excess = shown - height
-  if (excess <= 0) return { fit: 'cover', x: 50, y: 50 }
-  const at = (fraction: number) => fraction * shown
-  const header = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0
-  const arrowsLeft = (width - ARROWS.right - ARROWS.width) / width
-  const arrowsRight = (width - ARROWS.right) / width
-  const floor = arrowsLeft < words[2] && arrowsRight > words[0] ? height - ARROWS.top - AIR : height - AIR
-  const lo = Math.max(0, at(words[3]) - floor)
-  const hi = Math.min(excess, at(words[1]) - header - AIR)
-  const pictureLo = Math.max(lo, at(picture[3]) - height)
-  const pictureHi = Math.min(hi, at(picture[1]) - header - AIR)
-  const cut =
-    pictureLo <= pictureHi ? (pictureLo + pictureHi) / 2
-    : lo <= hi ? Math.min(hi, Math.max(lo, pictureLo))
-    : lo
-  return { fit: 'cover', x: 50, y: Math.round((Math.min(excess, Math.max(0, cut)) / excess) * 100) }
-}
-
 /** Feathered edges, so a poster shown whole melts into its field. */
 const FEATHER: Record<Exclude<Fit, 'cover'>, string> = {
   band: 'linear-gradient(to bottom, transparent, #000 10%)',
@@ -165,16 +56,21 @@ export default function Hero() {
   // The words over the film, from the Pages tab; read here, at render, so a
   // preview's drafts show.
   const words = pages.home.hero
+  // The poster, from the Poster tab, likewise.
+  const { poster } = hero
   const ref = useRef<HTMLDivElement>(null)
   const video = useRef<HTMLVideoElement>(null)
   const copy = useRef<HTMLDivElement>(null)
   const controls = useRef<HTMLDivElement>(null)
 
+  const slides = heroSlides(poster)
+  // With the poster off, the film has nothing to hand over to: it loops.
+  const alone = slides.length === 1
   const [index, setIndex] = useState(0)
-  const slide: Slide = SLIDES[index]
+  const slide = slides[index % slides.length]
   const onPoster = slide === 'poster'
-  const next = useCallback(() => setIndex((i) => (i + 1) % SLIDES.length), [])
-  const prev = useCallback(() => setIndex((i) => (i - 1 + SLIDES.length) % SLIDES.length), [])
+  const next = useCallback(() => setIndex((i) => (i + 1) % slides.length), [slides.length])
+  const prev = useCallback(() => setIndex((i) => (i - 1 + slides.length) % slides.length), [slides.length])
 
   /*
    * Persuade iOS to play the background clip.
@@ -193,8 +89,9 @@ export default function Hero() {
     el.playsInline = true
   }, [])
 
-  // Nothing times out while nobody is looking at the tab.
-  const [hidden, setHidden] = useState(() => document.hidden)
+  // Nothing times out while nobody is looking at the tab. (No document is
+  // there when the hero is drawn on the server, as its test draws it.)
+  const [hidden, setHidden] = useState(() => typeof document !== 'undefined' && document.hidden)
   useEffect(() => {
     const onChange = () => setHidden(document.hidden)
     document.addEventListener('visibilitychange', onChange)
@@ -203,7 +100,7 @@ export default function Hero() {
 
   // The header reads this to stay legible over the poster.
   const setHeroTone = useUI((s) => s.setHeroTone)
-  useEffect(() => setHeroTone(onPoster ? POSTER.tone : 'dark'), [onPoster, setHeroTone])
+  useEffect(() => setHeroTone(onPoster ? poster.tone : 'dark'), [onPoster, poster.tone, setHeroTone])
   useEffect(() => () => setHeroTone('dark'), [setHeroTone])
 
   /*
@@ -235,12 +132,14 @@ export default function Hero() {
     }
     const el = video.current
     if (!el) return
+    // Back from a hidden tab, which may have paused it.
+    void el.play().catch(() => {})
+    // Alone, the film loops and there is nothing to move on to.
+    if (alone) return
     let moved = performance.now()
     const onMove = () => { moved = performance.now() }
     el.addEventListener('ended', next)
     el.addEventListener('timeupdate', onMove)
-    // Back from a hidden tab, which may have paused it.
-    void el.play().catch(() => {})
     const watch = window.setInterval(() => {
       if (performance.now() - moved > STALL_MS) next()
     }, 500)
@@ -249,7 +148,7 @@ export default function Hero() {
       el.removeEventListener('timeupdate', onMove)
       window.clearInterval(watch)
     }
-  }, [slide, hidden, next])
+  }, [slide, hidden, next, alone])
 
   /*
    * The ring around the next arrow: how far through the film, or how much of
@@ -258,7 +157,7 @@ export default function Hero() {
    * draw it.
    */
   useEffect(() => {
-    if (hidden) return
+    if (hidden || alone) return
     const start = performance.now()
     let frame = 0
     const tick = (now: number) => {
@@ -274,21 +173,22 @@ export default function Hero() {
     }
     frame = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(frame)
-  }, [slide, hidden])
+  }, [slide, hidden, alone])
 
   // The headline's buttons stay out of the tab order while they are hidden.
   useEffect(() => {
     copy.current?.toggleAttribute('inert', onPoster)
   }, [onPoster])
 
-  const [frame, setFrame] = useState<{ fit: Fit; x: number; y: number }>({ fit: 'cover', x: 50, y: 50 })
+  const [frame, setFrame] = useState<PosterFrame>({ fit: 'cover', x: 50, y: 50 })
   const { fit } = frame
   useEffect(() => {
     const el = ref.current
     if (!el) return
     const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect
-      if (width && height) setFrame(frameFor(width, height))
+      const header = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--header-h')) || 0
+      if (width && height) setFrame(frameFor(width, height, hero.poster, header))
     })
     observer.observe(el)
     return () => observer.disconnect()
@@ -318,7 +218,9 @@ export default function Hero() {
 
   // Controls take the tone of what is behind them: ivory over the film, and
   // ink over a light poster.
-  const light = onPoster && POSTER.tone === 'light'
+  const light = onPoster && poster.tone === 'light'
+  // Each print named at its own width, through the preview's photo store.
+  const sources = posterSources(poster.image, asset)
   // Hover only where there is a pointer to hover with: iOS keeps it stuck on
   // whatever was last tapped.
   const ring = light
@@ -340,6 +242,8 @@ export default function Hero() {
           ref={video}
           className="h-full w-full object-cover"
           autoPlay
+          // With no poster to hand over to, the film plays over and over.
+          loop={alone}
           muted
           playsInline
           // Safari wants this spelling as well as the camel-cased prop.
@@ -356,38 +260,40 @@ export default function Hero() {
       </motion.div>
 
       {/* The poster, dissolving in over the film */}
-      <motion.div
-        style={{ y }}
-        aria-hidden={!onPoster}
-        className={`absolute inset-0 transition-opacity duration-1000 ease-luxe ${
-          onPoster ? 'opacity-100' : 'opacity-0'
-        }`}
-      >
-        {fit !== 'cover' && (
-          <img
-            src={posterFile('fill')}
-            alt=""
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-        )}
-        <div className={`absolute inset-0 flex justify-center ${fit === 'card' ? 'items-center' : 'items-end'}`}>
-          <img
-            src={posterFile(2400)}
-            srcSet={`${posterFile(1280)} 1280w, ${posterFile(2400)} 2400w, ${posterFile(3200)} 3200w`}
-            sizes="100vw"
-            width={POSTER.width}
-            height={POSTER.height}
-            decoding="async"
-            alt={POSTER.alt}
-            className={fit === 'cover' ? 'absolute inset-0 h-full w-full object-cover' : 'h-auto w-full'}
-            style={
-              fit === 'cover'
-                ? { objectPosition: `${frame.x}% ${frame.y}%` }
-                : { WebkitMaskImage: FEATHER[fit], maskImage: FEATHER[fit] }
-            }
-          />
-        </div>
-      </motion.div>
+      {!alone && (
+        <motion.div
+          style={{ y }}
+          aria-hidden={!onPoster}
+          className={`absolute inset-0 transition-opacity duration-1000 ease-luxe ${
+            onPoster ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          {fit !== 'cover' && (
+            <img
+              src={asset(poster.image.fill)}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+          )}
+          <div className={`absolute inset-0 flex justify-center ${fit === 'card' ? 'items-center' : 'items-end'}`}>
+            <img
+              src={sources.src}
+              srcSet={sources.srcSet}
+              sizes="100vw"
+              width={poster.image.width}
+              height={poster.image.height}
+              decoding="async"
+              alt={poster.alt}
+              className={fit === 'cover' ? 'absolute inset-0 h-full w-full object-cover' : 'h-auto w-full'}
+              style={
+                fit === 'cover'
+                  ? { objectPosition: `${frame.x}% ${frame.y}%` }
+                  : { WebkitMaskImage: FEATHER[fit], maskImage: FEATHER[fit] }
+              }
+            />
+          </div>
+        </motion.div>
+      )}
 
       {/* Everything that belongs to the film, which steps aside for the poster */}
       <div
@@ -457,34 +363,37 @@ export default function Hero() {
           seeing them over the headline's buttons, which on a shorter window
           come right down to the bottom left. They sit on the concierge
           button's line, just inside it: the headline lives on the left, and the
-          poster's lettering stops well above. */}
-      <div ref={controls} className="absolute bottom-7 right-[5.5rem] z-20 flex items-center gap-2 md:bottom-9 md:right-24">
-        <button
-          onClick={prev}
-          aria-label="Previous slide"
-          className={`grid h-10 w-10 place-items-center rounded-full border backdrop-blur-sm transition-colors duration-700 ${ring}`}
-        >
-          <ChevronLeft width={18} />
-        </button>
-        <button
-          onClick={next}
-          aria-label="Next slide"
-          className={`relative grid h-10 w-10 place-items-center rounded-full border backdrop-blur-sm transition-colors duration-700 ${ring}`}
-        >
-          <svg viewBox="0 0 40 40" aria-hidden className="pointer-events-none absolute -left-px -top-px h-[42px] w-[42px] -rotate-90">
-            <circle
-              cx="20"
-              cy="20"
-              r="19.5"
-              fill="none"
-              strokeWidth="1.5"
-              className={`transition-colors duration-700 ${light ? 'stroke-gold-deep' : 'stroke-gold'}`}
-              style={{ strokeDasharray: RING, strokeDashoffset: `calc(${RING}px * (1 - var(--progress, 0)))` }}
-            />
-          </svg>
-          <ChevronRight width={18} />
-        </button>
-      </div>
+          poster's lettering stops well above. With the poster off there is
+          nothing to move between, so there are none. */}
+      {!alone && (
+        <div ref={controls} className="absolute bottom-7 right-[5.5rem] z-20 flex items-center gap-2 md:bottom-9 md:right-24">
+          <button
+            onClick={prev}
+            aria-label="Previous slide"
+            className={`grid h-10 w-10 place-items-center rounded-full border backdrop-blur-sm transition-colors duration-700 ${ring}`}
+          >
+            <ChevronLeft width={18} />
+          </button>
+          <button
+            onClick={next}
+            aria-label="Next slide"
+            className={`relative grid h-10 w-10 place-items-center rounded-full border backdrop-blur-sm transition-colors duration-700 ${ring}`}
+          >
+            <svg viewBox="0 0 40 40" aria-hidden className="pointer-events-none absolute -left-px -top-px h-[42px] w-[42px] -rotate-90">
+              <circle
+                cx="20"
+                cy="20"
+                r="19.5"
+                fill="none"
+                strokeWidth="1.5"
+                className={`transition-colors duration-700 ${light ? 'stroke-gold-deep' : 'stroke-gold'}`}
+                style={{ strokeDasharray: RING, strokeDashoffset: `calc(${RING}px * (1 - var(--progress, 0)))` }}
+              />
+            </svg>
+            <ChevronRight width={18} />
+          </button>
+        </div>
+      )}
 
       {/* Scroll cue. Not on a phone, where the arrows would run into it. */}
       <motion.div

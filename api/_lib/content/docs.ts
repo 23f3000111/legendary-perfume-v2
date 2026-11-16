@@ -7,6 +7,7 @@ import {
   JourneyDocSchema,
   JournalDocSchema,
   PartnersDocSchema,
+  HeroDocSchema,
   PagesDocSchema,
   PlacesDocSchema,
   PoliciesDocSchema,
@@ -55,6 +56,7 @@ export const DOCS: Record<DocKey, DocSpec> = {
   site: { path: 'src/content/site.json', label: 'Site details', schema: SiteDocSchema },
   policies: { path: 'src/content/policies.json', label: 'Policies', schema: PoliciesDocSchema },
   pages: { path: 'src/content/pages.json', label: 'Pages', schema: PagesDocSchema },
+  hero: { path: 'src/content/hero.json', label: 'Hero poster', schema: HeroDocSchema },
 }
 
 export { DOC_KEYS, isDocKey, type DocKey }

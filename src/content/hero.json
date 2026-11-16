@@ -1,0 +1,38 @@
+{
+  "poster": {
+    "show": true,
+    "image": {
+      "prints": [
+        {
+          "path": "/assets/client/hero-balloon-1280.webp",
+          "width": 1280
+        },
+        {
+          "path": "/assets/client/hero-balloon-2400.webp",
+          "width": 2400
+        },
+        {
+          "path": "/assets/client/hero-balloon-3200.webp",
+          "width": 3200
+        }
+      ],
+      "fill": "/assets/client/hero-balloon-fill.webp",
+      "width": 3200,
+      "height": 1802
+    },
+    "alt": "Legendary’s 11th anniversary: a bottle of Legendary and a cake in the basket of a golden hot air balloon. The legend of scent.",
+    "tone": "light",
+    "words": [
+      0.515,
+      0.288,
+      0.928,
+      0.767
+    ],
+    "picture": [
+      0.12,
+      0.41,
+      0.475,
+      0.955
+    ]
+  }
+}
