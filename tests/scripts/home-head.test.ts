@@ -11,8 +11,8 @@ describe('the static head', () => {
     const out: string = homeHead(html, { title: 'Legendary & Co', description: 'A "new" line' }, 'https://legendary.com.my')
     expect(out).toContain('<title>Legendary &amp; Co</title>')
     expect(out).toMatch(/name="description"\s+content="A &quot;new&quot; line"/)
-    expect(out).toContain('<meta property="og:title" content="Legendary &amp; Co" />')
-    expect(out).toContain('<meta property="og:image" content="https://legendary.com.my/assets/client/banner-fragrances.webp" />')
+    expect(out).toContain('<meta property="og:title" content="Legendary &amp; Co" data-rh="true" />')
+    expect(out).toContain('<meta property="og:image" content="https://legendary.com.my/assets/client/banner-fragrances.webp" data-rh="true" />')
     expect(out).not.toContain('A Scented Memory of Malaysia. A heritage')
   })
 
@@ -24,5 +24,16 @@ describe('the static head', () => {
     expect(out).toContain("<title>Gifts from $&amp; and $' up</title>")
     expect(out).toMatch(/name="description"\s+content="From \$` RM 95"/)
     expect(out.match(/<title>/g)).toHaveLength(1)
+  })
+
+  // Once the site runs, react-helmet-async writes each page's own tags and
+  // replaces only the head tags marked data-rh. Unmarked, Home's would stay
+  // beside every page's own, and come first.
+  it("the page's own tags take over from these once the site runs", () => {
+    const html = readFileSync('index.html', 'utf8')
+    const out: string = homeHead(html, { title: 'Title', description: 'Words' }, 'https://legendary.com.my')
+    for (const tag of ['property="og:title"', 'property="og:description"', 'property="og:image"', 'name="twitter:card"', 'name="description"']) {
+      expect(out).toMatch(new RegExp(`<meta\\s+${tag}[^>]*data-rh="true"`))
+    }
   })
 })
