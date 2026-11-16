@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import type { PagesDoc } from '../../api/_lib/content/schema'
+import type { BannerEntry, PagesDoc } from '../../api/_lib/content/schema'
+import BannerField from './BannerField'
 import { sameContent, useContent } from './contentStore'
 import { ContentGate, errorUnder, LinesField, NumberField, TextArea, TextField } from './fields'
 import { getAt, PAGE_SPECS, setAt, type PageField } from './pages'
@@ -132,6 +133,22 @@ function Field({
       return (
         <div>
           <PhotoField kind="page" label={field.label} value={words || undefined} onChange={(path) => onChange(path ?? '')} disabled={busy} />
+          {error && <p className={`mt-1 text-xs ${danger}`}>{error}</p>}
+        </div>
+      )
+    case 'banner':
+      return (
+        <div>
+          <BannerField label={field.label} value={value as BannerEntry | undefined} onChange={onChange} disabled={busy} hint={field.hint} />
+          {error && <p className={`mt-1 text-xs ${danger}`}>{error}</p>}
+        </div>
+      )
+    case 'share':
+      return (
+        <div>
+          {/* Optional: taken away, the key is left out and the page shares its banner. */}
+          <PhotoField kind="share" label={field.label} value={words || undefined} onChange={(path) => onChange(path)} disabled={busy} />
+          {hint && !error && <p className="mt-1 text-xs text-smoke">{hint}</p>}
           {error && <p className={`mt-1 text-xs ${danger}`}>{error}</p>}
         </div>
       )

@@ -14,7 +14,7 @@ import { danger, small } from './styles'
  * the site already shows is used as it is.
  */
 export default function PhotoField({
-  kind, value, onChange, label, disabled, onBusy, white: offerWhite,
+  kind, value, onChange, label, disabled, onBusy, white: offerWhite, removable = true,
 }: {
   kind: SlotKind
   value?: string
@@ -26,6 +26,8 @@ export default function PhotoField({
   onBusy?: (busy: boolean) => void
   /** Offer to make a white background see-through, for a cut-out sent on white. */
   white?: boolean
+  /** Whether the photo can be taken away; a page's banner cannot, only replaced. */
+  removable?: boolean
 }) {
   const [busy, setBusy] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -105,7 +107,7 @@ export default function PhotoField({
             <button type="button" disabled={locked} onClick={() => setPicking(true)} className={small}>
               Choose from library
             </button>
-            {value && (
+            {value && removable && (
               <button type="button" disabled={locked} onClick={() => onChange(undefined)} className="text-xs text-smoke underline transition hover:text-ink">
                 Remove photo
               </button>
@@ -140,8 +142,16 @@ export default function PhotoField({
 
 /** A dashboard photo may not be in this build yet; the photo API holds every one it stored. */
 function Preview({ path }: { path: string }) {
+  return <PhotoPreview path={path} className="h-full w-full object-cover" />
+}
+
+/**
+ * A stored photo in the dashboard: one made here comes from the photo API
+ * (the build may not have it yet), and falls back to the site's own copy.
+ */
+export function PhotoPreview({ path, className, style }: { path: string; className?: string; style?: React.CSSProperties }) {
   const first = path.startsWith('/assets/cms/') ? apiUrl(`/api/admin/media?file=${path.slice('/assets/cms/'.length)}`) : asset(path)
   const [src, setSrc] = useState(first)
   useEffect(() => setSrc(first), [first])
-  return <img src={src} alt="" onError={() => setSrc(asset(path))} className="h-full w-full object-cover" />
+  return <img src={src} alt="" onError={() => setSrc(asset(path))} className={className} style={style} />
 }

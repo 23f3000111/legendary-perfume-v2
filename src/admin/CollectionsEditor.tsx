@@ -1,7 +1,8 @@
 import type { CollectionEntry, CollectionsDoc, PlacesDoc, ProductsDoc } from '../../api/_lib/content/schema'
 import { accents } from '../lib/accents'
 import { useContent } from './contentStore'
-import { errorAt, ListEditor, Select, TextArea, TextField } from './fields'
+import BannerField from './BannerField'
+import { errorAt, errorUnder, ListEditor, Select, TextArea, TextField } from './fields'
 import PhotoField from './PhotoField'
 import PublishBar from './PublishBar'
 import { blankCollection, collectionInUse, renameCollection } from './site'
@@ -110,6 +111,20 @@ export default function CollectionsEditor() {
                   disabled={busy}
                 />
                 {at('image') && <p className={`text-xs ${danger}`}>{at('image')}</p>}
+                <BannerField
+                  label="Shop banner"
+                  optional
+                  hint="Behind its title in the shop. Left empty, the shop's own banner shows."
+                  value={c.banner}
+                  onChange={(banner) => {
+                    const { banner: _old, ...rest } = c
+                    update(banner ? { ...rest, banner } : rest)
+                  }}
+                  disabled={busy}
+                />
+                {errorUnder(doc.errors, `collections.${i}.banner`) && (
+                  <p className={`text-xs ${danger}`}>{errorUnder(doc.errors, `collections.${i}.banner`)}</p>
+                )}
               </>
             )
           }}

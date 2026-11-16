@@ -48,8 +48,8 @@ const field = (path: string, label: string, kind: FieldKind = 'text', extra: Par
 const heading = (path: string, label = 'Heading', warnAt?: number): PageField =>
   field(path, label, 'heading', { hint: HEADING_HINT, ...(warnAt ? { warnAt, warning: DRAWN_FOR } : {}) })
 
-const BANNER_HINT = 'Click the photo where the bottle is: phones and wide screens keep that spot in view.'
-const banner = (path: string, label = 'Banner'): PageField => field(path, label, 'banner', { hint: BANNER_HINT })
+// How to set a banner's spot is the banner field's own words.
+const banner = (path: string, label = 'Banner'): PageField => field(path, label, 'banner')
 
 const seo = (key: string): PageSection => ({
   title: 'Search engines',
