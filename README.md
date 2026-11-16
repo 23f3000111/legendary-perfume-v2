@@ -150,7 +150,7 @@ The same `/admin` edits the site's content, so the Legendary team can make their
 own changes instead of sending revision PDFs. It covers the **FAQ**, the **store
 list**, the **Journal**, the **products**, **each page's own words** (the Pages
 tab), the **site details and lists** (the Site tab), the **policies**, the
-**banners** and the **sharing images**. The hero poster follows, as set out in
+**banners**, the **sharing images** and the **hero**, as set out in
 `docs/superpowers/specs/2026-11-12-content-dashboard-design.md`.
 
 - **Content lives in `src/content/*.json`.** The site imports it at build time,
@@ -282,6 +282,29 @@ tab), the **site details and lists** (the Site tab), the **policies**, the
   page shares its banner (`shareImage` in `src/data/pages.ts`), and Home, which
   has no banner, shares the house's default picture
   (`/assets/client/banner-fragrances.webp`). A shop view shares its banner.
+- **The hero.** The words over the film (the small line, the heading, the
+  introduction, the two buttons and the side label) are Home's first section in
+  the Pages tab (`home.hero` in `pages.json`); the heading takes a newline and
+  `*gold*` like the others and warns past 34 characters. The campaign poster
+  that follows the film is its own document, `src/content/hero.json`, on the
+  **Poster** tab:
+  - **On or off.** Off, the poster is not a slide: the film plays alone and
+    loops, with no arrows.
+  - **The poster, and its words** for anyone who cannot see it.
+  - **The header over it:** a light poster turns the header and the arrows to
+    ink while it is up.
+  - **Two boxes** the team drags over it, the lettering and the bottle, by their
+    bodies and corners or with the arrow keys (Shift resizes). The hero crops
+    the poster around them on every shape of screen (`frameFor` in
+    `src/lib/poster.ts`); the tab's three previews (a laptop, a wide screen and
+    a phone) are drawn by the same function.
+  - **One upload makes the four files** `save_hero_poster` in
+    `scripts/prepare-assets.py` makes: prints 1280, 2400 and 3200 px wide, never
+    enlarged and each named with its width in the `srcset`, and a 480 px blurred
+    fill it sits on where it is shown whole. A see-through edge is trimmed
+    first. A poster is chosen from the dashboard's own photos only, since the
+    library does not know a site poster's widths. `save_hero_poster` stays for
+    the developer's own batch work.
 
 ### Setting it up
 

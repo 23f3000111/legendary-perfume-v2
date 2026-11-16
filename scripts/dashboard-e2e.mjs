@@ -19,7 +19,9 @@
  * policy, restores the site details, changes a page's words and the footer,
  * restores the pages, publishes a new Our Story banner with its phone crop and
  * its spot, previews
- * the Stores page's sharing image, and checks the photo paths in Safari's
+ * the Stores page's sharing image, moves the hero poster's words box and
+ * darkens its header, publishes a new poster, previews the hero with the
+ * poster off, and checks the photo paths in Safari's
  * engine and on a phone.
  * It refuses to run against anything but a local GitHub, so it can never
  * publish to the real repository.
@@ -549,7 +551,9 @@ try {
   await page.locator('main ul li', { hasText: 'Home' }).first().locator('button:text-is("Edit")').click()
   await page.waitForSelector('button:text-is("All pages")')
   const signatureLine = `that began it all, ${Date.now()}`
-  await page.getByLabel('Heading').first().fill(`Orchid, the scent\n${signatureLine}`)
+  // The Signature section's own heading: the Hero's comes first on the page.
+  const signatureSection = page.locator('section', { has: page.locator('h3', { hasText: 'Home · Signature' }) })
+  await signatureSection.getByLabel('Heading', { exact: true }).fill(`Orchid, the scent\n${signatureLine}`)
   await page.waitForSelector('text=Saved as a draft')
   const [signaturePreview] = await Promise.all([context.waitForEvent('page'), page.click('button:text-is("Preview")')])
   await signaturePreview.waitForURL(/\/\?preview/)
@@ -666,6 +670,59 @@ try {
     "30. the Stores page's sharing image is the one og:image in its preview",
     ogImages.length === 1 && ogImages[0].endsWith(`/assets/cms/${shareFile}`),
     ogImages.join(' | '),
+  )
+
+  // 31. The poster's words box, moved with the arrow keys, and a dark header go live
+  await openTab(page, 'Poster')
+  await page.waitForSelector('text=The two boxes')
+  const seedHero = await ghJson('src/content/hero.json')
+  await page.locator('[data-box="words"]').focus()
+  for (let i = 0; i < 4; i++) await page.keyboard.press('ArrowRight')
+  await page.getByLabel('Header over the poster').selectOption('dark')
+  await page.click('button:text-is("Publish")')
+  await page.waitForSelector('text=Live. The site shows your changes.', { timeout: 30000 })
+  await page.click('button:text-is("OK")')
+  const movedHero = await ghJson('src/content/hero.json')
+  check(
+    "31. the poster's words box, moved with the arrow keys, and its dark header are published",
+    Math.abs(movedHero.poster.words[0] - (seedHero.poster.words[0] + 0.02)) < 1e-9 && movedHero.poster.tone === 'dark',
+    `${JSON.stringify(movedHero.poster.words)} ${movedHero.poster.tone}`,
+  )
+
+  // 32. A new poster goes live with its three widths and its fill
+  const posterArt = await sharp({ create: { width: 3600, height: 2025, channels: 3, background: { r: 200, g: 170, b: 110 } } }).png().toBuffer()
+  const posterPanel = page.locator('section', { hasText: 'The campaign poster that follows the film' })
+  await posterPanel.locator('input[type="file"]').setInputFiles({ name: 'poster.png', mimeType: 'image/png', buffer: posterArt })
+  await posterPanel.locator('img[src*="/api/admin/media?file="]').waitFor({ timeout: 60000 })
+  await page.click('button:text-is("Publish")')
+  await page.waitForSelector('text=Live. The site shows your changes.', { timeout: 30000 })
+  await page.click('button:text-is("OK")')
+  const newPoster = (await ghJson('src/content/hero.json')).poster.image
+  const posterTree = await ghTree()
+  const posterFiles = [...newPoster.prints.map((p) => p.path), newPoster.fill]
+  check(
+    '32. a new poster goes live with prints 1280, 2400 and 3200 wide and a fill, all four in the repository',
+    JSON.stringify(newPoster.prints.map((p) => p.width)) === '[1280,2400,3200]' &&
+      posterFiles.every((p) => p.startsWith('/assets/cms/') && posterTree.some((f) => `/${f.replace(/^public\//, '')}` === p)),
+    JSON.stringify(newPoster),
+  )
+
+  // 33. The poster off: Preview of the Home page shows the film alone; then discarded
+  await page.getByLabel('Show the poster after the film').uncheck()
+  await page.waitForSelector('text=Saved as a draft')
+  const offPreview = await context.newPage()
+  await offPreview.goto(`${site}/?preview`, { waitUntil: 'networkidle' })
+  const offHero = await offPreview.evaluate(() => ({
+    posters: document.querySelectorAll('section img[sizes="100vw"]').length,
+    arrows: document.querySelectorAll('button[aria-label="Next slide"]').length,
+  }))
+  await offPreview.close()
+  await page.click('button:text-is("Discard")')
+  await page.waitForFunction(() => !document.body.innerText.includes('Unpublished changes:'), null, { timeout: 15000 })
+  check(
+    '33. with the poster off, Preview of the Home page has no poster and no arrows, and it is discarded',
+    offHero.posters === 0 && offHero.arrows === 0,
+    JSON.stringify(offHero),
   )
 } catch (err) {
   failures++
