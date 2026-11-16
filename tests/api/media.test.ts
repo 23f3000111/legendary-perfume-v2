@@ -321,6 +321,42 @@ describe('the photo API', () => {
     expect([res.body.width, res.body.height]).toEqual([1200, 1000])
   })
 
+  // The hero poster: the three widths and the blurred fill save_hero_poster
+  // makes, each print with its real width, for the srcset.
+  it('a poster gets three widths and a blurred fill', async () => {
+    const art = await sharp({ create: { width: 3600, height: 2025, channels: 3, background: { r: 200, g: 170, b: 110 } } }).jpeg().toBuffer()
+    const master = (await upload(art)).body.file
+    const res = await call({ method: 'POST', query: { derive: master, kind: 'poster' } })
+    expect(res.status).toBe(200)
+    expect(res.body.prints.map((p: { width: number }) => p.width)).toEqual([1280, 2400, 3200])
+    expect([res.body.width, res.body.height]).toEqual([3200, 1800])
+    expect(res.body.path).toBe(res.body.prints[2].path)
+    const fill = await sharp(await fetchFile(res.body.fill.slice('/assets/cms/'.length))).metadata()
+    expect(fill.width).toBe(480)
+  })
+
+  it('a poster narrower than 3200 px is never enlarged', async () => {
+    const art = await sharp({ create: { width: 2000, height: 1125, channels: 3, background: { r: 200, g: 170, b: 110 } } }).jpeg().toBuffer()
+    const master = (await upload(art)).body.file
+    const res = await call({ method: 'POST', query: { derive: master, kind: 'poster' } })
+    expect(res.status).toBe(200)
+    expect(res.body.prints.map((p: { width: number }) => p.width)).toEqual([1280, 2000])
+  })
+
+  // The first anniversary PNG came with a translucent fringe down two edges.
+  it("a poster's see-through edge is trimmed, as the delivery's was", async () => {
+    const inner = await sharp({ create: { width: 1000, height: 560, channels: 4, background: { r: 200, g: 170, b: 110, alpha: 1 } } }).png().toBuffer()
+    const art = await sharp({ create: { width: 1008, height: 568, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
+      .composite([{ input: inner, left: 4, top: 4 }])
+      .png()
+      .toBuffer()
+    const master = (await upload(art)).body.file
+    const res = await call({ method: 'POST', query: { derive: master, kind: 'poster' } })
+    expect(res.status).toBe(200)
+    expect(res.body.prints.map((p: { width: number }) => p.width)).toEqual([1000])
+    expect(res.body.height).toBe(560)
+  })
+
   it('derive makes a 900 px store photo on white', async () => {
     const transparent = await sharp({
       create: { width: 2000, height: 1500, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },

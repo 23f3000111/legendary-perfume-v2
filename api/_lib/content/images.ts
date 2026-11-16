@@ -113,6 +113,45 @@ async function groundToClear(master: Buffer): Promise<Buffer> {
   return sharp(data, { raw: { width, height, channels: 4 } }).trim().png().toBuffer()
 }
 
+/** The widths a poster is printed at, as save_hero_poster prints the delivery's. */
+const POSTER_WIDTHS = [1280, 2400, 3200]
+
+/**
+ * A hero poster's files, as save_hero_poster in scripts/prepare-assets.py
+ * makes the delivery's: prints 1280, 2400 and 3200 px wide, so a phone takes
+ * the smallest and only a large, dense screen asks for the largest; and a fill,
+ * the poster small and heavily blurred, which it sits on where it is shown
+ * whole, so its own colours run out to the edges of the frame.
+ *
+ * A poster narrower than 3200 px is never enlarged: its prints stop at its own
+ * width. One with a see-through edge, as the first anniversary PNG had down two
+ * sides, loses 4 px all round rather than being laid on a colour the artwork
+ * never had.
+ */
+export async function makePoster(master: Buffer): Promise<{ prints: Print[]; fill: Print }> {
+  const meta = await sharp(master).metadata()
+  let source = master
+  if (!(await sharp(master).stats()).isOpaque && (meta.width ?? 0) > 8 && (meta.height ?? 0) > 8) {
+    source = await sharp(master)
+      .extract({ left: 4, top: 4, width: meta.width! - 8, height: meta.height! - 8 })
+      .toBuffer()
+  }
+  const flat = await sharp(source).flatten({ background: '#ffffff' }).toBuffer()
+  const { width = 0 } = await sharp(flat).metadata()
+  const widths = [...new Set(POSTER_WIDTHS.map((w) => Math.min(w, width)))]
+  const prints: Print[] = []
+  for (const w of widths) {
+    const { data, info } = await sharp(flat).resize({ width: w }).webp({ quality: 84 }).toBuffer({ resolveWithObject: true })
+    prints.push({ data, width: info.width, height: info.height })
+  }
+  const { data, info } = await sharp(flat)
+    .resize({ width: Math.min(480, width) })
+    .blur(18)
+    .webp({ quality: 70 })
+    .toBuffer({ resolveWithObject: true })
+  return { prints, fill: { data, width: info.width, height: info.height } }
+}
+
 /**
  * A partner or seller logo in its two prints: its own colours, which the walls
  * show on hover, and the black and white print they rest in. Both are made as

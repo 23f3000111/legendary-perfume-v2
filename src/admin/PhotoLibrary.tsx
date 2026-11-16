@@ -174,6 +174,9 @@ export function LibraryPicker({
   const { library, error } = useLibrary()
   const spec = kind ? SLOT_KINDS[kind] : undefined
   const needsSecond = Boolean(spec && (spec.mono || spec.phone))
+  // A poster on the site is a set of files whose widths and size the library
+  // does not know, so a poster is chosen from the dashboard's own photos only.
+  const siteOffered = !spec?.poster
   return (
     <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-5">
       <div className="flex max-h-[85vh] w-full max-w-4xl flex-col rounded-sm border border-line bg-ivory shadow-xl">
@@ -197,16 +200,20 @@ export function LibraryPicker({
                   </li>
                 ))}
               </ul>
-              <p className="eyebrow mt-8 text-smoke">Already on the site</p>
-              <ul className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-6">
-                {library.site.filter((path) => !needsSecond || (spec && siteSecond(spec, path))).map((path) => (
-                  <li key={path}>
-                    <button type="button" onClick={() => onPick({ site: path })} className="block w-full transition hover:opacity-80">
-                      <img src={asset(path)} alt="" loading="lazy" className={thumb} />
-                    </button>
-                  </li>
-                ))}
-              </ul>
+              {siteOffered && (
+                <>
+                  <p className="eyebrow mt-8 text-smoke">Already on the site</p>
+                  <ul className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-6">
+                    {library.site.filter((path) => !needsSecond || (spec && siteSecond(spec, path))).map((path) => (
+                      <li key={path}>
+                        <button type="button" onClick={() => onPick({ site: path })} className="block w-full transition hover:opacity-80">
+                          <img src={asset(path)} alt="" loading="lazy" className={thumb} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
             </>
           )}
         </div>

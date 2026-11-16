@@ -456,13 +456,23 @@ export function adminUploadPhoto(photo: Blob): Promise<{ file: string; url: stri
   })
 }
 
-/** A copy of a library photo sized for one kind of place; the path goes into the content. */
+/**
+ * What fitting a library photo to a place gives: its path, and for some places
+ * more. A logo has its black and white print; a hero poster has its prints,
+ * each with its width, and its blurred fill.
+ */
+export interface DerivedPhoto {
+  path: string
+  mono?: string
+  phone?: string
+  prints?: { path: string; width: number }[]
+  fill?: string
+  width: number
+  height: number
+}
+
 /** A copy of a library photo sized for one kind of place; `white` makes a cut-out's white background see-through. */
-export function adminDerivePhoto(
-  file: string,
-  kind: SlotKind,
-  opts: { white?: boolean } = {},
-): Promise<{ path: string; mono?: string; phone?: string; width: number; height: number }> {
+export function adminDerivePhoto(file: string, kind: SlotKind, opts: { white?: boolean } = {}): Promise<DerivedPhoto> {
   const white = opts.white ? '&white=1' : ''
   return request(`/api/admin/media?derive=${encodeURIComponent(file)}&kind=${kind}${white}`, { ...withCookies, method: 'POST' })
 }

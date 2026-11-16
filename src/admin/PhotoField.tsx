@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { SLOT_KINDS, type SlotKind } from '../../api/_lib/content/slots'
-import { adminDerivePhoto, apiUrl } from '../lib/api'
+import { adminDerivePhoto, apiUrl, type DerivedPhoto } from '../lib/api'
 import { asset } from '../lib/asset'
 import { coarsePointer, LibraryPicker, messageOf, uploadToLibrary, type LibraryChoice } from './PhotoLibrary'
 import { siteSecond } from './site'
@@ -18,8 +18,12 @@ export default function PhotoField({
 }: {
   kind: SlotKind
   value?: string
-  /** The photo's path; for a logo, its black and white print's path too, and for a banner its phone print's. */
-  onChange: (path: string | undefined, second?: string) => void
+  /**
+   * The photo's path; for a logo, its black and white print's path too, and for
+   * one of the site's banners its phone crop's. A photo fitted from the library
+   * also comes with everything the fitting gave (a poster's prints and fill).
+   */
+  onChange: (path: string | undefined, second?: string, derived?: DerivedPhoto) => void
   label?: string
   disabled?: boolean
   /** Told when a photo starts and stops being uploaded or fitted, so the form can hold still meanwhile. */
@@ -51,8 +55,8 @@ export default function PhotoField({
       alive.current = false
     }
   }, [])
-  const done = (path: string | undefined, second?: string) => {
-    if (alive.current) latest.current.onChange(path, second)
+  const done = (path: string | undefined, second?: string, derived?: DerivedPhoto) => {
+    if (alive.current) latest.current.onChange(path, second, derived)
   }
 
   const run = async (work: () => Promise<void>) => {
@@ -69,8 +73,8 @@ export default function PhotoField({
   }
   const place = async (master: string) => {
     setBusy('Fitting the photo…')
-    const { path, mono, phone } = await adminDerivePhoto(master, kind, { white: offerWhite && onWhite })
-    done(path, mono ?? phone)
+    const derived = await adminDerivePhoto(master, kind, { white: offerWhite && onWhite })
+    done(derived.path, derived.mono ?? derived.phone, derived)
   }
   const upload = (file: File) =>
     run(async () => {

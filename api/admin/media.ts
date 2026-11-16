@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { requireAdmin } from '../_lib/auth.js'
 import { handler, HttpError, json, nodeBody } from '../_lib/http.js'
-import { hashName, makeLogo, makeMaster, makeSlot, sniff } from '../_lib/content/images.js'
+import { hashName, makeLogo, makeMaster, makePoster, makeSlot, sniff } from '../_lib/content/images.js'
 import { isSlotKind, SLOT_KINDS } from '../_lib/content/slots.js'
 import { contentStore } from '../_lib/content/store.js'
 import { githubConfig, listFiles, readBinary } from '../_lib/github.js'
@@ -12,7 +12,8 @@ import { githubConfig, listFiles, readBinary } from '../_lib/github.js'
  *   POST  (the photo's bytes)          add a photo; it is kept large, as a master
  *   POST  ?derive=<file>&kind=<kind>   a copy of a master sized for one place;
  *                                      &white=1 makes a cut-out's white background see-through;
- *                                      a logo answers with its black and white print as `mono` too
+ *                                      a logo answers with its black and white print as `mono` too;
+ *                                      a poster with its `prints` (each with its width) and its `fill`
  *   GET   ?file=<file>                 a stored photo, for the dashboard and previews
  *   GET                                the library, and the photos the site already has
  *
@@ -90,6 +91,22 @@ export default handler(async (req: VercelRequest, res: VercelResponse) => {
       await store.putMedia({ file, bytes: colour.data, width: colour.width, height: colour.height, kind, source: derive })
       await store.putMedia({ file: monoFile, bytes: mono.data, width: mono.width, height: mono.height, kind, source: derive })
       json(res, 200, { path: `/assets/cms/${file}`, mono: `/assets/cms/${monoFile}`, width: colour.width, height: colour.height })
+      return
+    }
+    if (SLOT_KINDS[kind].poster) {
+      // A hero poster: its three widths and its blurred fill, each kept under
+      // its own name, and each print's width for the srcset.
+      const { prints, fill } = await makePoster(master)
+      const stored: { path: string; width: number }[] = []
+      for (const print of prints) {
+        const file = `${hashName(print.data)}.webp`
+        await store.putMedia({ file, bytes: print.data, width: print.width, height: print.height, kind, source: derive })
+        stored.push({ path: `/assets/cms/${file}`, width: print.width })
+      }
+      const fillFile = `${hashName(fill.data)}.webp`
+      await store.putMedia({ file: fillFile, bytes: fill.data, width: fill.width, height: fill.height, kind, source: derive })
+      const widest = prints[prints.length - 1]
+      json(res, 200, { path: stored[stored.length - 1].path, prints: stored, fill: `/assets/cms/${fillFile}`, width: widest.width, height: widest.height })
       return
     }
     // A banner is its wide print alone: the phone crop, when the designer sent

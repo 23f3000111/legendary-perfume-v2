@@ -26,6 +26,12 @@ export interface SlotSpec {
    * its own, of the `bannerPhone` kind.
    */
   phone?: boolean
+  /**
+   * The place needs the files save_hero_poster in scripts/prepare-assets.py
+   * makes: prints 1280, 2400 and 3200 px wide, and a small blurred fill. The
+   * hero poster.
+   */
+  poster?: boolean
 }
 
 const KINDS = {
@@ -57,6 +63,8 @@ const KINDS = {
   bannerPhone: { label: 'Phone crop', maxSide: 1200, alpha: false },
   /** What a link to the page shows when it is shared. */
   share: { label: 'Sharing image', maxSide: 1200, alpha: false },
+  /** The campaign poster after the film in the Home hero: three widths and a blurred fill. */
+  poster: { label: 'Poster', maxSide: 3200, alpha: false, poster: true },
 } satisfies Record<string, SlotSpec>
 
 export const SLOT_KINDS: Record<keyof typeof KINDS, SlotSpec> = KINDS
