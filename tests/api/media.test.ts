@@ -300,18 +300,25 @@ describe('the photo API', () => {
     expect(res.body.error).toMatch(/white/)
   })
 
-  // A page banner: 2400 px for wide screens, and a lighter print for phones,
-  // framed the same, which the title bar crops around its focus point.
-  it('a banner gets a wide print and a phone print', async () => {
+  // A page banner: the wide photo at 2400 px. A smaller print of it would only
+  // be blurrier on a phone, whose near square title bar shows a slice of its
+  // height, so phones get the designer's phone crop or else the wide photo.
+  it('a banner gets its wide print, and no smaller print for phones', async () => {
     const wide = await sharp({ create: { width: 3000, height: 1500, channels: 3, background: { r: 60, g: 40, b: 30 } } }).jpeg().toBuffer()
     const master = (await upload(wide)).body.file
     const res = await call({ method: 'POST', query: { derive: master, kind: 'banner' } })
     expect(res.status).toBe(200)
     expect([res.body.width, res.body.height]).toEqual([2400, 1200])
-    expect(res.body.phone).toMatch(/^\/assets\/cms\/[0-9a-f]{20}\.webp$/)
-    expect(res.body.phone).not.toBe(res.body.path)
-    const phone = await sharp(await fetchFile(res.body.phone.slice('/assets/cms/'.length))).metadata()
-    expect([phone.width, phone.height]).toEqual([1200, 600])
+    expect(res.body.phone).toBeUndefined()
+  })
+
+  // The banner brief asks the designer for a phone banner of 1200 by 1000.
+  it('a phone crop keeps its own framing at 1200 px', async () => {
+    const crop = await sharp({ create: { width: 2400, height: 2000, channels: 3, background: { r: 60, g: 40, b: 30 } } }).jpeg().toBuffer()
+    const master = (await upload(crop)).body.file
+    const res = await call({ method: 'POST', query: { derive: master, kind: 'bannerPhone' } })
+    expect(res.status).toBe(200)
+    expect([res.body.width, res.body.height]).toEqual([1200, 1000])
   })
 
   it('derive makes a 900 px store photo on white', async () => {

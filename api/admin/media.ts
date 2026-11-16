@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { requireAdmin } from '../_lib/auth.js'
 import { handler, HttpError, json, nodeBody } from '../_lib/http.js'
-import { hashName, makeBanner, makeLogo, makeMaster, makeSlot, sniff } from '../_lib/content/images.js'
+import { hashName, makeLogo, makeMaster, makeSlot, sniff } from '../_lib/content/images.js'
 import { isSlotKind, SLOT_KINDS } from '../_lib/content/slots.js'
 import { contentStore } from '../_lib/content/store.js'
 import { githubConfig, listFiles, readBinary } from '../_lib/github.js'
@@ -92,16 +92,9 @@ export default handler(async (req: VercelRequest, res: VercelResponse) => {
       json(res, 200, { path: `/assets/cms/${file}`, mono: `/assets/cms/${monoFile}`, width: colour.width, height: colour.height })
       return
     }
-    if (SLOT_KINDS[kind].phone) {
-      // A banner: its wide print and a lighter one for phones, framed the same.
-      const { wide, phone } = await makeBanner(master)
-      const file = `${hashName(wide.data)}.webp`
-      const phoneFile = `${hashName(phone.data)}.webp`
-      await store.putMedia({ file, bytes: wide.data, width: wide.width, height: wide.height, kind, source: derive })
-      await store.putMedia({ file: phoneFile, bytes: phone.data, width: phone.width, height: phone.height, kind, source: derive })
-      json(res, 200, { path: `/assets/cms/${file}`, phone: `/assets/cms/${phoneFile}`, width: wide.width, height: wide.height })
-      return
-    }
+    // A banner is its wide print alone: the phone crop, when the designer sent
+    // one, is a photo of its own (the bannerPhone kind), and without one a
+    // phone is given the wide print, since a smaller copy would only be blurrier.
     const slot = await makeSlot(master, kind, { white })
     const file = `${hashName(slot.data)}.webp`
     await store.putMedia({ file, bytes: slot.data, width: slot.width, height: slot.height, kind, source: derive })

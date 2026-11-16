@@ -114,24 +114,6 @@ async function groundToClear(master: Buffer): Promise<Buffer> {
 }
 
 /**
- * A page banner in its two prints, framed the same: up to 2400 px for wide
- * screens and up to 1200 px for phones. The title bar crops either around the
- * banner's focus point, so the phone print needs no framing of its own; it is
- * there so a phone does not download a 2400 px photograph.
- */
-export async function makeBanner(master: Buffer): Promise<{ wide: Print; phone: Print }> {
-  const print = async (side: number): Promise<Print> => {
-    const { data, info } = await sharp(master)
-      .flatten({ background: '#ffffff' })
-      .resize({ width: side, height: side, fit: 'inside', withoutEnlargement: true })
-      .webp({ quality: 82 })
-      .toBuffer({ resolveWithObject: true })
-    return { data, width: info.width, height: info.height }
-  }
-  return { wide: await print(SLOT_KINDS.banner.maxSide), phone: await print(1200) }
-}
-
-/**
  * A partner or seller logo in its two prints: its own colours, which the walls
  * show on hover, and the black and white print they rest in. Both are made as
  * `brand_mark` in scripts/prepare-assets.py makes the delivery's logos, so a

@@ -79,9 +79,10 @@ export default function PageHeader({
      photograph, which has none, and a <source> that names a missing file is
      not a fallback: the browser takes it anyway, and on a phone the header
      was left with no picture at all. So it is only offered for a banner. */
-  /* A banner from the content names its phone print itself, and may carry a
-     focus point: both prints are then cropped around it rather than the
-     middle, so the bottle stays in view on a phone and on a wide screen. */
+  /* A banner from the content names its phone crop itself: the designer's,
+     or the wide photo again when the team sent none. It may carry a focus
+     point, and either is then cropped around it rather than the middle, so
+     the bottle stays in view on a phone and on a wide screen. */
   const photo = banner ? asset(banner.image) : image
   const phoneCrop = banner
     ? asset(banner.phone)

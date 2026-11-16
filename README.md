@@ -265,14 +265,18 @@ tab), the **site details and lists** (the Site tab), the **policies**, the
   Contact, FAQ and the Journal, one for the four policies, and the shop's five
   views (All Fragrances, Bestsellers, Gifts & Sets, For Her, For Him), all in
   the Pages tab; a collection's own is on its Collections screen. A banner is
-  two prints made from one upload: the wide one at 2400 px, and a 1200 px one
-  that a `<source>` gives windows up to 640 px wide. The team clicks the photo
+  the wide photo (2400 px) and, when the designer sent one, its phone crop
+  (1200 by 1000, as `BANNER-SPEC.md` asks), uploaded beside it, which a
+  `<source>` gives windows up to 640 px wide. Without a phone crop, phones show
+  the wide photo itself: a phone's near square title bar shows a slice of its
+  height, so a smaller copy would only be blurrier. The team clicks the photo
   where the bottle is. That spot is kept as `focus`, two fractions, and becomes
-  the photo's `object-position`, so a laptop's wide title bar and a phone's
-  near square one both keep it in view; without one the photo is centred. A
-  new photo starts centred, since the old spot belonged to the old photo. The
-  banners the site started with keep the phone crops `scripts/prepare-assets.py`
-  made for them (`banner-<name>-sm.webp`) until a new photo replaces them.
+  the `object-position` of whichever photo shows, so a laptop's wide title bar
+  and a phone's near square one both keep it in view; without one the photo is
+  centred. A new photo starts centred and without a phone crop, since both
+  belonged to the old photo. The banners the site started with keep the phone
+  crops `scripts/prepare-assets.py` made for them (`banner-<name>-sm.webp`), and
+  one of them picked from the library brings its phone crop along.
 - **Sharing images.** Each page's search section has an optional sharing image
   (1200 px), the picture a link preview or social card shows. Left empty, the
   page shares its banner (`shareImage` in `src/data/pages.ts`), and Home, which

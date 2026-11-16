@@ -119,3 +119,18 @@ photography.
 
 Artwork that follows this specification simply replaces the generated version
 and will always look better, because a person framed it.
+
+---
+
+## Putting them on the site yourself
+
+The dashboard at `/admin` takes both crops. Open the page in the **Pages** tab
+(or the collection on the **Site** tab, under Collections), upload the wide
+banner into **Banner**, then the phone banner into **Phone crop** beneath it,
+and click the wide photo where the bottle is. Publish when the two previews
+look right.
+
+The phone crop is optional, but send it whenever you can. Without one, a phone
+shows the wide banner itself, cut down to a near square slice around the spot
+you clicked, which is exactly the slice of an enormous bottle this
+specification exists to avoid.

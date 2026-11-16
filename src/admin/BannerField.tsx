@@ -1,9 +1,11 @@
 import type { BannerEntry } from '../../api/_lib/content/schema'
-import { focusFrom } from './banner'
+import { focusFrom, phoneCrop, withPhoneCrop } from './banner'
 import PhotoField, { PhotoPreview } from './PhotoField'
 import { small } from './styles'
 
 const FOCUS_HINT = 'Click the photo where the bottle is: phones and wide screens keep that spot in view.'
+const PHONE_HINT =
+  'Optional: the same banner framed for phones, 1200 by 1000 as the banner brief asks. Without one, phones show the photo above, around its spot.'
 
 /**
  * A banner behind a title: its photo, and the spot that stays in view. A title
@@ -32,7 +34,9 @@ export default function BannerField({
         kind="banner"
         label={label}
         value={value?.image}
-        // A new photo starts centred: the old spot belonged to the old photo.
+        // A new photo starts centred and without a phone crop: the old spot and
+        // crop belonged to the old photo. One of the site's own banners, picked
+        // from the library, brings its phone crop with it.
         onChange={(image, phone) => onChange(image ? { image, phone: phone ?? image } : undefined)}
         disabled={disabled}
         removable={optional}
@@ -85,6 +89,16 @@ export default function BannerField({
               Centre
             </button>
           )}
+          {/* The designer's phone crop. A new photo above clears it, as it clears the spot. */}
+          <div>
+            <PhotoField
+              kind="bannerPhone"
+              value={phoneCrop(value)}
+              onChange={(crop) => onChange(withPhoneCrop(value, crop))}
+              disabled={disabled}
+            />
+            <p className="mt-1 text-xs text-smoke">{PHONE_HINT}</p>
+          </div>
         </div>
       )}
     </div>

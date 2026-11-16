@@ -17,7 +17,8 @@
  * its photo, restores the Journal, publishes a product and restores it, changes
  * the WhatsApp number, adds a partner logo, previews a review, publishes a
  * policy, restores the site details, changes a page's words and the footer,
- * restores the pages, publishes a new Our Story banner with its spot, previews
+ * restores the pages, publishes a new Our Story banner with its phone crop and
+ * its spot, previews
  * the Stores page's sharing image, and checks the photo paths in Safari's
  * engine and on a phone.
  * It refuses to run against anything but a local GitHub, so it can never
@@ -597,8 +598,20 @@ try {
     .composite([{ input: storyBottle, left: 2400, top: 400 }])
     .png()
     .toBuffer()
-  await storyBar.locator('input[type="file"]').setInputFiles({ name: 'story-banner.png', mimeType: 'image/png', buffer: storyPhoto })
+  const storyInputs = storyBar.locator('input[type="file"]')
+  await storyInputs.first().setInputFiles({ name: 'story-banner.png', mimeType: 'image/png', buffer: storyPhoto })
   await storyBar.locator('img[src*="/api/admin/media?file="]').first().waitFor({ timeout: 60000 })
+  // The designer's phone crop, 1200 by 1000 in the brief, sent larger.
+  const storyCrop = await sharp({ create: { width: 2400, height: 2000, channels: 3, background: { r: 214, g: 196, b: 160 } } })
+    .composite([{ input: storyBottle, left: 1050, top: 650 }])
+    .png()
+    .toBuffer()
+  await storyInputs.nth(1).setInputFiles({ name: 'story-banner-phone.png', mimeType: 'image/png', buffer: storyCrop })
+  await page.waitForFunction(
+    () => new Set([...document.querySelectorAll('img[src*="/api/admin/media?file="]')].map((i) => i.getAttribute('src'))).size >= 2,
+    null,
+    { timeout: 60000 },
+  )
   // The spot is set on the new photo, so it waits for that photo to draw.
   const picker = storyBar.locator('[aria-label="Set the spot that stays in view"]')
   await picker.locator('img[src*="/api/admin/media?file="]').evaluate((img) =>
@@ -618,15 +631,18 @@ try {
   const wideFile = storyBanner && bannerFile(storyBanner.image)
   const phoneFile = storyBanner && bannerFile(storyBanner.phone)
   const widePrint = wideFile ? await sharp(await ghFile(wideFile)).metadata() : null
+  const phonePrint = phoneFile ? await sharp(await ghFile(phoneFile)).metadata() : null
   check(
-    "29. Our Story's new banner goes live with both prints, 2400 px wide, its spot near the right edge",
+    "29. Our Story's new banner and its phone crop go live, 2400 wide and 1200 by 1000, its spot near the right edge",
     /^\/assets\/cms\//.test(storyBanner?.image ?? '') &&
       /^\/assets\/cms\//.test(storyBanner?.phone ?? '') &&
       storyBanner.image !== storyBanner.phone &&
       Boolean(wideFile && phoneFile) &&
       (storyBanner.focus?.x ?? 0) > 0.7 &&
-      widePrint?.width === 2400,
-    `${storyBanner?.image} ${storyBanner?.phone} ${JSON.stringify(storyBanner?.focus)} ${widePrint?.width}`,
+      widePrint?.width === 2400 &&
+      phonePrint?.width === 1200 &&
+      phonePrint?.height === 1000,
+    `${storyBanner?.image} ${storyBanner?.phone} ${JSON.stringify(storyBanner?.focus)} ${widePrint?.width} ${phonePrint?.width}x${phonePrint?.height}`,
   )
 
   // 30. The Stores page's sharing image is the one og:image its preview carries

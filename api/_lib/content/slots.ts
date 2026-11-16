@@ -19,7 +19,12 @@ export interface SlotSpec {
   square?: 'cover' | 'contain'
   /** The place also needs a black and white print, made with the colour one: the logo walls rest in black and white. */
   mono?: boolean
-  /** The place also needs a 1200 px print for phones, framed the same: the page banners. */
+  /**
+   * The site's own photos for the place have a phone crop beside them, named
+   * `-sm` (the page banners from scripts/prepare-assets.py), which comes with
+   * one picked from the library. A dashboard upload's phone crop is a photo of
+   * its own, of the `bannerPhone` kind.
+   */
   phone?: boolean
 }
 
@@ -46,8 +51,10 @@ const KINDS = {
   logo: { label: 'Logo', maxSide: 340, alpha: true, mono: true },
   /** A photograph on a page, such as the Signature section's Orchid or Our Story's first flower. */
   page: { label: 'Page photo', maxSide: 1800, alpha: false },
-  /** A page's banner, behind its title: 2400 px for wide screens, and a 1200 px print for phones. */
+  /** A page's banner, behind its title: the wide photo, 2400 px. */
   banner: { label: 'Banner', maxSide: 2400, alpha: false, phone: true },
+  /** The same banner framed for a phone's near square title bar: 1200 by 1000 in the banner brief. */
+  bannerPhone: { label: 'Phone crop', maxSide: 1200, alpha: false },
   /** What a link to the page shows when it is shared. */
   share: { label: 'Sharing image', maxSide: 1200, alpha: false },
 } satisfies Record<string, SlotSpec>
