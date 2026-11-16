@@ -117,6 +117,19 @@ export const PAGE_SPECS: PageSpec[] = [
     preview: '/',
     sections: [
       {
+        title: 'Hero',
+        fields: [
+          field('home.hero.eyebrow', 'Small line above the heading', 'text', {
+            hint: 'The words over the film. The poster that follows it is on the Poster tab.',
+          }),
+          heading('home.hero.heading', 'Heading', 34),
+          field('home.hero.intro', 'Introduction', 'area', { warnAt: 160, warning: DRAWN_FOR }),
+          field('home.hero.shop', 'First button', 'text', { hint: 'Opens the shop.' }),
+          field('home.hero.orchid', 'Second button', 'text', { hint: 'Opens Orchid.' }),
+          field('home.hero.label', 'Side label', 'text', { hint: 'Runs up the left edge beside the film, on a wide screen.' }),
+        ],
+      },
+      {
         title: 'Signature',
         fields: [
           field('home.signature.kicker', 'Small line'),

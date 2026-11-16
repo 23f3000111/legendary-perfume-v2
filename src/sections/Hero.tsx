@@ -2,8 +2,9 @@ import { asset } from '../lib/asset'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, useScroll, useTransform } from 'framer-motion'
-import SplitText from '../components/ui/SplitText'
+import HeroHeading from '../components/ui/HeroHeading'
 import { ArrowRight, ChevronDown, ChevronLeft, ChevronRight } from '../components/ui/icons'
+import { pages } from '../data/pages'
 import { useUI } from '../store/ui'
 
 /**
@@ -161,6 +162,9 @@ const FEATHER: Record<Exclude<Fit, 'cover'>, string> = {
 }
 
 export default function Hero() {
+  // The words over the film, from the Pages tab; read here, at render, so a
+  // preview's drafts show.
+  const words = pages.home.hero
   const ref = useRef<HTMLDivElement>(null)
   const video = useRef<HTMLVideoElement>(null)
   const copy = useRef<HTMLDivElement>(null)
@@ -395,7 +399,7 @@ export default function Hero() {
         {/* Side label */}
         <div className="absolute left-6 top-1/2 hidden -translate-y-1/2 lg:block">
           <span className="writing-vertical text-[0.68rem] uppercase tracking-[0.3em] text-ivory/50">
-            N°01 · The House of Legendary
+            {words.label}
           </span>
         </div>
 
@@ -417,20 +421,18 @@ export default function Hero() {
                 className="eyebrow eyebrow-gold"
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.9 }}
               >
-                Est. 2015 · Kuala Lumpur, Malaysia
+                {words.eyebrow}
               </motion.p>
 
               <h1 className="mt-6 font-display text-[clamp(2.8rem,7.5vw,6.4rem)] font-light leading-[0.98] text-ivory">
-                <SplitText text="A Scented Memory" /> <br />
-                <span className="italic text-gilt"><SplitText text="of Malaysia" delay={0.35} /></span>
+                <HeroHeading text={words.heading} />
               </h1>
 
               <motion.p
                 className="mt-7 max-w-xl text-lg text-ivory/75"
                 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1, duration: 1 }}
               >
-                An artisanal perfume house capturing the rich soul and heritage of Malaysia, from
-                wild rainforest flora to comforting cultural delights.
+                {words.intro}
               </motion.p>
 
               <motion.div
@@ -438,11 +440,11 @@ export default function Hero() {
                 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2, duration: 1 }}
               >
                 <Link to="/shop" className="btn-gold group">
-                  Explore Fragrances
+                  {words.shop}
                   <ArrowRight width={16} className="transition-transform duration-500 group-hover:translate-x-1" />
                 </Link>
                 <Link to="/product/orchid" className="btn-outline-light group">
-                  Discover Orchid
+                  {words.orchid}
                   <ArrowRight width={16} className="transition-transform duration-500 group-hover:translate-x-1" />
                 </Link>
               </motion.div>

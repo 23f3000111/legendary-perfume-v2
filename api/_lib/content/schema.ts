@@ -621,6 +621,8 @@ export const PagesDocSchema = object({
   }),
   home: object({
     seo,
+    /** The words over the film. The poster that follows it is in hero.json. */
+    hero: object({ eyebrow: text(60), heading: heading(80), intro: text(300), shop: text(30), orchid: text(30), label: text(60) }),
     signature: object({
       kicker: text(40),
       heading: heading(80),
