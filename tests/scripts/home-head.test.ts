@@ -15,4 +15,14 @@ describe('the static head', () => {
     expect(out).toContain('<meta property="og:image" content="https://legendary.com.my/assets/client/banner-fragrances.webp" />')
     expect(out).not.toContain('A Scented Memory of Malaysia. A heritage')
   })
+
+  // `$&`, `$'` and the like mean something to a string replace; typed into a
+  // title they must stay words, not copy pieces of the page into the head.
+  it('words with dollar signs are written as they are', () => {
+    const html = readFileSync('index.html', 'utf8')
+    const out: string = homeHead(html, { title: "Gifts from $& and $' up", description: 'From $` RM 95' }, 'https://legendary.com.my')
+    expect(out).toContain("<title>Gifts from $&amp; and $' up</title>")
+    expect(out).toMatch(/name="description"\s+content="From \$` RM 95"/)
+    expect(out.match(/<title>/g)).toHaveLength(1)
+  })
 })

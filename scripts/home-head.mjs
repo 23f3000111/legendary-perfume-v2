@@ -29,8 +29,10 @@ export function homeHead(html, home, siteUrl) {
     `<meta property="og:image" content="${image}" />`,
     `<meta name="twitter:card" content="summary_large_image" />`,
   ]
+  // Replacer functions, so `$&`, `$'` and the like in the team's words are
+  // written as they are rather than read as replacement patterns.
   return html
-    .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
-    .replace(/(<meta\s+name="description"\s+content=")[^"]*(")/, `$1${description}$2`)
-    .replace('</head>', `    ${tags.join('\n    ')}\n  </head>`)
+    .replace(/<title>[^<]*<\/title>/, () => `<title>${title}</title>`)
+    .replace(/(<meta\s+name="description"\s+content=")[^"]*(")/, (_, open, close) => `${open}${description}${close}`)
+    .replace('</head>', () => `    ${tags.join('\n    ')}\n  </head>`)
 }
