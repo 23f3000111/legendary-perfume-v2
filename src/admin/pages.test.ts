@@ -40,4 +40,14 @@ describe('the Pages tab', () => {
     expect(next.about.values).toBe(doc.about.values)
     expect(next.home).toBe(doc.home)
   })
+
+  // Every address is first served with the Home page's head, and a link
+  // preview runs no script: it shows Home's picture for a link to any page.
+  it('the sharing image hints say what a link preview shows', () => {
+    const hint = (path: string) =>
+      PAGE_SPECS.flatMap((p) => p.sections.flatMap((s) => s.fields)).find((f) => f.path === path)?.hint ?? ''
+    expect(hint('home.seo.image')).toMatch(/for a link to any page/)
+    expect(hint('stores.seo.image')).toMatch(/show the Home page's picture/)
+    expect(hint('stores.seo.image')).not.toMatch(/Shown when the page is shared/)
+  })
 })

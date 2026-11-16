@@ -58,10 +58,12 @@ const seo = (key: string): PageSection => ({
     field(`${key}.seo.description`, 'Description', 'area', { warnAt: 160, warning: 'Search engines show about 160 characters.' }),
     field(`${key}.seo.image`, 'Sharing image', 'share', {
       optional: true,
+      // Every address is first served with Home's head, and a link preview runs
+      // no script, so Home's picture is the one previews show for any page.
       hint:
         key === 'home'
-          ? 'Shown when the page is shared. Left empty, the page shares the house’s default picture.'
-          : 'Shown when the page is shared. Left empty, the page shares its banner.',
+          ? 'Link previews (WhatsApp, Facebook and the like) show this picture, with the title and description above, for a link to any page of the site. Left empty, the house’s default picture.'
+          : 'Read by search engines for this page. Link previews (WhatsApp, Facebook and the like) show the Home page\'s picture instead. Left empty, the page uses its banner.',
     }),
   ],
 })
