@@ -130,26 +130,27 @@ const POSTER_WIDTHS = [1280, 2400, 3200]
  */
 export async function makePoster(master: Buffer): Promise<{ prints: Print[]; fill: Print }> {
   const meta = await sharp(master).metadata()
-  let source = master
+  let image = sharp(master)
   if (!(await sharp(master).stats()).isOpaque && (meta.width ?? 0) > 8 && (meta.height ?? 0) > 8) {
-    source = await sharp(master)
-      .extract({ left: 4, top: 4, width: meta.width! - 8, height: meta.height! - 8 })
-      .toBuffer()
+    image = image.extract({ left: 4, top: 4, width: meta.width! - 8, height: meta.height! - 8 })
   }
-  const flat = await sharp(source).flatten({ background: '#ffffff' }).toBuffer()
-  const { width = 0 } = await sharp(flat).metadata()
-  const widths = [...new Set(POSTER_WIDTHS.map((w) => Math.min(w, width)))]
+  // Trimmed and laid on white as raw pixels, never encoded on the way: each
+  // print is then one encode of the master's own pixels. A copy kept in the
+  // master's WebP would cost every print its sharpest lettering.
+  const { data: pixels, info } = await image.flatten({ background: '#ffffff' }).raw().toBuffer({ resolveWithObject: true })
+  const flat = () => sharp(pixels, { raw: { width: info.width, height: info.height, channels: info.channels } })
+  const widths = [...new Set(POSTER_WIDTHS.map((w) => Math.min(w, info.width)))]
   const prints: Print[] = []
   for (const w of widths) {
-    const { data, info } = await sharp(flat).resize({ width: w }).webp({ quality: 84 }).toBuffer({ resolveWithObject: true })
-    prints.push({ data, width: info.width, height: info.height })
+    const { data, info: out } = await flat().resize({ width: w }).webp({ quality: 84 }).toBuffer({ resolveWithObject: true })
+    prints.push({ data, width: out.width, height: out.height })
   }
-  const { data, info } = await sharp(flat)
-    .resize({ width: Math.min(480, width) })
+  const fill = await flat()
+    .resize({ width: Math.min(480, info.width) })
     .blur(18)
     .webp({ quality: 70 })
     .toBuffer({ resolveWithObject: true })
-  return { prints, fill: { data, width: info.width, height: info.height } }
+  return { prints, fill: { data: fill.data, width: fill.info.width, height: fill.info.height } }
 }
 
 /**
