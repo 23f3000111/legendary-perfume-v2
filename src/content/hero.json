@@ -1,6 +1,6 @@
 {
   "poster": {
-    "show": true,
+    "show": false,
     "image": {
       "prints": [
         {
@@ -23,16 +23,16 @@
     "alt": "Legendary’s 11th anniversary: a bottle of Legendary and a cake in the basket of a golden hot air balloon. The legend of scent.",
     "tone": "light",
     "words": [
-      0.515,
-      0.288,
-      0.928,
-      0.767
+      0.501,
+      0.28,
+      0.939,
+      0.786
     ],
     "picture": [
-      0.12,
-      0.41,
-      0.475,
-      0.955
+      0.092,
+      0.384,
+      0.447,
+      0.929
     ]
   }
 }
